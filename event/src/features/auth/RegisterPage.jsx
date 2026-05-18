@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import HeroSection from './components/HeroSection';
 import AccountTypeForm from './components/AccountTypeForm';
+import FreelancerProfileForm from './components/FreelancerProfileForm';
 import InputField from '../../components/InputField';
 import Button from '../../components/Button';
 
 function RegisterPage() {
     const [step, setStep] = useState(1);
+    const [accountType, setAccountType] = useState('freelancer'); // تخزين كرت الاختيار من المرحلة الثانية
     const [formData, setFormData] = useState({
         firstName: '', lastName: '', email: '', phone: '', password: ''
     });
@@ -15,8 +17,30 @@ function RegisterPage() {
     };
 
     const handleNextStep = (e) => {
-        e.preventDefault();
-        setStep(2); // الانتقال لخطوة اختيار الحساب
+        if (e) e.preventDefault();
+        setStep(2); // الانتقال لخطوة اختيار الحساب (الكروت)
+    };
+
+    // 💡 دالة الربط السحرية التي تنقلك للخطوة الثالثة بناءً على الكرت المختار
+    const handleAccountTypeSelection = (selectedType) => {
+        setAccountType(selectedType);
+        if (selectedType === 'freelancer') {
+            setStep(3); // الانتقال الفوري لواجهة Complete Your Profile للمستقل
+        } else {
+            console.log("نتوجه لواجهة الشركة التخصصية لاحقاً");
+            // هنا سنضع شرط الانتقال لواجهة الشركة عند بنائها في الخطوة القادمة
+        }
+    };
+
+    const handleFinalSubmit = (profileData) => {
+        // تجميع كامل بيانات المستخدم من الخطوات الثلاث لجهوزية إرسالها للباك إند
+        const completePayload = {
+            ...formData,
+            accountType,
+            ...profileData
+        };
+        console.log("🚀 إرسال البيانات المكتملة إلى الباك إند:", completePayload);
+        alert("تم إرسال ملف العضوية الملكية الفاخرة بنجاح! جاري المراجعة يدوياً.");
     };
 
     return (
@@ -26,14 +50,20 @@ function RegisterPage() {
             <div className="w-full md:w-1/2 h-full bg-royal-dark flex flex-col justify-between p-8 sm:p-12 lg:p-16 overflow-y-auto">
                 <div className="my-auto max-w-md w-full mx-auto space-y-8">
 
-                    {step === 1 ? (
+                    {step === 1 && (
                         /* الخطوة الأولى: البيانات العامة */
-                        <div className="space-y-8">
+                        <div className="space-y-8 animate-fade-in">
                             <div>
                                 <h3 className="text-3xl font-semibold text-royal-text mb-2 tracking-wide" style={{ fontFamily: "'Playfair Display', serif" }}>
                                     Create Account
                                 </h3>
                                 <p className="text-xs text-royal-muted">Step into the world of Royal Events.</p>
+                            </div>
+
+                            <div className="flex items-center space-x-2 pt-1">
+                                <div className="w-8 h-[2px] bg-royal-gold rounded-full"></div>
+                                <div className="w-8 h-[2px] bg-royal-field-focus rounded-full"></div>
+                                <div className="w-8 h-[2px] bg-royal-field-focus rounded-full"></div>
                             </div>
 
                             <form className="space-y-5" onSubmit={handleNextStep}>
@@ -62,20 +92,32 @@ function RegisterPage() {
                                 <a href="#" className="text-royal-gold hover:text-royal-gold-light underline underline-offset-4 transition-colors font-medium ml-1">Sign In</a>
                             </div>
                         </div>
-                    ) : (
-                        /* الخطوة الثانية: اختيار نوع الحساب */
-                        <AccountTypeForm onBack={() => setStep(1)} />
+                    )}
+
+                    {step === 2 && (
+                        /* 🔗 ربط واجهة اختيار نوع الحساب بـ دالة التوجيه handleAccountTypeSelection */
+                        <AccountTypeForm
+                            onBack={() => setStep(1)}
+                            onContinue={handleAccountTypeSelection}
+                        />
+                    )}
+
+                    {step === 3 && (
+                        /* 🔗 ربط استمارة الفري لانسر بالتسجيل النهائي والعودة لخطوة الكروت */
+                        <FreelancerProfileForm
+                            onBack={() => setStep(2)}
+                            onSubmit={handleFinalSubmit}
+                        />
                     )}
 
                 </div>
 
-                {/* التذييل السفلي */}
+                {/* التذييل السفلي الخارجي */}
                 <div className="flex flex-col sm:flex-row justify-between items-center text-[10px] text-[#4e4639] border-t border-royal-field pt-4 mt-8 space-y-2 sm:space-y-0">
-                    <p>&copy; 2026 Royal Events. All rights reserved.</p>
+                    <p>&copy; 2026 Royal Events International. All rights reserved.</p>
                     <div className="flex space-x-4 uppercase tracking-wider">
+                        <a href="#" className="hover:text-royal-gold transition-colors">Help Center</a>
                         <a href="#" className="hover:text-royal-gold transition-colors">Privacy</a>
-                        <a href="#" className="hover:text-royal-gold transition-colors">Terms</a>
-                        <a href="#" className="hover:text-royal-gold transition-colors">Concierge</a>
                     </div>
                 </div>
             </div>
