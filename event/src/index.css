@@ -1,0 +1,37 @@
+@import "tailwindcss";
+
+@theme {
+    /* --- الهوية البصرية الفاخرة لـ Royal Events (Tailwind v4) --- */
+
+    /* ألوان الخلفيات الداكنة والعميقة */
+    --color-royal-dark: #140e0c;         /* الأسود الفحمي الدافئ للجناح الأيمن */
+    --color-royal-bg: #18120f;           /* أسود بديل لإعطاء أبعاد وتداخل عميق */
+    --color-royal-field: #1c1512;        /* لون خانات الإدخال الافتراضي */
+    --color-royal-field-focus: #231b17;  /* لون الخانات عند الكتابة بداخله */
+    --color-royal-border: #261d19;       /* لون خطوط الفصل الرقيقة والأطر */
+
+    /* تدرجات اللون الذهبي المعدني */
+    --color-royal-gold: #c5a059;         /* الذهبي الملكي الأساسي للنصوص والحدود */
+    --color-royal-gold-dark: #a68341;    /* الذهبي الداكن لزوايا تدرج الأزرار */
+    --color-royal-gold-light: #d6b26a;   /* الذهبي المضيء لتأثيرات الحركات (Hover) */
+
+    /* ألوان النصوص وقابليتها للقراءة */
+    --color-royal-text: #eee0da;         /* اللون العاجي الفاخر للنصوص الأساسية */
+    --color-royal-muted: #9a8f80;        /* اللون الرمادي الدافئ للنصوص الفرعية والمساعدِة */
+}
+
+/* حركة ناعمة مخصصة للانتقال بين واجهات التسجيل (Fade In Effect) */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
