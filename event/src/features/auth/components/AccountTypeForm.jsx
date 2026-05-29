@@ -1,109 +1,159 @@
 import React, { useState } from 'react';
 import Button from '../../../components/Button';
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import Paper from '@mui/material/Paper';
+import MuiButton from '@mui/material/Button';
+import StarBorderIcon from '@mui/icons-material/StarBorder';
+import BusinessIcon from '@mui/icons-material/Business';
 
 function AccountTypeForm({ onBack, onContinue }) {
-    // كود الـ State لتخزين الكرت المختار (freelancer أو company)
     const [selectedType, setSelectedType] = useState('freelancer');
 
     return (
-        <div className="space-y-8 animate-fade-in w-full">
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4, width: '100%' }} className="animate-fade-in">
 
-            {/* 1. رأس الصفحة والوصف الفاخر */}
-            <div>
-                <h3
-                    className="text-3xl font-semibold text-royal-text mb-2 tracking-wide"
-                    style={{ fontFamily: "'Playfair Display', serif" }}
+            {/* حاوية العناوين والأوصاف التحريرية الخفيفة */}
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, textAlign: 'left' }}>
+                <Typography
+                    variant="h4"
+                    sx={{
+                        fontFamily: "'Playfair Display', serif",
+                        color: '#eee0da',
+                        fontSize: '2.6rem',
+                        letterSpacing: '0.02em',
+                        fontWeight: 400
+                    }}
                 >
                     Select Account Type
-                </h3>
-                <p className="text-xs text-royal-muted leading-relaxed max-w-sm">
+                </Typography>
+                <Typography variant="caption" sx={{ color: '#9a8f80', fontSize: '14px', lineHeight: 1.5 }}>
                     Please select the membership category that suits your professional needs for a bespoke and exclusive experience.
-                </p>
-            </div>
+                </Typography>
+            </Box>
 
-            {/* 2. مؤشر شريط التقدم (Progress Indicators) */}
-            <div className="flex items-center space-x-2 pt-1">
-                <div className="w-8 h-[2px] bg-royal-field-focus rounded-full"></div>
-                <div className="w-8 h-[2px] bg-royal-gold rounded-full"></div>
-                <div className="w-8 h-[2px] bg-royal-field-focus rounded-full"></div>
-            </div>
+            {/* شريط مؤشرات التقدم الثلاثي الملموم */}
+            <Box sx={{ display: 'flex', gap: 1 }}>
+                <Box sx={{ width: 32, height: 2, backgroundColor: '#261d19', borderRadius: '4px' }} />
+                <Box sx={{ width: 32, height: 2, backgroundColor: '#c5a059', borderRadius: '4px' }} />
+                <Box sx={{ width: 32, height: 2, backgroundColor: '#261d19', borderRadius: '4px' }} />
+            </Box>
 
-            {/* 3. حاوية كروت اختيار نوع الحساب */}
-            <div className="grid grid-cols-2 gap-4 pt-2">
+            {/* شبكة الكروت التفاعلية */}
+            <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 2.5 }}>
 
-                {/* كرت المستقل (Freelancer Card) */}
-                <div
+                {/* كرت المستقل Freelancer */}
+                <Paper
                     onClick={() => setSelectedType('freelancer')}
-                    className={`group relative flex flex-col items-center text-center p-6 bg-royal-field rounded-[4px] cursor-pointer transition-all duration-300 min-h-[220px] justify-center border-2 ${
-                        selectedType === 'freelancer'
-                            ? 'border-royal-gold bg-royal-field-focus shadow-xl shadow-black/30'
-                            : 'border-royal-border hover:border-royal-gold/40'
-                    }`}
-                >
-                    {/* أيقونة المستقل الفنية الهندسية */}
-                    <div className={`p-3 rounded-[4px] mb-4 transition-colors duration-300 ${
-                        selectedType === 'freelancer' ? 'bg-royal-gold text-royal-dark' : 'bg-royal-field-focus text-royal-gold'
-                    }`}>
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499c.172-.435.789-.435.961 0l1.96 4.94a1 1 0 00.754.548l5.328.43c.474.038.663.62.319.954l-3.99 3.877a1 1 0 00-.288.886l1.11 5.293c.099.47-.404.835-.812.593L12 18.054l-4.73 2.872c-.409.248-.912-.117-.812-.593l1.11-5.293a1 1 0 00-.288-.886l-3.99-3.877c-.344-.333-.155-.916.319-.954l5.328-.43a1 1 0 00.754-.548l1.96-4.94z" />
-                        </svg>
-                    </div>
-
-                    <h4 className="text-royal-text font-semibold text-base mb-2">Freelancer</h4>
-                    <p className="text-[11px] text-royal-muted leading-relaxed px-2">
-                        For independent creators and professionals managing their business with exceptional flexibility and creativity.
-                    </p>
-                </div>
-
-                {/* كرت الشركة (Company Card) */}
-                <div
-                    onClick={() => setSelectedType('company')}
-                    className={`group relative flex flex-col items-center text-center p-6 bg-royal-field rounded-[4px] cursor-pointer transition-all duration-300 min-h-[220px] justify-center border-2 ${
-                        selectedType === 'company'
-                            ? 'border-royal-gold bg-royal-field-focus shadow-xl shadow-black/30'
-                            : 'border-royal-border hover:border-royal-gold/40'
-                    }`}
-                >
-                    {/* أيقونة الشركة الكلاسيكية */}
-                    <div className={`p-3 rounded-[4px] mb-4 transition-colors duration-300 ${
-                        selectedType === 'company' ? 'bg-royal-gold text-royal-dark' : 'bg-royal-field-focus text-royal-gold'
-                    }`}>
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.33l-7.5-5-7.5 5V21m16.5 0H3.75" />
-                        </svg>
-                    </div>
-
-                    <h4 className="text-royal-text font-semibold text-base mb-2">Company</h4>
-                    <p className="text-[11px] text-royal-muted leading-relaxed px-2">
-                        For large institutions and companies looking for integrated management solutions and multi-permission teams.
-                    </p>
-                </div>
-
-            </div>
-
-            {/* 4. أزرار المتابعة والرجوع */}
-            <div className="space-y-4 pt-2">
-                {/* استخدام زر الـ Button الفاخر المشترك الذي أرسلتِه كمكون */}
-                <Button
-                    text="CONTINUE"
-                    onClick={(e) => {
-                        e.preventDefault();
-                        if (onContinue) onContinue(selectedType);
+                    elevation={0}
+                    sx={{
+                        padding: '24px 16px',
+                        backgroundColor: '#1c1512',
+                        cursor: 'pointer',
+                        textAlign: 'center',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        minHeight: '200px',
+                        borderRadius: '0px',
+                        border: '1px solid',
+                        borderColor: selectedType === 'freelancer' ? '#c5a059' : 'rgba(78, 70, 57, 0.25)',
+                        transition: 'all 0.3s ease',
+                        '&:hover': { borderColor: '#c5a059' }
                     }}
-                />
+                >
+                    <Box sx={{
+                        p: 1,
+                        borderRadius: '0px',
+                        mb: 2,
+                        backgroundColor: selectedType === 'freelancer' ? '#c5a059' : 'transparent',
+                        color: selectedType === 'freelancer' ? '#1c1512' : '#c5a059',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                    }}>
+                        <StarBorderIcon sx={{ fontSize: '24px' }} />
+                    </Box>
+                    <Typography variant="body1" sx={{ color: '#eee0da', fontWeight: 500, fontSize: '17px', mb: 1, letterSpacing: '0.02em' }}>
+                        Freelancer
+                    </Typography>
+                    <Typography variant="caption" sx={{ color: '#8a7f70', fontSize: '13px', lineHeight: 1.5, display: 'block', px: 0.5 }}>
+                        For independent creators and professionals managing their business with hospitality flexibility and creativity.
+                    </Typography>
+                </Paper>
 
-                <div className="text-center">
-                    <button
-                        type="button"
-                        onClick={onBack}
-                        className="text-[11px] text-royal-muted hover:text-royal-text transition-colors uppercase tracking-[0.2em] font-semibold cursor-pointer underline underline-offset-4"
-                    >
-                        Go Back
-                    </button>
-                </div>
-            </div>
+                {/* كرت الشركات Company */}
+                <Paper
+                    onClick={() => setSelectedType('company')}
+                    elevation={0}
+                    sx={{
+                        padding: '24px 16px',
+                        backgroundColor: '#1c1512',
+                        cursor: 'pointer',
+                        textAlign: 'center',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        minHeight: '200px',
+                        borderRadius: '0px',
+                        border: '1px solid',
+                        borderColor: selectedType === 'company' ? '#c5a059' : 'rgba(78, 70, 57, 0.25)',
+                        transition: 'all 0.3s ease',
+                        '&:hover': { borderColor: '#c5a059' }
+                    }}
+                >
+                    <Box sx={{
+                        p: 1,
+                        borderRadius: '0px',
+                        mb: 2,
+                        backgroundColor: selectedType === 'company' ? '#c5a059' : 'transparent',
+                        color: selectedType === 'company' ? '#1c1512' : '#c5a059',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                    }}>
+                        <BusinessIcon sx={{ fontSize: '24px' }} />
+                    </Box>
+                    <Typography variant="body1" sx={{ color: '#eee0da', fontWeight: 500, fontSize: '17px', mb: 1, letterSpacing: '0.02em' }}>
+                        Company
+                    </Typography>
+                    <Typography variant="caption" sx={{ color: '#8a7f70', fontSize: '13px', lineHeight: 1.5, display: 'block', px: 0.5 }}>
+                        For large institutions looking for integrated management solutions and multi-permission teams.
+                    </Typography>
+                </Paper>
+            </Box>
 
-        </div>
+            {/* حاوية أزرار التحكم السفلي */}
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, mt: 1 }}>
+                <Button text="CONTINUE" onClick={(e) => { e.preventDefault(); if (onContinue) onContinue(selectedType); }} />
+
+                {/* زر العودة المحدث: نفس خط الكتابة التوضيحية الأنيق وتحته خط كلاسيكي فاخر مع تباعد الحروف */}
+                <MuiButton
+                    onClick={onBack}
+                    disableRipple
+                    sx={{
+                        color: '#9a8f80',
+                        textTransform: 'none',
+                        fontSize: '14px',
+                        fontWeight: 400,
+                        fontFamily: "'Playfair Display', serif",
+                        letterSpacing: '0.18em', // 👑 حقن تباعد الحروف التحريري الفاخر لمنح الكلمة مسافات أنيقة
+                        textDecoration: 'underline',
+                        textUnderlineOffset: '5px', // ترحيل مسافة الخط تحت الأحرف المتباعدة بدقة
+                        backgroundColor: 'transparent',
+                        '&:hover': {
+                            color: '#eee0da',
+                            backgroundColor: 'transparent',
+                            textDecoration: 'underline'
+                        }
+                    }}
+                >
+                    Go Back
+                </MuiButton>
+            </Box>
+        </Box>
     );
 }
 

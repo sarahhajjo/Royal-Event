@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import Button from '../../../components/Button';
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import MuiButton from '@mui/material/Button';
 
 function OTPVerificationForm({ onBack, onVerify }) {
     const [otp, setOtp] = useState(new Array(6).fill(""));
     const [timer, setTimer] = useState(59);
 
-    // عداد الوقت التنازلي لإعادة الإرسال
     useEffect(() => {
         if (timer > 0) {
             const interval = setInterval(() => setTimer(timer - 1), 1000);
@@ -13,80 +15,77 @@ function OTPVerificationForm({ onBack, onVerify }) {
         }
     }, [timer]);
 
-    // دالة للتعامل مع إدخال الأرقام والتنقل التلقائي بين الخانات
     const handleChange = (element, index) => {
         if (isNaN(element.value)) return false;
-
         setOtp([...otp.map((d, idx) => (idx === index ? element.value : d))]);
-
-        // الانتقال للخانة التالية تلقائياً
         if (element.nextSibling && element.value) {
             element.nextSibling.focus();
         }
     };
 
     return (
-        <div className="space-y-8 animate-fade-in w-full">
-            {/* 1. العنوان والوصف */}
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4, width: '100%' }} className="animate-fade-in">
             <div>
-                <h3 className="text-3xl font-semibold text-royal-text mb-2 tracking-wide" style={{ fontFamily: "'Playfair Display', serif" }}>
+                <Typography variant="h4" sx={{ fontFamily: "'Playfair Display', serif", color: '#eee0da', mb: 1, fontWeight: 600 }}>
                     Verify Your Account
-                </h3>
-                <p className="text-xs text-royal-muted leading-relaxed">
+                </Typography>
+                <Typography variant="caption" sx={{ color: '#9a8f80', display: 'block' }}>
                     We have sent a 6-digit code to your email address. Please enter it below to proceed.
-                </p>
+                </Typography>
             </div>
 
-            {/* 2. شريط التقدم - الخط الأول مضيء (لأننا لسه في مرحلة التوثيق) */}
-            <div className="flex items-center space-x-2">
-                <div className="w-8 h-[2px] bg-royal-gold rounded-full"></div>
-                <div className="w-8 h-[2px] bg-royal-field-focus rounded-full"></div>
-                <div className="w-8 h-[2px] bg-royal-field-focus rounded-full"></div>
-            </div>
+            <Box sx={{ display: 'flex', gap: 1 }}>
+                <Box sx={{ width: 32, height: 2, backgroundColor: '#c5a059', borderRadius: 1 }} />
+                <Box sx={{ width: 32, height: 2, backgroundColor: '#231b17', borderRadius: 1 }} />
+                <Box sx={{ width: 32, height: 2, backgroundColor: '#231b17', borderRadius: 1 }} />
+            </Box>
 
-            {/* 3. خانات الـ OTP الستة المصممة هندسياً */}
-            <div className="flex justify-between gap-2 pt-2">
+            {/* مدخلات الـ OTP المصممة هندسياً بـ MUI */}
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 1 }}>
                 {otp.map((data, index) => (
-                    <input
+                    <Box
+                        component="input"
                         key={index}
                         type="text"
                         maxLength="1"
                         value={data}
                         onChange={e => handleChange(e.target, index)}
                         onFocus={e => e.target.select()}
-                        className="w-12 h-14 bg-royal-field text-royal-text border-2 border-royal-border rounded-[4px] text-center text-xl font-bold focus:border-royal-gold focus:bg-royal-field-focus outline-none transition-all duration-300 shadow-inner"
+                        sx={{
+                            width: '48px',
+                            height: '56px',
+                            backgroundColor: '#1c1512',
+                            color: '#eee0da',
+                            border: '2px solid #261d19',
+                            borderRadius: '4px',
+                            textAlign: 'center',
+                            fontSize: '20px',
+                            fontWeight: 'bold',
+                            outline: 'none',
+                            transition: 'all 0.3s ease',
+                            '&:focus': { borderColor: '#c5a059', backgroundColor: '#231b17' }
+                        }}
                     />
                 ))}
-            </div>
+            </Box>
 
-            {/* 4. زر التحقق والمتابعة */}
-            <div className="space-y-6 pt-2">
-                <Button
-                    text="VERIFY & CONTINUE →"
-                    onClick={() => onVerify(otp.join(""))}
-                />
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, mt: 2 }}>
+                <Button text="VERIFY & CONTINUE →" onClick={() => onVerify(otp.join(""))} />
 
-                {/* 5. خيارات إعادة الإرسال والوقت */}
-                <div className="flex flex-col items-center space-y-4 text-[10px] tracking-[0.2em] uppercase font-bold">
-                    <div className="text-royal-muted">
-                        RESEND IN <span className="text-royal-gold ml-1">00:{timer < 10 ? `0${timer}` : timer}</span>
-                    </div>
-                    <button
-                        disabled={timer > 0}
-                        className={`transition-colors underline underline-offset-4 ${timer > 0 ? 'text-royal-border' : 'text-royal-gold hover:text-royal-gold-light cursor-pointer'}`}
-                    >
+                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+                    <Typography variant="caption" sx={{ color: '#9a8f80', letterSpacing: '0.15em', fontWeight: 'bold' }}>
+                        RESEND IN <Box component="span" sx={{ color: '#c5a059', ml: 1 }}>00:{timer < 10 ? `0${timer}` : timer}</Box>
+                    </Typography>
+                    <MuiButton disabled={timer > 0} sx={{ color: '#c5a059', fontSize: '10px', fontWeight: 'bold', letterSpacing: '0.15em', textDecoration: 'underline', '&:disabled': { color: '#261d19' } }}>
                         RESEND CODE
-                    </button>
-                </div>
-            </div>
+                    </MuiButton>
+                </Box>
 
-            {/* زر الرجوع */}
-            <div className="text-center">
-                <button onClick={onBack} className="text-[10px] text-royal-muted hover:text-royal-text transition-colors uppercase tracking-[0.2em] font-semibold underline underline-offset-4">
+                <MuiButton onClick={onBack} sx={{ color: '#9a8f80', textTransform: 'uppercase', letterSpacing: '0.2em', fontSize: '11px', textDecoration: 'underline', '&:hover': { color: '#eee0da' } }}>
                     Go Back
-                </button>
-            </div>
-        </div>
+                </MuiButton>
+            </Box>
+        </Box>
     );
 }
 

@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import LoginPage from './features/auth/LoginPage';
 import RegisterPage from './features/auth/RegisterPage';
 import AddProductPage from './features/company-dashboard/AddProductPage'; // 🔗 استدعاء واجهة المنتجات
-
+import CompanyDashboardPage from './features/company-dashboard/CompanyDashboardPage';
 function App() {
   return (
       <Router>
@@ -17,6 +17,7 @@ function App() {
 
           {/* إعادة التوجيه التلقائي للمسارات غير المعرفة */}
           <Route path="*" element={<Navigate to="/" />} />
+            <Route path="/company-dashboard" element={<CompanyDashboardPage />} />
         </Routes>
       </Router>
   );

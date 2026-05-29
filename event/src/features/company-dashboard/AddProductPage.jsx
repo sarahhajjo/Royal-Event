@@ -1,268 +1,184 @@
 import React, { useState } from 'react';
-import InputField from '../../components/InputField';
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import Paper from '@mui/material/Paper';
+import Radio from '@mui/material/Radio';
+import RadioGroup from '@mui/material/RadioGroup';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Checkbox from '@mui/material/Checkbox';
+import Grid from '@mui/material/Grid';
+
+// استيراد الأيقونات والأزرار العامة
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import CustomInputField from './addition-components/CustomInputField';
+import VariantCard from './addition-components/VariantCard'; // 🚀 استيراد الكومبوننت المخصص الجديد
 import Button from '../../components/Button';
 
 function AddProductPage() {
-    // 1. الحالات التفاعلية لإدارة محتوى الاستمارة وبدائل الألوان
-    const [productName, setProductName] = useState('');
-    const [description, setDescription] = useState('');
-    const [material, setMaterial] = useState('');
-    const [hasVariants, setHasVariants] = useState('yes'); // 'yes' or 'no'
-    const [colorCount, setColorCount] = useState('1');
-    const [secondaryContact, setSecondaryContact] = useState('');
-    const [publishStatus, setPublishStatus] = useState('public'); // 'public' or 'draft'
+    const [coreDetails, setCoreDetails] = useState({ name: '', description: '', material: '' });
+    const [hasVariants, setHasVariants] = useState('yes');
+    const [variantCount, setVariantCount] = useState(1);
 
-    // مصفوفة ديناميكية لإدارة كروت البدائل المضافة (Variants) كما في الصورة
-    const [variants, setVariants] = useState([
-        { id: 1, name: 'e.g. Onyx', price: '0.00', stock: '0', date: '' },
-        { id: 2, name: 'e.g. Ivory', price: '0.00', stock: '0', date: '' },
-        { id: 3, name: 'e.g. Gold', price: '0.00', stock: '0', date: '' }
-    ]);
+    const [variants, setVariants] = useState([{}]);
+    const [logisticData, setLogisticData] = useState({ secondaryPhone: '', publishingStatus: 'public' });
 
-    const handleAddVariant = () => {
-        const newId = variants.length + 1;
-        setVariants([...variants, { id: newId, name: '', price: '0.00', stock: '0', date: '' }]);
+    const handleCoreChange = (field, value) => {
+        setCoreDetails(prev => ({ ...prev, [field]: value }));
     };
 
-    const handleVariantChange = (id, field, value) => {
-        setVariants(variants.map(v => v.id === id ? { ...v, [field]: value } : v));
+    const handleVariantToggle = (choice) => {
+        setHasVariants(choice);
+        if (choice === 'no') {
+            setVariantCount(1);
+            setVariants([{}]);
+        }
+    };
+
+    const handleCountChange = (value) => {
+        const num = parseInt(value, 10) || 1;
+        const safeNum = Math.max(1, Math.min(num, 20));
+        setVariantCount(safeNum);
+        setVariants(Array.from({ length: safeNum }, () => ({})));
     };
 
     return (
-        <div className="w-full h-screen min-h-screen bg-royal-bg flex overflow-hidden font-sans select-none text-royal-text">
+        // الحاوية الأب لضمان البقاء داخل مساحة شاشة العرض دون أي تمدد خارجي عشوائي
+        <Box sx={{ width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}>
 
-            {/* ----------------- الشطر الأيسر: القائمة الجانبية (Sidebar) من الصورة ----------------- */}
-            <div className="w-64 bg-royal-dark border-r border-royal-border h-full p-6 flex flex-col justify-between">
-                <div className="space-y-8">
-                    {/* رأس القائمة */}
-                    <div>
-                        <h2 className="text-sm font-bold tracking-wider text-royal-text" style={{ fontFamily: "'Playfair Display', serif" }}>Editorial Gala</h2>
-                        <p className="text-[10px] text-royal-muted uppercase tracking-widest mt-1">Concierge Portal</p>
-                    </div>
+            {/* الترويسة الفاخرة ومسار التنقل الملكي */}
+            <Box sx={{ mb: 4, textAlign: 'left' }}>
+                <Typography variant="caption" sx={{ color: '#9a8f80', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+                    Catalog &nbsp;•&nbsp; <Box component="span" sx={{ color: '#c5a059' }}>Add New Product</Box>
+                </Typography>
+                <Typography variant="h3" sx={{ fontFamily: "'Playfair Display', serif", fontSize: '2.5rem', color: '#ffffff', mt: 1, mb: 1, fontWeight: 500 }}>
+                    Add New Product
+                </Typography>
+                <Typography variant="body2" sx={{ color: '#9a8f80', fontWeight: 300 }}>
+                    Curate your next exclusive product offering for the Editorial Gala catalog.
+                </Typography>
+            </Box>
 
-                    {/* الروابط وأقسام العمل */}
-                    <nav className="space-y-4">
-                        <div className="text-[10px] font-semibold text-royal-gold uppercase tracking-[0.2em] mb-2">Addition Section</div>
-                        <a href="#" className="flex items-center space-x-3 text-xs bg-royal-field-focus text-royal-gold p-2.5 rounded-[4px] border-r-2 border-royal-gold">
-                            <span>📦</span> <span className="font-medium">Product</span>
-                        </a>
-                        <a href="#" className="flex items-center space-x-3 text-xs text-royal-muted hover:text-royal-text p-2.5 transition-colors">
-                            <span>🏰</span> <span>Hall for Rent</span>
-                        </a>
+            {/* 1️⃣ القسم الأول: التفاصيل الجوهرية (Core Details) */}
+            <Paper sx={{ p: 4, backgroundColor: '#1c1512', border: '1px solid #261d19', borderRadius: '6px', mb: 4, textAlign: 'left' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 3, borderBottom: '1px solid rgba(154, 143, 128, 0.1)', pb: 1.5 }}>
+                    <Typography sx={{ color: '#c5a059', fontSize: '16px' }}>🗂️</Typography>
+                    <Typography variant="subtitle1" sx={{ color: '#ffffff', fontWeight: 'bold', letterSpacing: '0.02em' }}>Core Details</Typography>
+                </Box>
 
-                        <div className="text-[10px] font-semibold text-royal-gold uppercase tracking-[0.2em] pt-4 mb-2">Requests Section</div>
-                        <a href="#" className="flex items-center space-x-3 text-xs text-royal-muted hover:text-royal-text p-2 transition-colors">
-                            <span>📥</span> <span>Requests Section</span>
-                        </a>
-                    </nav>
-                </div>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                    <CustomInputField label="Product Name" placeholder="e.g., Signature Silk Gala Gown" value={coreDetails.name} onChange={(e) => handleCoreChange('name', e.target.value)} />
+                    <CustomInputField label="Detailed Description" placeholder="Describe the craftsmanship and narrative behind this piece..." multiline rows={4} value={coreDetails.description} onChange={(e) => handleCoreChange('description', e.target.value)} />
+                    <CustomInputField label="Material / Composition" placeholder="e.g., 100% Mulberry Silk, 24k Gold Threading" value={coreDetails.material} onChange={(e) => handleCoreChange('material', e.target.value)} />
+                </Box>
+            </Paper>
 
-                {/* أسفل القائمة الجانبية */}
-                <div className="space-y-3 border-t border-royal-border pt-4">
-                    <button className="w-full bg-royal-field border border-royal-border text-royal-gold text-[10px] font-bold py-2 rounded-[4px] tracking-widest hover:bg-royal-field-focus transition-colors">
-                        + NEW EVENT
-                    </button>
-                    <div className="text-[11px] text-royal-muted flex justify-between px-1">
-                        <span className="hover:text-royal-text cursor-pointer">Support</span>
-                        <span className="hover:text-royal-text cursor-pointer">Account</span>
-                    </div>
-                </div>
-            </div>
+            {/* 2️⃣ القسم الثاني المحمي من التمدد: خيارات الألوان والمتغيرات (Variant Options) */}
+            <Paper sx={{
+                p: 4,
+                backgroundColor: '#1c1512',
+                border: '1px solid #261d19',
+                borderRadius: '6px',
+                mb: 4,
+                textAlign: 'left',
+                // 🛑 الحماية البرمجية الصارمة لمنع خروج الـ Paper عن حافة شاشة المتصفح 🛑
+                width: '100%',
+                maxWidth: '100%',
+                boxSizing: 'border-box',
+                overflow: 'hidden'
+            }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 3, borderBottom: '1px solid rgba(154, 143, 128, 0.1)', pb: 1.5 }}>
+                    <Typography sx={{ color: '#c5a059', fontSize: '16px' }}>🎨</Typography>
+                    <Typography variant="subtitle1" sx={{ color: '#ffffff', fontWeight: 'bold', letterSpacing: '0.02em' }}>Variant Options</Typography>
+                </Box>
 
-            {/* ----------------- الشطر الأيمن: استمارة إضافة منتج ومحتوى الجاليري ----------------- */}
-            <div className="flex-grow h-full bg-royal-bg flex flex-col overflow-y-auto p-10">
+                <Grid container spacing={3} sx={{ mb: 4 }}>
+                    <Grid item xs={12} md={6}>
+                        <Typography variant="caption" sx={{ color: '#9a8f80', fontWeight: 'bold', textTransform: 'uppercase', display: 'block', mb: 1 }}>
+                            Add variants with different colors?
+                        </Typography>
+                        <RadioGroup row value={hasVariants} onChange={(e) => handleVariantToggle(e.target.value)}>
+                            <Box sx={{ display: 'flex', gap: 2, width: '100%' }}>
+                                <Paper sx={{ flex: 1, backgroundColor: hasVariants === 'yes' ? 'rgba(197, 160, 89, 0.08)' : '#140e0c', border: hasVariants === 'yes' ? '1px solid #c5a059' : '1px solid #261d19', borderRadius: '4px' }}>
+                                    <FormControlLabel value="yes" control={<Radio sx={{ color: '#c5a059', '&.Mui-checked': { color: '#c5a059' } }} />} label="Yes" sx={{ width: '100%', m: 0, px: 2, color: '#ffffff' }} />
+                                </Paper>
+                                <Paper sx={{ flex: 1, backgroundColor: hasVariants === 'no' ? 'rgba(197, 160, 89, 0.08)' : '#140e0c', border: hasVariants === 'no' ? '1px solid #c5a059' : '1px solid #261d19', borderRadius: '4px' }}>
+                                    <FormControlLabel value="no" control={<Radio sx={{ color: '#c5a059', '&.Mui-checked': { color: '#c5a059' } }} />} label="No" sx={{ width: '100%', m: 0, px: 2, color: '#ffffff' }} />
+                                </Paper>
+                            </Box>
+                        </RadioGroup>
+                    </Grid>
 
-                {/* مسار الصفحة والعنوان الرئيسي */}
-                <div className="mb-6">
-                    <div className="text-[10px] text-royal-muted space-x-2 uppercase tracking-widest mb-2">
-                        <span>Catalog</span> <span className="text-royal-gold">›</span> <span>Add New Product</span>
-                    </div>
-                    <h1 className="text-3xl font-medium text-royal-text" style={{ fontFamily: "'Playfair Display', serif" }}>Add New Product</h1>
-                    <p className="text-xs text-royal-muted mt-1">Curate your next exclusive product offering for the Editorial Gala catalog.</p>
-                </div>
+                    <Grid item xs={12} md={6}>
+                        {hasVariants === 'yes' && (
+                            <CustomInputField label="How many colors would you like to add?" placeholder="1" type="number" value={variantCount} onChange={(e) => handleCountChange(e.target.value)} />
+                        )}
+                    </Grid>
+                </Grid>
 
-                {/* الحاوية الرئيسية للاستمارة الهندسية */}
-                <div className="space-y-6 max-w-4xl w-full pb-16">
+                {/* 🔄 حاوية التمرير الأفقي الآمنة والمعزولة داخلياً بنسبة 100% */}
+                <Box sx={{
+                    display: 'flex',
+                    gap: 2.5,
+                    overflowX: 'auto',
+                    overflowY: 'hidden',
+                    pb: 2,
+                    width: '100%',
+                    maxWidth: '100%', // إجبار الحاوية على الانضغاط الداخلي دون دفع الأب للخارج
+                    boxSizing: 'border-box',
+                    WebkitOverflowScrolling: 'touch',
 
-                    {/* SECTION 1: Core Details */}
-                    <div className="bg-royal-dark border border-royal-border p-6 rounded-[4px] space-y-4">
-                        <div className="flex items-center space-x-2 text-royal-gold text-xs font-semibold uppercase tracking-wider mb-2">
-                            <span>📋</span> <span>Core Details</span>
-                        </div>
-                        <InputField
-                            label="Product Name"
-                            placeholder="e.g., Signature Silk Gala Gown"
-                            value={productName}
-                            onChange={(e) => setProductName(e.target.value)}
-                        />
+                    '&::-webkit-scrollbar': { height: '8px' },
+                    '&::-webkit-scrollbar-track': { backgroundColor: '#140e0c', borderRadius: '10px' },
+                    '&::-webkit-scrollbar-thumb': { backgroundColor: 'rgba(197, 160, 89, 0.4)', borderRadius: '10px', '&:hover': { backgroundColor: '#c5a059' } }
+                }}>
+                    {variants.map((_, index) => (
+                        // 🚀 استدعاء المكون المستقل الفاخر لكل كرت متغير
+                        <VariantCard key={index} index={index} hasVariants={hasVariants} />
+                    ))}
+                </Box>
+            </Paper>
 
-                        {/* حقل الوصف التفصيلي المسكوب */}
-                        <div className="flex flex-col space-y-1.5">
-                            <label className="text-[10px] font-semibold text-royal-gold uppercase tracking-[0.2em]">Detailed Description</label>
-                            <textarea
-                                placeholder="Describe the craftsmanship and narrative behind this piece..."
-                                value={description}
-                                onChange={(e) => setDescription(e.target.value)}
-                                rows={3}
-                                className="w-full bg-royal-field text-royal-text border-b-2 border-transparent focus:border-royal-gold focus:bg-royal-field-focus outline-none rounded-[4px] p-3 text-sm transition-all duration-300 placeholder-[#4e4639] resize-none"
-                            />
-                        </div>
+            {/* 3️⃣ القسم الثالث: الخدمات اللوجستية والرؤية (Logistic & Visibility) */}
+            <Paper sx={{ p: 4, backgroundColor: '#1c1512', border: '1px solid #261d19', borderRadius: '6px', mb: 5, textAlign: 'left' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 3, borderBottom: '1px solid rgba(154, 143, 128, 0.1)', pb: 1.5 }}>
+                    <Typography sx={{ color: '#c5a059', fontSize: '16px' }}>📦</Typography>
+                    <Typography variant="subtitle1" sx={{ color: '#ffffff', fontWeight: 'bold', letterSpacing: '0.02em' }}>Logistic & Visibility</Typography>
+                </Box>
 
-                        <InputField
-                            label="Material / Composition"
-                            placeholder="e.g., 100% Mulberry Silk, 24k Gold Threading"
-                            value={material}
-                            onChange={(e) => setMaterial(e.target.value)}
-                        />
-                    </div>
+                <Grid container spacing={4}>
+                    <Grid item xs={12} md={6} sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                        <CustomInputField label="Secondary Contact Number (Optional)" placeholder="+963 (555) 000-0000" />
+                        <Box sx={{ mt: 1 }}>
+                            <Typography variant="caption" sx={{ color: '#9a8f80', fontWeight: 'bold', textTransform: 'uppercase', display: 'block', mb: 1 }}>Publishing Status</Typography>
+                            <RadioGroup row value={logisticData.publishingStatus} onChange={(e) => setLogisticData(prev => ({ ...prev, publishingStatus: e.target.value }))}>
+                                <FormControlLabel value="public" control={<Radio sx={{ color: '#c5a059', '&.Mui-checked': { color: '#c5a059' } }} />} label="Display to public" sx={{ color: '#ffffff', mr: 4 }} />
+                                <FormControlLabel value="draft" control={<Radio sx={{ color: '#c5a059', '&.Mui-checked': { color: '#c5a059' } }} />} label="Save as private draft" sx={{ color: '#ffffff' }} />
+                            </RadioGroup>
+                        </Box>
+                    </Grid>
 
-                    {/* SECTION 2: Variant Options */}
-                    <div className="bg-royal-dark border border-royal-border p-6 rounded-[4px] space-y-6">
-                        <div className="flex items-center space-x-2 text-royal-gold text-xs font-semibold uppercase tracking-wider">
-                            <span>🎨</span> <span>Variant Options</span>
-                        </div>
+                    <Grid item xs={12} md={6}>
+                        <Typography variant="caption" sx={{ color: '#9a8f80', fontWeight: 'bold', textTransform: 'uppercase', display: 'block', mb: 1.5 }}>Cancellation Policy</Typography>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                            <FormControlLabel control={<Checkbox sx={{ color: '#261d19', '&.Mui-checked': { color: '#c5a059' } }} />} label="Cancellation before acceptance" sx={{ color: '#eee0da' }} />
+                            <FormControlLabel control={<Checkbox sx={{ color: '#261d19', '&.Mui-checked': { color: '#c5a059' } }} />} label="Cancellation after acceptance" sx={{ color: '#eee0da' }} />
+                            <FormControlLabel control={<Checkbox sx={{ color: '#261d19', '&.Mui-checked': { color: '#c5a059' } }} />} label="Cancellation before payment" sx={{ color: '#eee0da' }} />
+                        </Box>
+                    </Grid>
+                </Grid>
+            </Paper>
 
-                        {/* الراديو كرت التفاعلي للسؤال عن ألوان متعددة */}
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-semibold text-royal-gold uppercase tracking-[0.2em]">Add variants with different colors?</label>
-                                <div className="flex space-x-2">
-                                    <button
-                                        type="button"
-                                        onClick={() => setHasVariants('yes')}
-                                        className={`flex-1 py-2 text-xs font-bold rounded-[4px] border transition-all ${hasVariants === 'yes' ? 'bg-royal-field-focus border-royal-gold text-royal-text' : 'bg-royal-field border-royal-border text-royal-muted'}`}
-                                    >
-                                        ● Yes
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setHasVariants('no')}
-                                        className={`flex-1 py-2 text-xs font-bold rounded-[4px] border transition-all ${hasVariants === 'no' ? 'bg-royal-field-focus border-royal-gold text-royal-text' : 'bg-royal-field border-royal-border text-royal-muted'}`}
-                                    >
-                                        ○ No
-                                    </button>
-                                </div>
-                            </div>
+            {/* أزرار الإجراءات السفلية النهائية */}
+            <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-start', borderTop: '1px solid #261d19', pt: 4, pb: 4 }}>
+                <Box sx={{ width: '240px' }}>
+                    <Button text="PUBLISH PRODUCT" icon={<ArrowForwardIcon fontSize="small" />} />
+                </Box>
+                <Box component="button" sx={{ px: 4, py: '12px', backgroundColor: 'transparent', border: '1px solid #261d19', color: '#ffffff', borderRadius: '4px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold', letterSpacing: '0.05em', transition: 'all 0.3s', '&:hover': { backgroundColor: '#261d19' } }}>
+                    SAVE FOR LATER
+                </Box>
+            </Box>
 
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-semibold text-royal-gold uppercase tracking-[0.2em]">How many colors would you like to add?</label>
-                                <input
-                                    type="number"
-                                    value={colorCount}
-                                    onChange={(e) => setColorCount(e.target.value)}
-                                    className="w-full bg-royal-field text-royal-text border-b-2 border-transparent focus:border-royal-gold focus:bg-royal-field-focus outline-none rounded-[4px] p-2.5 text-sm transition-all duration-300"
-                                />
-                            </div>
-                        </div>
-
-                        {/* شبكة كروت البدائل الديناميكية (Variant Cards Grid) */}
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            {variants.map((variant, index) => (
-                                <div key={variant.id} className="bg-royal-field border border-royal-border p-4 rounded-[4px] space-y-3 relative">
-                                    <div className="text-[9px] uppercase tracking-widest text-royal-muted flex justify-between">
-                                        <span>Variant {index + 1}</span>
-                                        <span className="cursor-pointer hover:text-red-400">🗑</span>
-                                    </div>
-
-                                    {/* مساحة رفع الصورة المصغرة */}
-                                    <div className="w-full h-24 bg-royal-dark border border-dashed border-royal-border hover:border-royal-gold rounded-[4px] flex flex-col items-center justify-center cursor-pointer transition-colors">
-                                        <span className="text-lg">📷</span>
-                                        <span className="text-[9px] uppercase tracking-wider text-royal-muted mt-1">Upload Image</span>
-                                    </div>
-
-                                    <InputField
-                                        label="Color Name/Hex"
-                                        placeholder={variant.name}
-                                        value={variant.name.startsWith('e.g.') ? '' : variant.name}
-                                        onChange={(e) => handleVariantChange(variant.id, 'name', e.target.value)}
-                                    />
-                                    <InputField
-                                        label="Price (USD)"
-                                        placeholder="0.00"
-                                        value={variant.price}
-                                        onChange={(e) => handleVariantChange(variant.id, 'price', e.target.value)}
-                                    />
-                                    <InputField
-                                        label="Stock Quantity"
-                                        placeholder="0"
-                                        value={variant.stock}
-                                        onChange={(e) => handleVariantChange(variant.id, 'stock', e.target.value)}
-                                    />
-                                    <div className="flex flex-col space-y-1">
-                                        <label className="text-[9px] font-semibold text-royal-gold uppercase tracking-wider">Availability Date</label>
-                                        <input type="date" className="bg-royal-dark text-royal-text text-xs p-2 rounded-[4px] border border-royal-border outline-none focus:border-royal-gold" />
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-
-                        {/* زر إضافة كرت جديد ناعم */}
-                        <div className="text-center pt-2">
-                            <button
-                                type="button"
-                                onClick={handleAddVariant}
-                                className="border border-royal-gold/40 text-royal-gold text-[10px] font-bold px-4 py-2 rounded-[4px] tracking-widest hover:bg-royal-field transition-colors"
-                            >
-                                ＋ ADD ANOTHER VARIANT
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* SECTION 3: Logistic & Visibility */}
-                    <div className="bg-royal-dark border border-royal-border p-6 rounded-[4px] space-y-5">
-                        <div className="flex items-center space-x-2 text-royal-gold text-xs font-semibold uppercase tracking-wider">
-                            <span>🚛</span> <span>Logistic & Visibility</span>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-6">
-                            <InputField
-                                label="Secondary Contact Number (Optional)"
-                                placeholder="+1 (555) 000-0000"
-                                value={secondaryContact}
-                                onChange={(e) => setSecondaryContact(e.target.value)}
-                            />
-
-                            {/* سياسة الإلغاء وحقوق الملكية */}
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-semibold text-royal-gold uppercase tracking-[0.2em]">Cancellation Policy</label>
-                                <div className="space-y-2 pt-1">
-                                    {['Cancellation before acceptance', 'Cancellation after acceptance', 'Cancellation before payment'].map((policy, i) => (
-                                        <label key={i} className="flex items-center space-x-3 text-xs text-royal-muted cursor-pointer select-none">
-                                            <input type="checkbox" className="rounded bg-royal-field border-royal-border text-royal-gold accent-royal-gold" />
-                                            <span>{policy}</span>
-                                        </label>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* خيارات حالة النشر النهائي */}
-                        <div className="pt-2 border-t border-royal-border/40">
-                            <label className="text-[10px] font-semibold text-royal-gold uppercase tracking-[0.2em] block mb-2">Publishing Status</label>
-                            <div className="flex space-x-6">
-                                <label className="flex items-center space-x-2 text-xs text-royal-text cursor-pointer">
-                                    <input type="radio" checked={publishStatus === 'public'} onChange={() => setPublishStatus('public')} className="accent-royal-gold" />
-                                    <span>Display to public</span>
-                                </label>
-                                <label className="flex items-center space-x-2 text-xs text-royal-muted cursor-pointer">
-                                    <input type="radio" checked={publishStatus === 'draft'} onChange={() => setPublishStatus('draft')} className="accent-royal-gold" />
-                                    <span>Save as private draft</span>
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* أزرار الحفظ والإرسال المزدوجة بأسفل الاستمارة */}
-                    <div className="flex space-x-4 pt-4">
-                        <Button text="PUBLISH PRODUCT ▻" className="flex-1" />
-                        <button type="button" className="flex-1 border border-royal-border text-royal-muted hover:text-royal-text font-bold text-xs tracking-widest rounded-[4px] hover:bg-royal-field transition-colors">
-                            SAVE FOR LATER
-                        </button>
-                    </div>
-
-                </div>
-            </div>
-        </div>
+        </Box>
     );
 }
 

@@ -1,34 +1,58 @@
 import React from 'react';
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
 
 function HeroSection() {
     return (
-        <div className="hidden md:flex md:w-1/2 relative h-full p-12 flex-col justify-between items-start z-10">
-            <div
-                className="absolute inset-0 bg-cover bg-center transition-transform duration-1000 hover:scale-105"
-                style={{
-                    backgroundImage: `linear-gradient(to right, rgba(24, 18, 15, 0.4), rgba(24, 18, 15, 0.85)), url('https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&q=80&w=1200')`
+        <Box
+            className="hidden md:flex"
+            sx={{
+                width: '50%',
+                position: 'relative',
+                height: '100%',
+                padding: '48px',
+                flexDirection: 'col',
+                justifyContent: 'space-between',
+                alignItems: 'flex-start',
+                zIndex: 10,
+                overflow: 'hidden',
+                borderRight: '1px solid rgba(78, 70, 57, 0.3)'
+            }}
+        >
+            {/* الخلفية السينمائية الملكية */}
+            <Box
+                sx={{
+                    position: 'absolute',
+                    inset: 0,
+                    backgroundImage: `linear-gradient(to right, rgba(24, 18, 15, 0.4), rgba(24, 18, 15, 0.85)), url('https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&q=80&w=1200')`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    transition: 'transform 1s ease',
+                    '&:hover': { transform: 'scale(1.05)' }
                 }}
             />
 
-            <div className="relative z-20">
-                <h1 className="text-3xl font-bold tracking-wide text-royal-text" style={{ fontFamily: "'Playfair Display', serif" }}>
+            {/* الشعار المركزي */}
+            <Box sx={{ position: 'relative', zIndex: 20 }}>
+                <Typography variant="h5" sx={{ fontFamily: "'Playfair Display', serif", fontWeight: 'bold', color: '#eee0da', letterSpacing: '0.05em' }}>
                     Royal Events
-                </h1>
-                <div className="w-12 h-[2px] bg-royal-gold mt-2"></div>
-            </div>
+                </Typography>
+                <Box sx={{ width: '48px', height: '2px', backgroundColor: '#c5a059', mt: 1 }} />
+            </Box>
 
-            <div className="relative z-20 max-w-lg mb-8">
-        <span className="text-[10px] uppercase tracking-[0.3em] text-royal-gold font-semibold block mb-3">
-          Heritage & Excellence
-        </span>
-                <h2 className="text-4xl lg:text-5xl font-medium text-royal-text leading-[1.25] mb-4" style={{ fontFamily: "'Playfair Display', serif" }}>
+            {/* النصوص السفلية الفاخرة */}
+            <Box sx={{ position: 'relative', zIndex: 20, maxWidth: '480px', mb: 4 }}>
+                <Typography variant="caption" sx={{ display: 'block', letterSpacing: '0.3em', textTransform: 'uppercase', color: '#c5a059', fontWeight: 'bold', mb: 1.5 }}>
+                    Heritage & Excellence
+                </Typography>
+                <Typography variant="h3" sx={{ fontFamily: "'Playfair Display', serif", color: '#eee0da', lineHeight: 1.25, mb: 2, fontSize: { lg: '2.5rem', md: '2rem' } }}>
                     A portal to refined experiences and bespoke luxury.
-                </h2>
-                <p className="text-sm text-royal-muted leading-relaxed">
+                </Typography>
+                <Typography variant="body2" sx={{ color: '#9a8f80', lineHeight: 1.6 }}>
                     Join an exclusive collective where meticulous craftsmanship meets timeless elegance.
-                </p>
-            </div>
-        </div>
+                </Typography>
+            </Box>
+        </Box>
     );
 }
 

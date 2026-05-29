@@ -1,17 +1,21 @@
 import React, { useState } from 'react';
-import HeroSection from './components/HeroSection';
+import { useNavigate } from 'react-router-dom';
 import OTPVerificationForm from './components/OTPVerificationForm';
 import AccountTypeForm from './components/AccountTypeForm';
 import FreelancerProfileForm from './components/FreelancerProfileForm';
 import CompanyProfileForm from './components/CompanyProfileForm';
 import InputField from '../../components/InputField';
 import Button from '../../components/Button';
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import Alert from '@mui/material/Alert';
 
 function RegisterPage() {
+    const navigate = useNavigate();
     const [step, setStep] = useState(1);
-    const [accountType, setAccountType] = useState('freelancer');
+    const [accountType, setAccountType] = useState('company'); // 💡 تم جعل القيمة الافتراضية 'company' تماشياً مع الرؤية الحالية
+    const [error, setError] = useState('');
 
-    // التحديث: إضافة حقل confirmPassword لإتمام الفحص الأمني
     const [formData, setFormData] = useState({
         firstName: '',
         lastName: '',
@@ -20,14 +24,11 @@ function RegisterPage() {
         confirmPassword: ''
     });
 
-    const [error, setError] = useState('');
-
     const handleChange = (field, value) => {
         setFormData(prev => ({ ...prev, [field]: value }));
-        if (error) setError(''); // تصفير رسائل الخطأ فور بدء المستخدم في الكتابة للتصحيح
+        if (error) setError('');
     };
 
-    // دالة ذكية للتحقق من المدخلات (هل هي إيميل أم هاتف؟)
     const validateContactInfo = (input) => {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         const phoneRegex = /^\+?[0-9]{7,15}$/;
@@ -40,11 +41,9 @@ function RegisterPage() {
         return { isValid: false, type: null };
     };
 
-    // الانتقال من البيانات العامة إلى الـ OTP مع الفحص الصارم للحقول والتطابق
     const handleNextToOTP = (e) => {
         if (e) e.preventDefault();
 
-        // 1️⃣ أولاً: منع المتابعة نهائياً إذا كان أي حقل من الحقول الخمسة فارغاً
         if (
             !formData.firstName.trim() ||
             !formData.lastName.trim() ||
@@ -56,39 +55,41 @@ function RegisterPage() {
             return;
         }
 
-        // 2️⃣ ثانياً: منع المتابعة إذا كانت كلمة السر وتأكيدها غير متطابقتين
         if (formData.password !== formData.confirmPassword) {
             setError('Passwords do not match. Please verify your entries.');
             return;
         }
 
-        // 3️⃣ ثالثاً: فحص صلاحية الإيميل أو رقم الهاتف المدمج
         const checkInput = validateContactInfo(formData.contactInfo);
-
         if (!checkInput.isValid) {
             setError('Please enter a valid Email Address or Phone Number.');
             return;
         }
 
-        // إذا اجتازت كل الشروط، يتم التصفير والانتقال للخطوة التالية بأمان
         setError('');
-        console.log(`User identifier type detected as: ${checkInput.type}`);
         setStep(2);
     };
 
     const handleVerifyOTP = (code) => {
-        console.log("Verifying OTP:", code);
+        console.log("Verifying OTP Code:", code);
         setStep(3);
     };
 
+    // 👑 المتحكم الذكي بنوع الحساب المستلم من AccountTypeForm للتحكم بالخطوات التالية
     const handleAccountTypeSelection = (selectedType) => {
         setAccountType(selectedType);
-        if (selectedType === 'freelancer') setStep(4);
-        else if (selectedType === 'company') setStep(5);
+        if (selectedType === 'freelancer') {
+            setStep(4); // التوجه لاستكمال ملف الفريلانسر التوضيحي
+        } else if (selectedType === 'company') {
+            setStep(5); // التوجه لاستكمال ملف الشركة
+        }
     };
 
+    // 👑 معالجة الإرسال النهائي والتحويل الفوري بناءً على الكنترول المحدد
+    // 👑 تحديث معالجة الإرسال النهائي والتوجيه الصارم الفوري
     const handleFinalSubmit = (profileData) => {
         const checkInput = validateContactInfo(formData.contactInfo);
+
         const payload = {
             firstName: formData.firstName,
             lastName: formData.lastName,
@@ -97,114 +98,206 @@ function RegisterPage() {
             accountType,
             ...profileData
         };
-        console.log("Final Registration Payload:", payload);
-        alert("Registration Complete!");
+
+        console.log("Final Registration Payload to backend:", payload);
+
+        // 🛠️ التوجيه الصريح المباشر فوراً بدون alert المتصفح المزعج
+        if (accountType === 'company') {
+            // 🚀 يمكنكِ لاحقاً حقن عمل dispatch للـ action الخاص بالباك إند هنا
+            navigate('/company-dashboard');
+        } else {
+            navigate('/freelancer-coming-soon');
+        }
     };
 
     return (
-        <div className="w-full h-screen min-h-screen bg-royal-bg flex overflow-hidden font-sans select-none">
-            {/* القسم الأيسر الفاخر */}
-            <HeroSection />
+        <Box sx={{ width: '100%', minHeight: '100vh', display: 'flex', flexDirection: { xs: 'column', md: 'row' }, backgroundColor: '#18120f', color: '#eee0da', overflow: 'hidden', position: 'relative' }}>
 
-            {/* القسم الأيمن التفاعلي */}
-            <div className="w-full md:w-1/2 h-full bg-royal-dark flex flex-col justify-between p-8 sm:p-12 lg:p-16 overflow-y-auto">
-                <div className="my-auto max-w-md w-full mx-auto space-y-8">
+            {/* الجناح الأيسر السينمائي الأصلي المحدث (صورة الفندق الفاخرة) */}
+            <Box sx={{
+                display: { xs: 'none', md: 'flex' },
+                width: '50%',
+                padding: '48px',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
+                alignItems: 'flex-start',
+                position: 'relative',
+                overflow: 'hidden',
+                borderRight: '1px solid rgba(78, 70, 57, 0.25)'
+            }}>
+                <Box
+                    sx={{
+                        position: 'absolute',
+                        inset: 0,
+                        backgroundImage: `linear-gradient(to right, rgba(24, 18, 15, 0.55), rgba(24, 18, 15, 0.85)), url('https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&q=80&w=1200')`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                        transition: 'transform 1.8s cubic-bezier(0.19, 1, 0.22, 1)',
+                        '&:hover': {
+                            transform: 'scale(1.12)'
+                        }
+                    }}
+                />
 
-                    {/* Step 1: General Info */}
+                {/* الشعار العلوي المتوهج */}
+                <Box sx={{ position: 'relative', zIndex: 10, display: 'flex', alignItems: 'center', gap: 1, letterSpacing: '0.25em', color: '#c5a059', textTransform: 'uppercase', fontSize: '13px', fontWeight: 'bold' }}>
+                    <span>✦ Royal Events ✦</span>
+                </Box>
+
+                {/* الحاوية النصية الكلاسيكية المحدثة */}
+                <Box sx={{ position: 'relative', zIndex: 10, maxWidth: '440px', mt: 'auto', mb: 3, textAlign: 'left' }}>
+                    <Typography variant="h3" sx={{ fontFamily: "'Playfair Display', serif", color: '#c5a059', fontWeight: 300, mb: 1.5, fontSize: '2.5rem', lineHeight: 1.25 }}>
+                        A portal to refined <br />
+                        <Box component="span" sx={{ color: '#ffffff', fontWeight: 400 }}>experiences and bespoke luxury.</Box>
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: '#d1c5b4', fontSize: '12px', fontWeight: 300, lineHeight: 1.6, letterSpacing: '0.02em' }}>
+                        Join an exclusive collective where meticulous craftsmanship meets timeless elegance.
+                    </Typography>
+                </Box>
+
+                {/* نص الحقوق السفلي المطابق للجهة اليسرى */}
+                <Box sx={{ position: 'relative', zIndex: 10, fontSize: '11px', color: '#8a7f70', letterSpacing: '0.05em', opacity: 0.7 }}>
+                    © 2026 Royal Events International.
+                </Box>
+            </Box>
+
+            {/* الجناح الأيمن التفاعلي الفحمي */}
+            <Box sx={{
+                width: { xs: '100%', md: '50%' },
+                height: '100vh',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                backgroundColor: '#18120f',
+                overflow: 'hidden',
+                boxSizing: 'border-box'
+            }}>
+
+                <Box sx={{ pt: 4 }} />
+
+                {/* حاوية الاستمارة لإنشاء الحساب */}
+                <Box sx={{ width: '100%', maxWidth: '380px', display: 'flex', flexDirection: 'column', gap: 3.5, mt: 5, mb: 4 }}>
+
                     {step === 1 && (
-                        <div className="space-y-8 animate-fade-in">
-                            <div>
-                                <h3 className="text-3xl font-semibold text-royal-text mb-2 tracking-wide" style={{ fontFamily: "'Playfair Display', serif" }}>Create Account</h3>
-                                <p className="text-xs text-royal-muted">Step into the world of Royal Events.</p>
-                            </div>
-                            <div className="flex items-center space-x-2 pt-1">
-                                <div className="w-8 h-[2px] bg-royal-gold rounded-full"></div>
-                                <div className="w-8 h-[2px] bg-royal-field-focus rounded-full"></div>
-                                <div className="w-8 h-[2px] bg-royal-field-focus rounded-full"></div>
-                            </div>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3.5 }}>
 
-                            <form className="space-y-5" onSubmit={handleNextToOTP}>
-                                <div className="grid grid-cols-2 gap-4">
+                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.8, textAlign: 'left' }}>
+                                <Typography variant="h4" sx={{ fontFamily: "'Playfair Display', serif", fontWeight: 400, color: '#eee0da', fontSize: '2.4rem', letterSpacing: '0.02em' }}>
+                                    Create Account
+                                </Typography>
+                                <Typography variant="caption" sx={{ color: '#9a8f80', fontSize: '12px' }}>
+                                    Step into the world of Royal Events.
+                                </Typography>
+                            </Box>
+
+                            {/* شريط مؤشرات التقدم الثلاثي */}
+                            <Box sx={{ display: 'flex', gap: 1 }}>
+                                <Box sx={{ width: 32, height: 2, backgroundColor: '#c5a059', borderRadius: '4px' }} />
+                                <Box sx={{ width: 32, height: 2, backgroundColor: '#261d19', borderRadius: '4px' }} />
+                                <Box sx={{ width: 32, height: 2, backgroundColor: '#261d19', borderRadius: '4px' }} />
+                            </Box>
+
+                            <form onSubmit={handleNextToOTP} style={{ display: 'flex', flexDirection: 'column', gap: '16px', textAlign: 'left' }}>
+                                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 2 }}>
                                     <InputField label="First Name" placeholder="Elias" value={formData.firstName} onChange={(e) => handleChange('firstName', e.target.value)} />
                                     <InputField label="Last Name" placeholder="Aurelius" value={formData.lastName} onChange={(e) => handleChange('lastName', e.target.value)} />
-                                </div>
+                                </Box>
+                                <InputField label="Email Address or Phone Number" placeholder="elias@royalevents.com or +15550000000" value={formData.contactInfo} onChange={(e) => handleChange('contactInfo', e.target.value)} />
+                                <InputField label="Password" type="password" placeholder="••••••••" value={formData.password} onChange={(e) => handleChange('password', e.target.value)} />
+                                <InputField label="Confirm Password" type="password" placeholder="••••••••" value={formData.confirmPassword} onChange={(e) => handleChange('confirmPassword', e.target.value)} />
 
-                                <InputField
-                                    label="Email Address or Phone Number"
-                                    type="text"
-                                    placeholder="elias@royalevents.com or +15550000000"
-                                    value={formData.contactInfo}
-                                    onChange={(e) => handleChange('contactInfo', e.target.value)}
-                                />
-
-                                <InputField label="Password" type="password" placeholder="••••••••" value={formData.password} onChange={(e) => handleChange('password', e.target.value)}>
-                                    <button type="button" className="absolute right-3 text-royal-muted hover:text-royal-gold transition-colors">
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 0116 0z" /></svg>
-                                    </button>
-                                </InputField>
-
-                                {/* 💡 حقل تأكيد كلمة السر الجديد والمبني على نفس الهوية البصرية */}
-                                <InputField label="Confirm Password" type="password" placeholder="••••••••" value={formData.confirmPassword} onChange={(e) => handleChange('confirmPassword', e.target.value)}>
-                                    <button type="button" className="absolute right-3 text-royal-muted hover:text-royal-gold transition-colors">
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 0116 0z" /></svg>
-                                    </button>
-                                </InputField>
-
-                                {/* رسالة خطأ ديناميكية في حال النسيان أو عدم التطابق */}
                                 {error && (
-                                    <p className="text-xs text-red-400 font-medium tracking-wide bg-red-950/30 border border-red-900/50 p-3 rounded-[4px] animate-fade-in">
+                                    <Alert severity="error" sx={{ backgroundColor: 'rgba(244, 67, 54, 0.04)', color: '#ffcdd2', border: '1px solid rgba(183, 28, 28, 0.25)', borderRadius: '4px', fontSize: '12px', py: 0.8 }}>
                                         {error}
-                                    </p>
+                                    </Alert>
                                 )}
 
-                                <Button text="CONTINUE" />
+                                <Box sx={{ pt: 1 }}>
+                                    <Button text="CONTINUE" />
+                                </Box>
                             </form>
-                        </div>
+                        </Box>
                     )}
 
-                    {/* Step 2: OTP Verification */}
-                    {step === 2 && (
-                        <OTPVerificationForm
-                            onBack={() => setStep(1)}
-                            onVerify={handleVerifyOTP}
-                        />
-                    )}
+                    {step === 2 && <OTPVerificationForm onBack={() => setStep(1)} onVerify={handleVerifyOTP} />}
+                    {step === 3 && <AccountTypeForm onBack={() => setStep(2)} onContinue={handleAccountTypeSelection} />}
+                    {step === 4 && <FreelancerProfileForm onBack={() => setStep(3)} onSubmit={handleFinalSubmit} />}
+                    {step === 5 && <CompanyProfileForm onBack={() => setStep(3)} onSubmit={handleFinalSubmit} />}
 
-                    {/* Step 3: Account Type Selection */}
-                    {step === 3 && (
-                        <AccountTypeForm
-                            onBack={() => setStep(2)}
-                            onContinue={handleAccountTypeSelection}
-                        />
-                    )}
+                </Box>
 
-                    {/* Step 4: Freelancer Form */}
-                    {step === 4 && (
-                        <FreelancerProfileForm
-                            onBack={() => setStep(3)}
-                            onSubmit={handleFinalSubmit}
-                        />
-                    )}
+                {/* التذييل الفاخر المصغر ذو المسافات المتباعدة الناعمة */}
+                <Box sx={{
+                    display: 'flex',
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    width: '100%',
+                    maxWidth: '100%',
+                    px: { xs: 4, sm: 6, lg: 8 },
+                    borderTop: '1px solid rgba(78, 70, 57, 0.35)',
+                    pt: 2.5,
+                    pb: 3,
+                    boxSizing: 'border-box'
+                }}>
+                    <Typography
+                        sx={{
+                            color: '#5a5043',
+                            fontSize: '9px',
+                            fontWeight: 300,
+                            letterSpacing: '0.12em',
+                            fontFamily: "'Inter', sans-serif",
+                            whiteSpace: 'nowrap',
+                            opacity: 0.8
+                        }}
+                    >
+                        © 2026 ROYAL EVENTS INTERNATIONAL. ALL RIGHTS RESERVED.
+                    </Typography>
 
-                    {/* Step 5: Company Form */}
-                    {step === 5 && (
-                        <CompanyProfileForm
-                            onBack={() => setStep(3)}
-                            onSubmit={handleFinalSubmit}
-                        />
-                    )}
-                </div>
+                    <Box sx={{
+                        display: 'flex',
+                        gap: 3,
+                        whiteSpace: 'nowrap',
+                        flexShrink: 0
+                    }}>
+                        <Box
+                            component="a"
+                            href="#"
+                            sx={{
+                                color: '#5a5043',
+                                textDecoration: 'none',
+                                fontSize: '9px',
+                                fontWeight: 300,
+                                letterSpacing: '0.12em',
+                                fontFamily: "'Inter', sans-serif",
+                                transition: 'color 0.2s',
+                                '&:hover': { color: '#c5a059' }
+                            }}
+                        >
+                            HELP CENTER
+                        </Box>
+                        <Box
+                            component="a"
+                            href="#"
+                            sx={{
+                                color: '#5a5043',
+                                textDecoration: 'none',
+                                fontSize: '9px',
+                                fontWeight: 300,
+                                letterSpacing: '0.12em',
+                                fontFamily: "'Inter', sans-serif",
+                                transition: 'color 0.2s',
+                                '&:hover': { color: '#c5a059' }
+                            }}
+                        >
+                            PRIVACY
+                        </Box>
+                    </Box>
+                </Box>
 
-                {/* Footer */}
-                <div className="flex flex-col sm:flex-row justify-between items-center text-[10px] text-[#4e4639] border-t border-royal-field pt-4 mt-8">
-                    <p>&copy; 2026 Royal Events International. All rights reserved.</p>
-                    <div className="flex space-x-4 uppercase tracking-wider">
-                        <a href="#" className="hover:text-royal-gold transition-colors">Help Center</a>
-                        <a href="#" className="hover:text-royal-gold transition-colors">Privacy</a>
-                    </div>
-                </div>
-            </div>
-        </div>
+            </Box>
+        </Box>
     );
 }
 
