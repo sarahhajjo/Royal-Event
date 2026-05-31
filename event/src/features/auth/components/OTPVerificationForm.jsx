@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { useTheme } from '@mui/material/styles';
 import Button from '../../../components/Button';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import MuiButton from '@mui/material/Button';
 
 function OTPVerificationForm({ onBack, onVerify }) {
+    const theme = useTheme();
     const [otp, setOtp] = useState(new Array(6).fill(""));
     const [timer, setTimer] = useState(59);
 
@@ -17,7 +19,7 @@ function OTPVerificationForm({ onBack, onVerify }) {
 
     const handleChange = (element, index) => {
         if (isNaN(element.value)) return false;
-        setOtp([...otp.map((d, idx) => (idx === index ? element.value : d))]);
+        setOtp([...otp.map((data, idx) => (idx === index ? element.value : data))]);
         if (element.nextSibling && element.value) {
             element.nextSibling.focus();
         }
@@ -25,22 +27,23 @@ function OTPVerificationForm({ onBack, onVerify }) {
 
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4, width: '100%' }} className="animate-fade-in">
-            <div>
-                <Typography variant="h4" sx={{ fontFamily: "'Playfair Display', serif", color: '#eee0da', mb: 1, fontWeight: 600 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.8, textAlign: 'center', alignItems: 'center' }}>
+                {/* مؤشر التقدم */}
+                <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
+                    <Box sx={{ width: 32, height: 2, backgroundColor: theme.palette.mode === 'dark' ? '#261d19' : '#d1c5b4', borderRadius: '4px' }} />
+                    <Box sx={{ width: 32, height: 2, backgroundColor: '#c5a059', borderRadius: '4px' }} />
+                    <Box sx={{ width: 32, height: 2, backgroundColor: theme.palette.mode === 'dark' ? '#261d19' : '#d1c5b4', borderRadius: '4px' }} />
+                </Box>
+
+                <Typography variant="h4" sx={{ fontFamily: "'Playfair Display', serif", color: theme.palette.text.primary, mb: 1, fontWeight: 400, fontSize: '2.2rem', letterSpacing: '0.02em' }}>
                     Verify Your Account
                 </Typography>
-                <Typography variant="caption" sx={{ color: '#9a8f80', display: 'block' }}>
-                    We have sent a 6-digit code to your email address. Please enter it below to proceed.
+                <Typography variant="caption" sx={{ color: theme.palette.text.secondary, display: 'block', fontSize: '13px' }}>
+                    We have sent a 6-digit code to your contact address. Please enter it below to proceed.
                 </Typography>
-            </div>
-
-            <Box sx={{ display: 'flex', gap: 1 }}>
-                <Box sx={{ width: 32, height: 2, backgroundColor: '#c5a059', borderRadius: 1 }} />
-                <Box sx={{ width: 32, height: 2, backgroundColor: '#231b17', borderRadius: 1 }} />
-                <Box sx={{ width: 32, height: 2, backgroundColor: '#231b17', borderRadius: 1 }} />
             </Box>
 
-            {/* مدخلات الـ OTP المصممة هندسياً بـ MUI */}
+            {/* حقول الإدخال */}
             <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 1 }}>
                 {otp.map((data, index) => (
                     <Box
@@ -54,16 +57,20 @@ function OTPVerificationForm({ onBack, onVerify }) {
                         sx={{
                             width: '48px',
                             height: '56px',
-                            backgroundColor: '#1c1512',
-                            color: '#eee0da',
-                            border: '2px solid #261d19',
+                            backgroundColor: theme.palette.background.paper,
+                            color: theme.palette.text.primary,
+                            border: `1px solid ${theme.palette.mode === 'dark' ? 'rgba(78, 70, 57, 0.25)' : 'rgba(0,0,0,0.1)'}`,
                             borderRadius: '4px',
                             textAlign: 'center',
                             fontSize: '20px',
                             fontWeight: 'bold',
                             outline: 'none',
-                            transition: 'all 0.3s ease',
-                            '&:focus': { borderColor: '#c5a059', backgroundColor: '#231b17' }
+                            transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                            '&:focus': {
+                                borderColor: '#c5a059',
+                                backgroundColor: theme.palette.mode === 'dark' ? '#231b17' : '#fdfaf0',
+                                boxShadow: '0 0 8px rgba(197, 160, 89, 0.2)'
+                            }
                         }}
                     />
                 ))}
@@ -73,15 +80,42 @@ function OTPVerificationForm({ onBack, onVerify }) {
                 <Button text="VERIFY & CONTINUE →" onClick={() => onVerify(otp.join(""))} />
 
                 <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
-                    <Typography variant="caption" sx={{ color: '#9a8f80', letterSpacing: '0.15em', fontWeight: 'bold' }}>
-                        RESEND IN <Box component="span" sx={{ color: '#c5a059', ml: 1 }}>00:{timer < 10 ? `0${timer}` : timer}</Box>
+                    <Typography variant="caption" sx={{ color: theme.palette.text.secondary, letterSpacing: '0.15em', fontWeight: 500, fontSize: '11px' }}>
+                        RESEND IN <Box component="span" sx={{ color: '#c5a059', ml: 0.5 }}>00:{timer < 10 ? `0${timer}` : timer}</Box>
                     </Typography>
-                    <MuiButton disabled={timer > 0} sx={{ color: '#c5a059', fontSize: '10px', fontWeight: 'bold', letterSpacing: '0.15em', textDecoration: 'underline', '&:disabled': { color: '#261d19' } }}>
+                    <MuiButton
+                        disabled={timer > 0}
+                        disableRipple
+                        sx={{
+                            color: '#c5a059',
+                            fontSize: '11px',
+                            fontWeight: 500,
+                            letterSpacing: '0.15em',
+                            textDecoration: 'underline',
+                            backgroundColor: 'transparent',
+                            '&:disabled': { color: theme.palette.mode === 'dark' ? '#261d19' : '#ccc', textDecoration: 'none' },
+                            '&:hover': { color: theme.palette.text.primary, backgroundColor: 'transparent' }
+                        }}
+                    >
                         RESEND CODE
                     </MuiButton>
                 </Box>
 
-                <MuiButton onClick={onBack} sx={{ color: '#9a8f80', textTransform: 'uppercase', letterSpacing: '0.2em', fontSize: '11px', textDecoration: 'underline', '&:hover': { color: '#eee0da' } }}>
+                <MuiButton
+                    onClick={onBack}
+                    disableRipple
+                    sx={{
+                        color: theme.palette.text.secondary,
+                        textTransform: 'none',
+                        letterSpacing: '0.18em',
+                        fontSize: '14px',
+                        fontFamily: "'Playfair Display', serif",
+                        textDecoration: 'underline',
+                        backgroundColor: 'transparent',
+                        alignSelf: 'center',
+                        '&:hover': { color: theme.palette.text.primary, backgroundColor: 'transparent' }
+                    }}
+                >
                     Go Back
                 </MuiButton>
             </Box>

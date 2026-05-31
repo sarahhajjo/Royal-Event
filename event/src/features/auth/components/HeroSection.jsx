@@ -11,12 +11,13 @@ function HeroSection() {
                 position: 'relative',
                 height: '100%',
                 padding: '48px',
-                flexDirection: 'col',
+                flexDirection: 'column',
                 justifyContent: 'space-between',
                 alignItems: 'flex-start',
                 zIndex: 10,
                 overflow: 'hidden',
-                borderRight: '1px solid rgba(78, 70, 57, 0.3)'
+                // الربط المباشر بمتغيرات Tailwind الخاصة بك
+                borderRight: '1px solid var(--color-royal-border)'
             }}
         >
             {/* الخلفية السينمائية الملكية */}
@@ -24,7 +25,8 @@ function HeroSection() {
                 sx={{
                     position: 'absolute',
                     inset: 0,
-                    backgroundImage: `linear-gradient(to right, rgba(24, 18, 15, 0.4), rgba(24, 18, 15, 0.85)), url('https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&q=80&w=1200')`,
+                    // استخدام المتغير الخاص بك للخلفية
+                    backgroundImage: `linear-gradient(to right, var(--color-royal-bg), var(--color-royal-bg)), url('https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&q=80&w=1200')`,
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
                     transition: 'transform 1s ease',
@@ -34,21 +36,21 @@ function HeroSection() {
 
             {/* الشعار المركزي */}
             <Box sx={{ position: 'relative', zIndex: 20 }}>
-                <Typography variant="h5" sx={{ fontFamily: "'Playfair Display', serif", fontWeight: 'bold', color: '#eee0da', letterSpacing: '0.05em' }}>
+                <Typography variant="h5" sx={{ fontFamily: "'Playfair Display', serif", fontWeight: 'bold', color: 'var(--color-royal-text)', letterSpacing: '0.05em' }}>
                     Royal Events
                 </Typography>
-                <Box sx={{ width: '48px', height: '2px', backgroundColor: '#c5a059', mt: 1 }} />
+                <Box sx={{ width: '48px', height: '2px', backgroundColor: 'var(--color-royal-gold)', mt: 1 }} />
             </Box>
 
             {/* النصوص السفلية الفاخرة */}
             <Box sx={{ position: 'relative', zIndex: 20, maxWidth: '480px', mb: 4 }}>
-                <Typography variant="caption" sx={{ display: 'block', letterSpacing: '0.3em', textTransform: 'uppercase', color: '#c5a059', fontWeight: 'bold', mb: 1.5 }}>
+                <Typography variant="caption" sx={{ display: 'block', letterSpacing: '0.3em', textTransform: 'uppercase', color: 'var(--color-royal-gold)', fontWeight: 'bold', mb: 1.5 }}>
                     Heritage & Excellence
                 </Typography>
-                <Typography variant="h3" sx={{ fontFamily: "'Playfair Display', serif", color: '#eee0da', lineHeight: 1.25, mb: 2, fontSize: { lg: '2.5rem', md: '2rem' } }}>
+                <Typography variant="h3" sx={{ fontFamily: "'Playfair Display', serif", color: 'var(--color-royal-text)', lineHeight: 1.25, mb: 2, fontSize: { lg: '2.5rem', md: '2rem' } }}>
                     A portal to refined experiences and bespoke luxury.
                 </Typography>
-                <Typography variant="body2" sx={{ color: '#9a8f80', lineHeight: 1.6 }}>
+                <Typography variant="body2" sx={{ color: 'var(--color-royal-muted)', lineHeight: 1.6 }}>
                     Join an exclusive collective where meticulous craftsmanship meets timeless elegance.
                 </Typography>
             </Box>
