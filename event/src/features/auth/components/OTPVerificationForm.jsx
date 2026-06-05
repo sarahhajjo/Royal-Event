@@ -4,11 +4,12 @@ import Button from '../../../components/Button';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import MuiButton from '@mui/material/Button';
-
+import Alert from '@mui/material/Alert'; // 1. استيراد Alert للتنبيه
 function OTPVerificationForm({ onBack, onVerify }) {
     const theme = useTheme();
     const [otp, setOtp] = useState(new Array(6).fill(""));
     const [timer, setTimer] = useState(59);
+    const [error, setError] = useState(''); // 2. إضافة حالة للخطأ
 
     useEffect(() => {
         if (timer > 0) {
@@ -17,14 +18,44 @@ function OTPVerificationForm({ onBack, onVerify }) {
         }
     }, [timer]);
 
-    const handleChange = (element, index) => {
-        if (isNaN(element.value)) return false;
-        setOtp([...otp.map((data, idx) => (idx === index ? element.value : data))]);
-        if (element.nextSibling && element.value) {
-            element.nextSibling.focus();
+    const handleChange = (e, index) => {
+        const value = e.target.value;
+        if (isNaN(value)) return false;
+
+        // تحديث الرمز: هنا نستخدم القيمة مباشرة
+        setOtp(prev => prev.map((data, idx) => (idx === index ? value : data)));
+
+        // الانتقال للخانة التالية
+        if (value && e.target.nextSibling) {
+            e.target.nextSibling.focus();
+        }
+    };
+    const handleKeyDown = (e, index) => {
+        if (e.key === "Backspace" && !otp[index] && e.target.previousSibling) {
+            e.target.previousSibling.focus();
+        }
+    };
+    const handleSubmit = async () => {
+        setError('');
+        const code = otp.join("");
+        if (code.length < 6) {
+            setError('Please enter the full 6-digit code.');
+            return;
+        }
+
+        // ننتظر نتيجة الـ onVerify (يجب أن يكون الدالة الأصلية في RegisterPage ترجع Promise أو نتيجة)
+        const isSuccess = await onVerify(code);
+        if (isSuccess === false) {
+            setError('Invalid verification code. Please try again.');
         }
     };
 
+    const handleResend = () => {
+        setTimer(59);
+        setError('');
+        // هنا يمكنك إضافة استدعاء API لإعادة إرسال الكود
+        console.log("Resending code...");
+    };
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4, width: '100%' }} className="animate-fade-in">
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.8, textAlign: 'center', alignItems: 'center' }}>
@@ -52,8 +83,9 @@ function OTPVerificationForm({ onBack, onVerify }) {
                         type="text"
                         maxLength="1"
                         value={data}
-                        onChange={e => handleChange(e.target, index)}
+                        onChange={e => handleChange(e, index)}
                         onFocus={e => e.target.select()}
+                        onKeyDown={e => handleKeyDown(e, index)} // التعديل هنا
                         sx={{
                             width: '48px',
                             height: '56px',
@@ -75,7 +107,7 @@ function OTPVerificationForm({ onBack, onVerify }) {
                     />
                 ))}
             </Box>
-
+            {error && <Alert severity="error" sx={{ fontSize: '12px' }}>{error}</Alert>}
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, mt: 2 }}>
                 <Button text="VERIFY & CONTINUE →" onClick={() => onVerify(otp.join(""))} />
 
@@ -86,6 +118,7 @@ function OTPVerificationForm({ onBack, onVerify }) {
                     <MuiButton
                         disabled={timer > 0}
                         disableRipple
+                        onClick={handleResend}
                         sx={{
                             color: '#c5a059',
                             fontSize: '11px',
@@ -98,8 +131,8 @@ function OTPVerificationForm({ onBack, onVerify }) {
                         }}
                     >
                         RESEND CODE
-                    </MuiButton>
-                </Box>
+                        </MuiButton>
+                    </Box>
 
                 <MuiButton
                     onClick={onBack}

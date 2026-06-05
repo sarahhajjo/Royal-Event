@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import {fetchCategories, fetchDistricts, setupProfile} from '../authSlice'; // استيراد الـ thunk من الـ slice
 import InputField from '../../../components/InputField';
 import Button from '../../../components/Button';
 import Box from '@mui/material/Box';
@@ -9,24 +11,37 @@ import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
 import Checkbox from '@mui/material/Checkbox';
 import FormControlLabel from '@mui/material/FormControlLabel';
-import { useTheme } from '@mui/material/styles'; // 🚀 استدعاء قارئ الثيم
+import { useTheme } from '@mui/material/styles';
+import { useNavigate } from 'react-router-dom';
 
-function CompanyProfileForm({ onBack, onSubmit }) {
+function CompanyProfileForm({ onBack, onSubmit ,accountType }) {
+    const navigate = useNavigate();
     const theme = useTheme();
-    const isDark = theme.palette.mode === 'dark'; // 👑 كاشف النمط
+    const isDark = theme.palette.mode === 'dark';
+    const dispatch = useDispatch();
 
+    // جلب الفئات من الـ Redux Store
+    const user = useSelector((state) => state.auth.user); // تأكدي أن الـ user object يحتوي على الـ id
+    const categories = useSelector((state) => state.auth.categories);
+    const districts = useSelector((state) => state.auth.districts);
     const [companyData, setCompanyData] = useState({
-        companyName: '', crNumber: '', category: '', location: '', contactName: '', position: '', agreeToTerms: false
+        brand_name: '',
+        provider_type:'company', // التحديد التلقائي بناءً على اختيار المستخدم
+        tax_number: '',
+        registration_no: '',
+        district_id: '',
+        categories: [],
+        contact_name: '',
+        position: '',
+        agreeToTerms: false
     });
+    // جلب البيانات عند تحميل المكون
+    useEffect(() => {
+        dispatch(fetchCategories());
+        dispatch(fetchDistricts());
+    }, [dispatch]);
 
-    const damascusDistricts = [
-        { name_ar: 'المزة', name_en: 'Mezzeh' },
-        { name_ar: 'مشروع دمر', name_en: 'Dummar Project' },
-        { name_ar: 'كفرسوسة', name_en: 'Kfar Souseh' },
-        { name_ar: 'الشعلان', name_en: 'Shaalan' },
-        { name_ar: 'القصاع', name_en: 'Al-Qassaa' },
-        { name_ar: 'باب توما', name_en: 'Bab Touma' }
-    ];
+
 
     const handleChange = (field, value) => {
         setCompanyData(prev => ({ ...prev, [field]: value }));
@@ -34,163 +49,88 @@ function CompanyProfileForm({ onBack, onSubmit }) {
 
     const handleSubmit = (e) => {
         e.preventDefault();
+
+        const token = localStorage.getItem('token');
+        console.log("Token being sent from browser:", token);
+
+        if (!token) {
+            alert("خطأ: لا يوجد توكن! يرجى التأكد من تسجيل الدخول.");
+            return;
+        }
         if (companyData.agreeToTerms && onSubmit) {
-            onSubmit(companyData);
+            // نرسل البيانات ومعها الـ ID الخاص بالمستخدم
+            dispatch(setupProfile(companyData)).then((result) => {
+                if (result.meta.requestStatus === 'fulfilled') {
+                    navigate('/company-dashboard');
+                }
+            });
         }
     };
 
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, width: '100%' }} className="animate-fade-in">
-            {/* حاوية العناوين التحريرية */}
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, textAlign: 'left', width: '100%' }}>
-                <Typography
-                    variant="h4"
-                    sx={{
-                        fontFamily: "'Playfair Display', 'Times New Roman', serif",
-                        color: isDark ? '#eee0da' : '#2B211E', // ☀️ قلب اللون ديناميكياً
-                        fontSize: '2.3rem',
-                        letterSpacing: '0.08em',
-                        fontWeight: 400,
-                        whiteSpace: 'nowrap',
-                        width: 'max-content'
-                    }}
-                >
+                <Typography variant="h4" sx={{ fontFamily: "'Playfair Display', serif", color: isDark ? '#eee0da' : '#2B211E', fontSize: '2.3rem', letterSpacing: '0.08em', fontWeight: 400 }}>
                     Complete Company Profile
                 </Typography>
-                <Typography variant="caption" sx={{ fontFamily: "'Playfair Display', serif", color: isDark ? '#9a8f80' : '#7A6F5E', fontSize: '13px', lineHeight: 1.4, width: '100%', fontWeight: 300 }}>
+                <Typography variant="caption" sx={{ fontFamily: "'Playfair Display', serif", color: isDark ? '#9a8f80' : '#7A6F5E', fontSize: '13px' }}>
                     Enter your legal and operational details to finalize corporate membership.
                 </Typography>
             </Box>
 
-            {/* شريط مؤشرات التقدم الثلاثي */}
-            <Box sx={{ display: 'flex', gap: 1, mb: 0.5 }}>
-                <Box sx={{ width: 32, height: 2, backgroundColor: isDark ? '#261d19' : '#E5D9B8', borderRadius: '4px' }} />
-                <Box sx={{ width: 32, height: 2, backgroundColor: isDark ? '#261d19' : '#E5D9B8', borderRadius: '4px' }} />
-                <Box sx={{ width: 32, height: 2, backgroundColor: isDark ? '#c5a059' : '#b38c45', borderRadius: '4px' }} />
-            </Box>
-
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                 <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 3, alignItems: 'flex-end' }}>
-                    <InputField label="Brand/Stage Name" placeholder="Royal Events Ltd" value={companyData.companyName} onChange={(e) => handleChange('companyName', e.target.value)} />
-                    <InputField label="CR Number" placeholder="1010XXXXXX" value={companyData.crNumber} onChange={(e) => handleChange('crNumber', e.target.value)} />
+                    <InputField label="Brand/Stage Name" id="brand_name" name="brand_name" placeholder="Royal Events Ltd" value={companyData.brand_name} onChange={(e) => handleChange('brand_name', e.target.value)} />
+                    <InputField label="CR Number" id="registration_no" name="registration_no" placeholder="1010XXXXXX" value={companyData.registration_no} onChange={(e) => handleChange('registration_no', e.target.value)} />
                 </Box>
 
-                {/* حقل اختيار فئة الخدمة المنسدل المتجاوب */}
+                <InputField label="Tax Number" id="tax_number" name="tax_number" placeholder="123456789" value={companyData.tax_number} onChange={(e) => handleChange('tax_number', e.target.value)} />
+
+                {/* Service Categories (Dynamic) */}
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.6, width: '100%' }}>
-                    <Box component="label" sx={{ fontFamily: "'Inter', sans-serif", fontSize: '11px', fontWeight: 400, color: isDark ? '#c5a059' : '#b38c45', textTransform: 'uppercase', letterSpacing: '0.25em', textAlign: 'left' }}>
-                        Service Categories
-                    </Box>
+                    <Box component="label" sx={{ fontFamily: "'Inter', sans-serif", fontSize: '11px', color: isDark ? '#c5a059' : '#b38c45', textTransform: 'uppercase' }}>Service Categories</Box>
                     <FormControl variant="standard" fullWidth>
                         <Select
-                            value={companyData.category}
-                            displayEmpty
-                            onChange={(e) => handleChange('category', e.target.value)}
-                            sx={{
-                                color: isDark ? '#eee0da' : '#2B211E',
-                                fontSize: '15px',
-                                fontFamily: "'Playfair Display', serif !important",
-                                letterSpacing: '0.05em',
-                                height: '24px',
-                                '&:before': { borderBottom: isDark ? '1px solid rgba(78, 70, 57, 0.45) !important' : '1px solid rgba(122, 111, 94, 0.45) !important' },
-                                '&:after': { borderBottom: isDark ? '2px solid #c5a059 !important' : '2px solid #b38c45 !important' },
-                                '& .MuiSelect-select': { padding: '2px 0px !important', textAlign: 'left', fontWeight: 400 },
-                                '& .MuiSvgIcon-root': { color: isDark ? '#c5a059' : '#b38c45', right: 0, bottom: '2px', fontSize: '20px' }
-                            }}
-                            MenuProps={{
-                                PaperProps: {
-                                    sx: {
-                                        backgroundColor: isDark ? '#1c1512' : '#EFE4C9',
-                                        color: isDark ? '#eee0da' : '#2B211E',
-                                        borderRadius: '0px',
-                                        border: isDark ? '1px solid rgba(197, 160, 89, 0.15)' : '1px solid rgba(179, 140, 69, 0.2)',
-                                        '& .MuiMenuItem-root': { color: isDark ? '#eee0da' : '#2B211E', '&.Mui-disabled': { color: isDark ? '#5a5043' : '#7A6F5E' } }
-                                    }
-                                }
-                            }}
+                            multiple // للسماح باختيار أكثر من فئة كما في Postman
+                            value={companyData.categories}
+                            onChange={(e) => handleChange('categories', e.target.value)}
+                            renderValue={(selected) => selected.map(id => categories.find(c => c.id === id)?.name_en).join(', ')}
+                            // ...
                         >
-                            <MenuItem value="" disabled>Select category</MenuItem>
-                            <MenuItem value="catering">Catering & Hospitality</MenuItem>
-                            <MenuItem value="venue">Venues & Halls</MenuItem>
+                            {categories.map((cat) => (
+                                <MenuItem key={cat.id} value={cat.id}>{cat.name_en}</MenuItem>
+                            ))}
                         </Select>
                     </FormControl>
                 </Box>
 
-                {/* حقل اختيار أحياء دمشق المنسجم المطور */}
+                {/* Headquarters Location */}
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.6, width: '100%' }}>
-                    <Box component="label" sx={{ fontFamily: "'Inter', sans-serif", fontSize: '11px', fontWeight: 400, color: isDark ? '#c5a059' : '#b38c45', textTransform: 'uppercase', letterSpacing: '0.25em', textAlign: 'left' }}>
-                        Headquarters Location (Damascus)
-                    </Box>
+                    <Box component="label" sx={{ fontFamily: "'Inter', sans-serif", fontSize: '11px', color: isDark ? '#c5a059' : '#b38c45', textTransform: 'uppercase' }}>Headquarters Location</Box>
                     <FormControl variant="standard" fullWidth>
                         <Select
-                            value={companyData.location}
-                            displayEmpty
-                            onChange={(e) => handleChange('location', e.target.value)}
-                            sx={{
-                                color: isDark ? '#eee0da' : '#2B211E',
-                                fontSize: '15px',
-                                fontFamily: "'Playfair Display', serif !important",
-                                letterSpacing: '0.05em',
-                                height: '24px',
-                                '&:before': { borderBottom: isDark ? '1px solid rgba(78, 70, 57, 0.45) !important' : '1px solid rgba(122, 111, 94, 0.45) !important' },
-                                '&:after': { borderBottom: isDark ? '2px solid #c5a059 !important' : '2px solid #b38c45 !important' },
-                                '& .MuiSelect-select': { padding: '2px 0px !important', textAlign: 'left', fontWeight: 400 },
-                                '& .MuiSvgIcon-root': { color: isDark ? '#c5a059' : '#b38c45', right: 0, bottom: '2px', fontSize: '20px' }
-                            }}
-                            MenuProps={{
-                                PaperProps: {
-                                    sx: {
-                                        backgroundColor: isDark ? '#1c1512' : '#EFE4C9',
-                                        color: isDark ? '#eee0da' : '#2B211E',
-                                        borderRadius: '0px',
-                                        border: isDark ? '1px solid rgba(197, 160, 89, 0.15)' : '1px solid rgba(179, 140, 69, 0.2)',
-                                        '& .MuiMenuItem-root': { color: isDark ? '#eee0da' : '#2B211E', '&.Mui-disabled': { color: isDark ? '#5a5043' : '#7A6F5E' } }
-                                    }
-                                }
-                            }}
+                            value={companyData.district_id || ''}
+                            onChange={(e) => handleChange('district_id', e.target.value)}
+                            sx={{ color: isDark ? '#eee0da' : '#2B211E' }}
                         >
-                            <MenuItem value="" disabled>Select business district</MenuItem>
-                            {damascusDistricts.map((district, i) => (
-                                <MenuItem key={i} value={district.name_en}>
-                                    {district.name_en} — {district.name_ar}
+                            {districts.map((d) => (
+                                <MenuItem key={d.id} value={d.id}>
+                                    {d.name_en}
                                 </MenuItem>
                             ))}
                         </Select>
                     </FormControl>
                 </Box>
 
-                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 3, alignItems: 'flex-end' }}>
-                    <InputField label="Contact Person Name" placeholder="Full Name" value={companyData.contactName} onChange={(e) => handleChange('contactName', e.target.value)} />
-                    <InputField label="Position" placeholder="Operations Manager" value={companyData.position} onChange={(e) => handleChange('position', e.target.value)} />
-                </Box>
-
                 <FormControlLabel
-                    control={<Checkbox checked={companyData.agreeToTerms} onChange={(e) => handleChange('agreeToTerms', e.target.checked)} sx={{ color: isDark ? '#5a5043' : '#7A6F5E', '&.Mui-checked': { color: isDark ? '#c5a059' : '#b38c45' }, p: 0, mr: 1, ml: 0 }} />}
-                    label={<Typography variant="caption" sx={{ fontFamily: "'Playfair Display', serif", color: isDark ? '#9a8f80' : '#7A6F5E', fontSize: '12px', fontWeight: 300 }}>I verify that this company is legally registered.</Typography>}
-                    sx={{ mt: 0.2, display: 'flex', alignItems: 'center', ml: 0 }}
+                    control={<Checkbox checked={companyData.agreeToTerms} onChange={(e) => handleChange('agreeToTerms', e.target.checked)} />}
+                    label={<Typography variant="caption" sx={{ color: isDark ? '#9a8f80' : '#7A6F5E' }}>I verify that this company is legally registered.</Typography>}
                 />
 
-                <Box sx={{ pt: 0.5 }}>
-                    <Button text="COMPLETE REGISTRATION →" />
-                </Box>
+                <Button text="COMPLETE REGISTRATION →" type="submit" />
             </form>
 
-            <MuiButton
-                onClick={onBack}
-                disableRipple
-                sx={{
-                    color: isDark ? '#9a8f80' : '#7A6F5E',
-                    textTransform: 'none',
-                    fontSize: '13px',
-                    fontFamily: "'Playfair Display', serif",
-                    letterSpacing: '0.18em',
-                    textDecoration: 'underline',
-                    textUnderlineOffset: '4px',
-                    backgroundColor: 'transparent',
-                    alignSelf: 'center',
-                    mt: 0.5,
-                    '&:hover': { color: isDark ? '#eee0da' : '#2B211E', backgroundColor: 'transparent' }
-                }}
-            >
+            <MuiButton onClick={onBack} sx={{ color: isDark ? '#9a8f80' : '#7A6F5E', textTransform: 'none', textDecoration: 'underline' }}>
                 Go Back
             </MuiButton>
         </Box>

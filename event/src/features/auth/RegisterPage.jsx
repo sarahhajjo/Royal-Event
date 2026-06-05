@@ -14,10 +14,15 @@ import Button from '../../components/Button';
 import OTPVerificationForm from './components/OTPVerificationForm';
 import FreelancerProfileForm from './components/FreelancerProfileForm';
 import CompanyProfileForm from './components/CompanyProfileForm';
+import AccountTypeForm from './components/AccountTypeForm';
+
+import { useDispatch } from 'react-redux';
+import {registerUser, verifyOTPEmail, verifyOTPUser} from './authSlice';
 
 function RegisterPage() {
     const theme = useTheme();
     const navigate = useNavigate();
+    const dispatch = useDispatch();
     const [step, setStep] = useState(1);
     const [accountType, setAccountType] = useState('company');
     const [error, setError] = useState('');
@@ -43,55 +48,60 @@ function RegisterPage() {
         return { isValid: false, type: null };
     };
 
+    // في دالة handleFirstStepSubmit
     const handleFirstStepSubmit = (e) => {
         if (e) e.preventDefault();
 
         if (!formData.firstName.trim() || !formData.lastName.trim() || !formData.contactInfo.trim() || !formData.password || !formData.confirmPassword) {
-            setError('Please fill in all elite fields before continuing.');
-            return;
-        }
-        if (formData.password !== formData.confirmPassword) {
-            setError('Passwords do not match. Please verify your entries.');
-            return;
-        }
-        if (!validateContactInfo(formData.contactInfo).isValid) {
-            setError('Please enter a valid Email Address or Phone Number.');
+            setError('Please fill in all fields before continuing.');
             return;
         }
 
-        setError('');
-        setStep(2);
+        const registerPayload = {
+            first_name: formData.firstName,
+            last_name: formData.lastName,
+            identity: formData.contactInfo,
+            password: formData.password,
+            password_confirmation: formData.confirmPassword,
+            role: 'provider' // دائماً provider
+        };
+
+        dispatch(registerUser(registerPayload)).then((result) => {
+            if (result.meta.requestStatus === 'fulfilled') {
+                setError('');
+                setStep(2);
+            } else {
+                setError(result.payload?.message || 'Registration failed.');
+            }
+        });
     };
 
-    const handleVerifyOTP = (code) => {
-        console.log("OTP Verified successfully, Token Code:", code);
+// في دالة handleVerifyOTP للتأكد من الانتقال الصحيح
+    const handleVerifyOTP = async (code) => {
         setError('');
+        const infoValidation = validateContactInfo(formData.contactInfo);
 
-        if (accountType === 'freelancer') {
-            setStep(3);
+        let result;
+        if (infoValidation.type === 'email') {
+            result = await dispatch(verifyOTPEmail({ email: formData.contactInfo, otp: code }));
         } else {
-            setStep(4);
+            result = await dispatch(verifyOTPUser({ phone: formData.contactInfo, code: code }));
+        }
+
+        if (result.meta.requestStatus === 'fulfilled') {
+            if (accountType === 'freelancer') setStep(3);
+            else setStep(4);
+            return true; // نجح
+        } else {
+            return false; // فشل
         }
     };
 
     const handleFinalSubmit = (profileData) => {
-        const checkInput = validateContactInfo(formData.contactInfo);
-        const payload = {
-            firstName: formData.firstName,
-            lastName: formData.lastName,
-            password: formData.password,
-            [checkInput.type]: formData.contactInfo,
-            accountType,
-            ...profileData
-        };
-
-        console.log("Final Consolidated Registration Payload to Server API:", payload);
-
-        if (accountType === 'company') {
-            navigate('/company-dashboard');
-        } else {
-            navigate('/freelancer-coming-soon');
-        }
+        // هنا يتم إرسال بيانات البروفايل (Company/Freelancer Profile)
+        console.log("Finalizing profile:", profileData);
+        // dispatch(setupProviderProfile(profileData));
+        navigate('/company-dashboard');
     };
 
     return (
@@ -125,41 +135,54 @@ function RegisterPage() {
 
                             <form onSubmit={handleFirstStepSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '18px', textAlign: 'left' }}>
                                 <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 2.5 }}>
-                                    <InputField label="First Name" placeholder="Elias" value={formData.firstName} onChange={(e) => handleChange('firstName', e.target.value)} />
-                                    <InputField label="Last Name" placeholder="Aurelius" value={formData.lastName} onChange={(e) => handleChange('lastName', e.target.value)} />
+                                    <InputField label="First Name" id="firstName" name="first_name" value={formData.firstName} onChange={(e) => handleChange('firstName', e.target.value)} />
+                                    <InputField label="Last Name" id="lastName" name="last_name" value={formData.lastName} onChange={(e) => handleChange('lastName', e.target.value)} />
                                 </Box>
-                                <InputField label="Email Address or Phone Number" placeholder="+963954635619" value={formData.contactInfo} onChange={(e) => handleChange('contactInfo', e.target.value)} />
-                                <InputField label="Password" type="password" placeholder="••••••••••••" value={formData.password} onChange={(e) => handleChange('password', e.target.value)} />
-                                <InputField label="Confirm Password" type="password" placeholder="••••••••••••" value={formData.confirmPassword} onChange={(e) => handleChange('confirmPassword', e.target.value)} />
-
+                                <InputField label="Email or Phone" id="contactInfo" name="identity" value={formData.contactInfo} onChange={(e) => handleChange('contactInfo', e.target.value)} />
+                                <InputField label="Password" id="password" name="password" type="password" value={formData.password} onChange={(e) => handleChange('password', e.target.value)} />
+                                <InputField label="Confirm Password" id="confirmPassword" name="password_confirmation" type="password" value={formData.confirmPassword} onChange={(e) => handleChange('confirmPassword', e.target.value)} />
                                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mt: 1 }}>
                                     <Typography sx={{ color: '#c5a059', fontFamily: "'Inter', sans-serif", fontSize: '10px', fontWeight: 600, letterSpacing: '0.2em', textTransform: 'uppercase', textAlign: 'center' }}>
                                         Membership Category
                                     </Typography>
-                                    <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 2 }}>
-                                        <Paper onClick={() => setAccountType('freelancer')} elevation={0} sx={{ p: 2.5, backgroundColor: theme.palette.background.paper, cursor: 'pointer', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '160px', borderRadius: '0px', border: '1px solid', borderColor: accountType === 'freelancer' ? '#c5a059' : 'rgba(78, 70, 57, 0.25)', transition: 'all 0.25s ease', '&:hover': { borderColor: '#c5a059' } }}>
-                                            <Box sx={{ p: 0.8, backgroundColor: accountType === 'freelancer' ? '#c5a059' : 'transparent', color: accountType === 'freelancer' ? theme.palette.background.default : '#c5a059', display: 'flex', mb: 1 }}><StarBorderIcon sx={{ fontSize: '20px' }} /></Box>
-                                            <Typography sx={{ color: theme.palette.text.primary, fontSize: '15px', fontWeight: 500, mb: 0.5 }}>Freelancer</Typography>
-                                            <Typography sx={{ color: theme.palette.text.secondary, fontSize: '11px', lineHeight: 1.4 }}>For independent creators and professionals.</Typography>
-                                        </Paper>
-                                        <Paper onClick={() => setAccountType('company')} elevation={0} sx={{ p: 2.5, backgroundColor: theme.palette.background.paper, cursor: 'pointer', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '160px', borderRadius: '0px', border: '1px solid', borderColor: accountType === 'company' ? '#c5a059' : 'rgba(78, 70, 57, 0.25)', transition: 'all 0.25s ease', '&:hover': { borderColor: '#c5a059' } }}>
-                                            <Box sx={{ p: 0.8, backgroundColor: accountType === 'company' ? '#c5a059' : 'transparent', color: accountType === 'company' ? theme.palette.background.default : '#c5a059', display: 'flex', mb: 1 }}><BusinessIcon sx={{ fontSize: '20px' }} /></Box>
-                                            <Typography sx={{ color: theme.palette.text.primary, fontSize: '15px', fontWeight: 500, mb: 0.5 }}>Company</Typography>
-                                            <Typography sx={{ color: theme.palette.text.secondary, fontSize: '11px', lineHeight: 1.4 }}>For large corporate integrated solutions.</Typography>
-                                        </Paper>
-                                    </Box>
+
                                 </Box>
 
                                 {error && <Alert severity="error" sx={{ backgroundColor: 'rgba(244, 67, 54, 0.04)', color: '#ffcdd2', border: '1px solid rgba(183, 28, 28, 0.25)', fontSize: '12px', py: 0.6 }}>{error}</Alert>}
-                                <Box sx={{ pt: 1 }}><Button text="CONTINUE" /></Box>
+                                <Box sx={{ pt: 1 }}><Button text="CONTINUE" type="submit" /></Box>
                             </form>
-                            <Typography sx={{ color: theme.palette.text.secondary, fontSize: '13px', mt: 1, textAlign: 'center' }}>Already have an account? <Box component="span" sx={{ color: '#c5a059', cursor: 'pointer', fontWeight: 500, textDecoration: 'underline' }}>Sign In</Box></Typography>
+                            <Typography sx={{ color: theme.palette.text.secondary, fontSize: '13px', mt: 1, textAlign: 'center' }}>Already have an account?
+                                <Box
+                                    component="span"
+                                    onClick={() => navigate('/')}
+                                    sx={{ color: '#c5a059', cursor: 'pointer', fontWeight: 500, textDecoration: 'underline' }}
+                                >
+                                    Sign In
+                                </Box>
+                            </Typography>
                         </Box>
                     )}
 
                     {step === 2 && <OTPVerificationForm onBack={() => setStep(1)} onVerify={handleVerifyOTP} />}
-                    {step === 3 && <FreelancerProfileForm onBack={() => setStep(2)} onSubmit={handleFinalSubmit} />}
-                    {step === 4 && <CompanyProfileForm onBack={() => setStep(2)} onSubmit={handleFinalSubmit} />}
+
+                    {/* خطوة اختيار النوع الجديدة */}
+                    {step === 3 && (
+                        <AccountTypeForm
+                            onBack={() => setStep(2)}
+                            onContinue={(type) => {
+                                setAccountType(type); // تخزين الاختيار (freelancer/company)
+                                setStep(4); // الانتقال لخطوة إكمال الملف
+                            }}
+                        />
+                    )}
+
+                    {/* خطوة إكمال الملف الشخصي */}
+                    {step === 4 && accountType === 'freelancer' && (
+                        <FreelancerProfileForm onBack={() => setStep(3)} onSubmit={handleFinalSubmit} accountType={accountType} />
+                    )}
+                    {step === 4 && accountType === 'company' && (
+                        <CompanyProfileForm onBack={() => setStep(3)} onSubmit={handleFinalSubmit} accountType={accountType} />
+                    )}
                 </Box>
 
                 <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', width: '100%', borderTop: '1px solid rgba(78, 70, 57, 0.2)', pt: 2, boxSizing: 'border-box' }}>

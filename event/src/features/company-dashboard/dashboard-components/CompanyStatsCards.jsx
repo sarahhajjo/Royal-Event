@@ -23,7 +23,6 @@ function CompanyStatsCards({ statsData }) {
         { id: 1, title: 'Total Revenue', value: '$1.24M', info: '+12% this month', icon: 'revenue' },
         { id: 2, title: 'Active Listings', value: '42', info: 'Premium venues', icon: 'listings' },
         { id: 3, title: 'Pending Requests', value: '18', info: 'Needs review', icon: 'pending', alert: true },
-        { id: 4, title: 'Upcoming Events', value: '24', info: 'Confirmed bookings', icon: 'events' }
     ];
 
     return (

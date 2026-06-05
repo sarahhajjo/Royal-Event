@@ -4,7 +4,7 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import FileUploadIcon from '@mui/icons-material/FileUpload';
 import { useTheme } from '@mui/material/styles';
-import CustomInputField from './CustomInputField';
+import CustomInputField from './CustomInputField.jsx';
 
 const VariantCard = ({ index, hasVariants }) => {
     const theme = useTheme();

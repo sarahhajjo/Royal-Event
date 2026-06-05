@@ -8,8 +8,8 @@ import CompanyStatsCards from './dashboard-components/CompanyStatsCards';
 import PendingAdminApproval from './dashboard-components/PendingAdminApproval';
 import RecentActivityList from './dashboard-components/RecentActivityList';
 import TopPerformingServices from './dashboard-components/TopPerformingServices';
-
 import AddProductPage from './AddProductPage';
+import PublishHallPage from "./PublishHallPage.jsx";
 
 function CompanyDashboardPage() {
     const [activeTab, setActiveTab] = useState('dashboard');
@@ -105,9 +105,9 @@ function CompanyDashboardPage() {
                     )}
 
                     {activeTab === 'add_hall' && (
-                        <Typography className="animate-fade-in" sx={{ color: isDark ? '#ffffff' : '#2B211E', textAlign: 'left', fontFamily: "'Playfair Display', serif", fontSize: '1.8rem' }}>
-                            Hall for Rent Setup Page (قيد التطوير)
-                        </Typography>
+                        <Box className="animate-fade-in" sx={{ width: '100%', p: 4 }}>
+                            <PublishHallPage />
+                        </Box>
                     )}
 
                     {['request', 'request_status', 'my_offers', 'job_offers', 'job_applicants'].includes(activeTab) && (

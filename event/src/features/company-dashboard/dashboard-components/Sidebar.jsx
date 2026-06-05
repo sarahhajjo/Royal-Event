@@ -23,11 +23,13 @@ import ExpandMore from '@mui/icons-material/ExpandMore';
 import InventoryIcon from '@mui/icons-material/Inventory';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import CorporateFareIcon from '@mui/icons-material/CorporateFare';
+import {useNavigate} from "react-router-dom";
 
 function Sidebar({ activeTab, setActiveTab }) {
     const [isAdditionOpen, setIsAdditionOpen] = useState(false);
     const theme = useTheme();
     const isDark = theme.palette.mode === 'dark'; // 👑 فحص حالة المود الحالي
+    const navigate = useNavigate(); // 2. تعريف التنقل
 
     const handleAdditionClick = () => {
         setIsAdditionOpen(!isAdditionOpen);
@@ -106,8 +108,15 @@ function Sidebar({ activeTab, setActiveTab }) {
                             <ListItemIcon sx={{ color: getIconColor('add_arrangement'), minWidth: '35px' }}><AutoAwesomeIcon sx={{ fontSize: '18px' }} /></ListItemIcon>
                             <ListItemText primary="Ready Arrangement" slotProps={{ primary: { sx: { color: getTextColor('add_arrangement'), fontSize: '13px' } }}} />
                         </ListItemButton>
-                        <ListItemButton onClick={() => setActiveTab('add_hall')} sx={getButtonStyle('add_hall')}>
-                            <ListItemIcon sx={{ color: getIconColor('add_hall'), minWidth: '35px' }}><CorporateFareIcon sx={{ fontSize: '18px' }} /></ListItemIcon>
+                        <ListItemButton
+                            onClick={() => {
+                                setActiveTab('add_hall'); // هذا يكفي لجعل الـ Dashboard تعرض المكون
+                            }}
+                            sx={getButtonStyle('add_hall')}
+                        >
+                            <ListItemIcon sx={{ color: getIconColor('add_hall'), minWidth: '35px' }}>
+                                <CorporateFareIcon sx={{ fontSize: '18px' }} />
+                            </ListItemIcon>
                             <ListItemText primary="Hall for Rent" slotProps={{ primary: { sx: { color: getTextColor('add_hall'), fontSize: '13px' } }}} />
                         </ListItemButton>
                     </List>

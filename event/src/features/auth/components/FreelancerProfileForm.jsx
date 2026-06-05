@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState,useEffect } from 'react';
 import InputField from '../../../components/InputField';
 import Button from '../../../components/Button';
 import Box from '@mui/material/Box';
@@ -11,9 +11,18 @@ import Checkbox from '@mui/material/Checkbox';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import { useTheme } from '@mui/material/styles';
 
+import { useDispatch, useSelector } from 'react-redux'; // استيراد الـ hooks
+import { fetchCategories, setupfreelancerProfile } from '../authSlice';
+
 function FreelancerProfileForm({ onBack, onSubmit }) {
     const theme = useTheme();
     const isDark = theme.palette.mode === 'dark';
+    const dispatch = useDispatch();
+    const categories = useSelector((state) => state.auth.categories);
+    useEffect(() => {
+        dispatch(fetchCategories()); // جلب البيانات عند تحميل المكون
+    }, [dispatch]);
+
 
     const [profileData, setProfileData] = useState({
         brandName: '', specialty: '', experience: '0', idNumber: '', portfolio: '', agreeToTerms: false
@@ -22,7 +31,26 @@ function FreelancerProfileForm({ onBack, onSubmit }) {
     const handleChange = (field, value) => {
         setProfileData(prev => ({ ...prev, [field]: value }));
     };
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        if (!profileData.agreeToTerms) return;
 
+        const payload = {
+            brand_name: profileData.brandName,
+            provider_type: 'freelancer',
+            national_id: profileData.idNumber,
+            experience_years: parseInt(profileData.experience),
+            // نرسل الـ ID المختار من القائمة
+            categories: profileData.specialty ? [parseInt(profileData.specialty)] : [],
+            portfolio: profileData.portfolio || null
+        };
+
+        dispatch(setupfreelancerProfile(payload)).then((result) => {
+            if (result.meta.requestStatus === 'fulfilled') {
+                // الانتقال للداشبورد هنا
+            }
+        });
+    };
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3.5, width: '100%' }} className="animate-fade-in">
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, textAlign: 'left', width: '100%' }}>
@@ -51,8 +79,7 @@ function FreelancerProfileForm({ onBack, onSubmit }) {
                 <Box sx={{ width: 32, height: 2, backgroundColor: isDark ? '#c5a059' : '#b38c45', borderRadius: '4px' }} />
             </Box>
 
-            <form onSubmit={(e) => { e.preventDefault(); if(profileData.agreeToTerms) onSubmit(profileData); }} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 3, alignItems: 'flex-end' }}>
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 3, alignItems: 'flex-end' }}>
                     <InputField label="Brand/Stage Name" placeholder="e.g. Noir Studio" value={profileData.brandName} onChange={(e) => handleChange('brandName', e.target.value)} />
 
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, width: '100%' }}>
@@ -86,10 +113,12 @@ function FreelancerProfileForm({ onBack, onSubmit }) {
                                     }
                                 }}
                             >
-                                <MenuItem value="" disabled sx={{ color: isDark ? '#5a5043' : '#7A6F5E' }}>Select specialty</MenuItem>
-                                <MenuItem value="photography">Photography (تصوير)</MenuItem>
-                                <MenuItem value="decoration">Decoration (ديكور)</MenuItem>
-                                <MenuItem value="dj">Sound & DJ (دي جي)</MenuItem>
+                                <MenuItem value="" disabled>Select specialty</MenuItem>
+                                {categories.map((cat) => (
+                                    <MenuItem key={cat.id} value={cat.id}>
+                                        {cat.name_en}
+                                    </MenuItem>
+                                ))}
                             </Select>
                         </FormControl>
                     </Box>
@@ -100,16 +129,14 @@ function FreelancerProfileForm({ onBack, onSubmit }) {
                     <InputField label="National ID Number" placeholder="Enter ID" value={profileData.idNumber} onChange={(e) => handleChange('idNumber', e.target.value)} />
                 </Box>
 
-                <InputField label="Portfolio Link" placeholder="https://..." value={profileData.portfolio} onChange={(e) => handleChange('portfolio', e.target.value)} />
-
+                <InputField label="Portfolio Link (Optional)" placeholder="https://..." value={profileData.portfolio} onChange={(e) => handleChange('portfolio', e.target.value)} />
                 <FormControlLabel
-                    control={<Checkbox checked={profileData.agreeToTerms} onChange={(e) => handleChange('agreeToTerms', e.target.checked)} sx={{ color: isDark ? '#5a5043' : '#7A6F5E', '&.Mui-checked': { color: isDark ? '#c5a059' : '#b38c45' }, p: 0, mr: 1, ml: 0 }} />}
-                    label={<Typography variant="caption" sx={{ color: isDark ? '#9a8f80' : '#7A6F5E', fontSize: '13px', fontFamily: "'Inter', sans-serif" }}>I agree to the Royal Events Membership Terms.</Typography>}
-                    sx={{ mt: 0.5, display: 'flex', alignItems: 'center', ml: 0 }}
+                    control={<Checkbox checked={profileData.agreeToTerms} onChange={(e) => handleChange('agreeToTerms', e.target.checked)} />}
+                    label="I agree to the Royal Events Membership Terms."
                 />
 
                 <Box sx={{ pt: 1 }}>
-                    <Button text="COMPLETE REGISTRATION →" />
+                    <Button text="COMPLETE REGISTRATION →" type="submit" />
                 </Box>
             </form>
 
