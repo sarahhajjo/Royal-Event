@@ -10,9 +10,9 @@ import Grid from '@mui/material/Grid';
 import { useTheme } from '@mui/material/styles';
 
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-import CustomInputField from './add-components/addition-product-components/CustomInputField';
-import VariantCard from './add-components/addition-product-components/VariantCard';
-import Button from '../../components/Button';
+import CustomInputField from './addition-product-components/CustomInputField.jsx';
+import VariantCard from './addition-product-components/VariantCard.jsx';
+import Button from '../../../components/Button.jsx';
 
 function AddProductPage() {
     const theme = useTheme();

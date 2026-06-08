@@ -36,7 +36,7 @@ function Main() {
             primary: { main: mode === 'dark' ? '#c5a059' : '#b38c45' },
             background: {
                 default: mode === 'dark' ? '#18120f' : '#FAF0D5',
-                paper: mode === 'dark' ? '#1c1512' : '#EFE4C9'
+                paper: mode === 'dark' ? '#18120f' : '#EFE4C9' // اجعليها مطابقة للـ default // اجعليها مطابقة للـ default
             },
             text: {
                 primary: mode === 'dark' ? '#eee0da' : '#2B211E',

@@ -8,8 +8,9 @@ import CompanyStatsCards from './dashboard-components/CompanyStatsCards';
 import PendingAdminApproval from './dashboard-components/PendingAdminApproval';
 import RecentActivityList from './dashboard-components/RecentActivityList';
 import TopPerformingServices from './dashboard-components/TopPerformingServices';
-import AddProductPage from './AddProductPage';
-import PublishHallPage from "./PublishHallPage.jsx";
+import AddProductPage from './add-components/AddProductPage.jsx';
+import PublishHallPage from "./add-components/PublishHallPage.jsx";
+import ArrangementPage from "./add-components/ArrangementPage.jsx";
 
 function CompanyDashboardPage() {
     const [activeTab, setActiveTab] = useState('dashboard');
@@ -99,8 +100,8 @@ function CompanyDashboardPage() {
                     )}
 
                     {activeTab === 'add_arrangement' && (
-                        <Typography className="animate-fade-in" sx={{ color: isDark ? '#ffffff' : '#2B211E', textAlign: 'left', fontFamily: "'Playfair Display', serif", fontSize: '1.8rem' }}>
-                            Ready Arrangement Setup Page (قيد التطوير)
+                        <Typography className="animate-fade-in" sx={{ width: '100%', p: 4 }}>
+                            <ArrangementPage />
                         </Typography>
                     )}
 
