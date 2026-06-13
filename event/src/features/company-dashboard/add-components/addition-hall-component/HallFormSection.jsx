@@ -1,10 +1,12 @@
 import React from 'react';
 import { Box, Typography, TextField, Paper, useTheme } from '@mui/material';
+import MenuItem from "@mui/material/MenuItem";
+import {useSelector} from "react-redux";
 
 const HallFormSection = ({ data, setData }) => {
     const theme = useTheme();
     const isDark = theme.palette.mode === 'dark';
-
+    const { categories, districts } = useSelector((state) => state.addhall);
     const inputStyle = {
         mb: 3,
         '& .MuiOutlinedInput-root': {
@@ -38,12 +40,36 @@ const HallFormSection = ({ data, setData }) => {
 
             <Box sx={{ display: 'flex', gap: 2 }}>
                 <Box sx={{ flex: 1 }}>
-                    <Typography sx={{ color: theme.palette.primary.main, fontSize: '11px', mb: 1, fontWeight: 'bold', textTransform: 'uppercase' }}>Governorate / Province</Typography>
-                    <TextField fullWidth placeholder="Select location" sx={inputStyle} value={data.governorate} onChange={(e) => setData({...data, governorate: e.target.value})} />
+                    <Typography sx={{ color: theme.palette.primary.main, fontSize: '11px', mb: 1, fontWeight: 'bold', textTransform: 'uppercase' }}>DISTRICTS</Typography>
+                    <TextField
+                        select
+                        fullWidth
+                        value={data.district_id || ''} // تأكدي من تسمية الحقل بشكل صحيح
+                        onChange={(e) => setData({ ...data, district_id: e.target.value })}
+                        sx={inputStyle}
+                    >
+                        {districts.map((dist) => (
+                            <MenuItem key={dist.id} value={dist.id}>
+                                {dist.name_en || dist.name}
+                            </MenuItem>
+                        ))}
+                    </TextField>
                 </Box>
                 <Box sx={{ flex: 1 }}>
-                    <Typography sx={{ color: theme.palette.primary.main, fontSize: '11px', mb: 1, fontWeight: 'bold', textTransform: 'uppercase' }}>Approximate Capacity (Guests)</Typography>
-                    <TextField fullWidth type="number" placeholder="500" sx={inputStyle} value={data.capacity} onChange={(e) => setData({...data, capacity: e.target.value})} />
+                    <Typography sx={{ color: theme.palette.primary.main, fontSize: '11px', mb: 1, fontWeight: 'bold', textTransform: 'uppercase' }}>CATEGORY </Typography>
+                    <TextField
+                        select
+                        fullWidth
+                        value={data.category_id || ''}
+                        onChange={(e) => setData({ ...data, category_id: e.target.value })}
+                        sx={inputStyle}
+                    >
+                        {categories.map((cat) => (
+                            <MenuItem key={cat.id} value={cat.id}>
+                                {cat.name_en || cat.name}
+                            </MenuItem>
+                        ))}
+                    </TextField>
                 </Box>
             </Box>
 

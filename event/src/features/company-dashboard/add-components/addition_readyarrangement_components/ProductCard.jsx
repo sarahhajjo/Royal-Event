@@ -6,9 +6,13 @@ const ProductCard = ({ product, onAdd }) => {
     const theme = useTheme();
 
     // حالة للتحكم باللون المختار والكمية
-    const [selectedColor, setSelectedColor] = useState(product.colors?.[0] || '#ccc');
-    const [quantity, setQuantity] = useState(product.qty);
+    const [selectedVariant, setSelectedVariant] = useState(product.variants[0]);
+    const [quantity, setQuantity] = useState(selectedVariant.stock || 0);
 
+    const handleColorClick = (variant) => {
+        setSelectedVariant(variant);
+        setQuantity(variant.stock); // تحديث الكمية القصوى عند تغيير اللون
+    };
     // دالة التعامل مع تغيير الكمية مع التحقق
     const handleQtyChange = (e) => {
         const val = parseInt(e.target.value);
@@ -21,7 +25,24 @@ const ProductCard = ({ product, onAdd }) => {
             setQuantity(val);
         }
     };
-
+    // دالة بسيطة للتأكد من أن النص لون صحيح، وإلا نرجع لون افتراضي
+    const getColorCode = (color) => {
+        const c = color.toLowerCase();
+        const colorMap = {
+            'red': '#FF0000',
+            'blue': '#0000FF',
+            'green': '#008000',
+            'white': '#FFFFFF',
+            'black': '#000000',
+            'yellow': '#FFFF00',
+            'purple': '#800080',
+            'orange': '#FFA500',
+            'pink': '#FFC0CB',
+            'brown': '#A52A2A',
+            'gray': '#808080'
+        };
+        return colorMap[c] || c; // إذا لم يجد الاسم، سيعتبره كود Hex مباشر
+    };
     return (
         <Box sx={{
             bgcolor: theme.palette.background.paper,
@@ -51,7 +72,7 @@ const ProductCard = ({ product, onAdd }) => {
                 <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 0.2 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
                         <Typography sx={{ color: theme.palette.text.primary, fontWeight: 'bold', fontSize: '0.85rem' }}>
-                            {product.name}
+                            {product.title?.en || product.name}
                         </Typography>
                         <Button
                             variant="contained"
@@ -59,10 +80,9 @@ const ProductCard = ({ product, onAdd }) => {
                             onClick={() => {
                                 const data = {
                                     ...product,
-                                    selectedColor: selectedColor, // القيمة من الـ State في الكرت
-                                    selectedQty: quantity         // القيمة من الـ State في الكرت
+                                    selectedColor: selectedVariant.name.en, // استخدمي القيمة الصحيحة
+                                    selectedQty: quantity     // القيمة من الـ State في الكرت
                                 };
-                                console.log("البيانات المرسلة للتو:", data);
                                 onAdd(data); // هنا نستدعي الدالة التي مررناها من الأب
                             }}
                             startIcon={<AddIcon sx={{ fontSize: '0.7rem', ml: -0.5 }} />}
@@ -79,27 +99,27 @@ const ProductCard = ({ product, onAdd }) => {
                     </Box>
 
                     <Typography sx={{ color: theme.palette.primary.main, fontWeight: 'bold', fontSize: '0.8rem' }}>
-                        $ {product.price}
+                        $ {selectedVariant.price}
                     </Typography>
                     <Typography variant="caption" sx={{ color: theme.palette.text.secondary, fontSize: '0.65rem' }}>
-                        Available from: {product.availableDate}
+                        Available from: {selectedVariant.availabilities?.[0]?.available_date ? selectedVariant.availabilities[0].available_date.split('T')[0] : 'N/A'}
                     </Typography>
 
                     {/* الألوان والكمية */}
                     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 0.8 }}>
                         <Box sx={{ display: 'flex', gap: 0.8 }}>
-                            {product.colors?.map((color, i) => (
+                            {product.variants.map((v, i) => (
                                 <Box
                                     key={i}
-                                    onClick={() => setSelectedColor(color)}
+                                    onClick={() => handleColorClick(v)}
                                     sx={{
-                                        width: 14, height: 14, borderRadius: '50%', bgcolor: color, cursor: 'pointer',
-                                        border: selectedColor === color ? `1.5px solid ${theme.palette.primary.main}` : '1px solid #555'
+                                        width: 16, height: 16, borderRadius: '50%',
+                                        bgcolor: getColorCode(v.name.en),
+                                        border: selectedVariant.id === v.id ? '2px solid gold' : '1px solid #555'
                                     }}
                                 />
                             ))}
                         </Box>
-
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                             <Typography sx={{ color: theme.palette.text.primary, fontSize: '0.7rem', fontWeight: 'bold' }}>QTY:</Typography>
                             <TextField
@@ -107,6 +127,7 @@ const ProductCard = ({ product, onAdd }) => {
                                 size="small"
                                 value={quantity}
                                 onChange={handleQtyChange}
+                                inputProps={{ max: selectedVariant.stock }} // السقف هو كمية هذا اللون فقط
                                 sx={{
                                     width: 40,
                                     '& .MuiInputBase-input': { p: 0.2, textAlign: 'center', fontSize: '0.75rem', color: theme.palette.text.primary },

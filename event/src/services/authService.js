@@ -1,77 +1,66 @@
-import axios from 'axios';
-
-const API_URL = 'http://127.0.0.1:8000/api/auth';
+import api from './api';
+import {token} from "stylis"; // 👈 استيراد المعترض المركزي
 
 const register = async (userData) => {
-    const response = await axios.post(`http://localhost:8000/api/auth/register`, userData);
+    const response = await api.post(`/auth/register`, userData);
     return response.data;
 };
 
 const login = async (userData) => {
-    // إرسال البيانات كـ x-www-form-urlencoded
-    const response = await axios.post(`${API_URL}/login`, new URLSearchParams(userData).toString(), {
+    // إرسال البيانات كـ x-www-form-urlencoded كما هو مطلوب في الـ API الخاص بك
+    const response = await api.post(`/auth/login`, new URLSearchParams(userData).toString(), {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
     });
-    if (response.data.data.access_token) {
+
+    // حفظ التوكن فور نجاح تسجيل الدخول
+    if (response.data.data && response.data.data.access_token) {
         localStorage.setItem('token', response.data.data.access_token);
     }
     return response.data;
 };
 
 const getCategories = async () => {
-    const response = await axios.get(`http://127.0.0.1:8000/api/categories`);
+    const response = await api.get(`/categories`);
     return response.data;
 };
+
 const getDistricts = async () => {
-    const response = await axios.get(`http://127.0.0.1:8000/api/districts`);
+    const response = await api.get(`/districts`);
     return response.data;
 };
-// في authService.js
+
 const setupProfile = async (profileData) => {
-    const token = localStorage.getItem('token');
-    const URL = 'http://127.0.0.1:8000/api/provider/complete-profile';
-
-    return await axios.post(URL, profileData, {
-        headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json', // أضيفي هذا السطر
-            'Authorization': `Bearer ${token}`
-        }
-    });
+    // التوكن والهيدرز تضاف تلقائياً من ملف api.js
+    const response = await api.post('/provider/complete-profile', profileData);
+    return response;
 };
-// في authService.js
+
 const setupfreelancerProfile = async (profileData) => {
-    const token = localStorage.getItem('token');
-    return await axios.post('http://127.0.0.1:8000/api/provider/complete-profile', profileData, {
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-        }
-    });
+    const response = await api.post('/provider/complete-profile', profileData);
+    return response;
 };
-
 
 const verifyOTP = async (data) => {
-    // بناءً على Postman، البيانات ترسل كـ x-www-form-urlencoded
-    const response = await axios.post(`http://127.0.0.1:8000/api/auth/verify-otp`, new URLSearchParams(data).toString(), {
+    const response = await api.post(`/auth/verify-otp`, new URLSearchParams(data).toString(), {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
     });
 
-    // إذا كان الـ API يعيد token عند التحقق، يفضل تخزينه
     if (response.data.data && response.data.data.access_token) {
         localStorage.setItem('token', response.data.data.access_token);
     }
     return response.data;
 };
+
 const verifyEmailOTP = async (data) => {
-    // بناءً على طلبك، الإيميل والرمز يرسلان كـ params في الـ URL
-    const response = await axios.post(`http://127.0.0.1:8000/api/auth/verify-email-otp`, null, {
+    const response = await api.post(`/auth/verify-email-otp`, null, {
         params: { email: data.email, otp: data.otp }
     });
+
     if (response.data.data?.access_token) {
         localStorage.setItem('token', response.data.data.access_token);
     }
     return response.data;
 };
-const authService = { register, login,getCategories,getDistricts , verifyOTP ,setupProfile ,setupfreelancerProfile,verifyEmailOTP};
+
+const authService = { register, login, getCategories, getDistricts, verifyOTP, setupProfile, setupfreelancerProfile, verifyEmailOTP };
 export default authService;

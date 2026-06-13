@@ -19,6 +19,7 @@ import HelpOutlineIcon from "@mui/icons-material/HelpOutlined";
 import LogoutIcon from '@mui/icons-material/Logout';
 import ExpandLess from '@mui/icons-material/ExpandLess';
 import ExpandMore from '@mui/icons-material/ExpandMore';
+import ViewListIcon from '@mui/icons-material/ViewList';
 
 import InventoryIcon from '@mui/icons-material/Inventory';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
@@ -122,6 +123,22 @@ function Sidebar({ activeTab, setActiveTab }) {
                     </List>
                 </Collapse>
 
+                {/* My Catalog */}
+                <ListItem disablePadding>
+                    <ListItemButton onClick={() => setActiveTab('my_catalog')} sx={getButtonStyle('my_catalog')}>
+                        <ListItemIcon sx={{ color: getIconColor('my_catalog'), minWidth: '40px' }}>
+                            <ViewListIcon />
+                        </ListItemIcon>
+                        <ListItemText
+                            primary="My Catalog"
+                            slotProps={{
+                                primary: {
+                                    sx: { color: getTextColor('my_catalog'), fontSize: '14px', fontFamily: "'Inter', sans-serif" }
+                                }
+                            }}
+                        />
+                    </ListItemButton>
+                </ListItem>
                 {/* Request */}
                 <ListItem disablePadding>
                     <ListItemButton onClick={() => setActiveTab('request')} sx={getButtonStyle('request')}>

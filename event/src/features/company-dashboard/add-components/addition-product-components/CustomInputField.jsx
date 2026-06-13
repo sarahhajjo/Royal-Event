@@ -4,7 +4,7 @@ import Typography from '@mui/material/Typography';
 import TextField from '@mui/material/TextField';
 import { useTheme } from '@mui/material/styles';
 
-const CustomInputField = ({ label, placeholder, value, onChange, type = 'text', multiline = false, rows = 1 }) => {
+const CustomInputField = ({ label, placeholder, value, onChange, type = 'text', multiline = false, rows = 1, sx, ...props }) => {
     const theme = useTheme();
     const isDark = theme.palette.mode === 'dark';
 
@@ -22,25 +22,30 @@ const CustomInputField = ({ label, placeholder, value, onChange, type = 'text', 
                 value={value}
                 onChange={onChange}
                 variant="outlined"
-                sx={{
-                    '& .MuiOutlinedInput-root': {
-                        backgroundColor: isDark ? 'rgba(0, 0, 0, 0.4)' : 'rgba(255, 255, 255, 0.6)', // ☀️ حقول بيضاء شفافة وناعمة في الوضع الفاتح
-                        color: isDark ? '#eee0da' : '#2B211E',
-                        borderRadius: '4px',
-                        border: isDark ? '1px solid rgba(78, 70, 57, 0.3)' : '1px solid rgba(179, 140, 69, 0.35)',
-                        '& fieldset': { borderColor: 'transparent' },
-                        '&:hover fieldset': { borderColor: 'transparent' },
-                        '&.Mui-focused': {
-                            border: isDark ? '1px solid #c5a059' : '1px solid #b38c45',
-                            boxShadow: isDark ? '0 0 8px rgba(197, 160, 89, 0.2)' : '0 0 8px rgba(179, 140, 69, 0.25)'
+                {...props}
+                sx={[
+                    {
+                        '& .MuiOutlinedInput-root': {
+                            backgroundColor: isDark ? 'rgba(0, 0, 0, 0.4)' : 'rgba(255, 255, 255, 0.6)',
+                            color: isDark ? '#eee0da' : '#2B211E',
+                            borderRadius: '4px',
+                            border: isDark ? '1px solid rgba(78, 70, 57, 0.3)' : '1px solid rgba(179, 140, 69, 0.35)',
+                            '& fieldset': { borderColor: 'transparent' },
+                            '&:hover fieldset': { borderColor: 'transparent' },
+                            '&.Mui-focused': {
+                                border: isDark ? '1px solid #c5a059' : '1px solid #b38c45',
+                                boxShadow: isDark ? '0 0 8px rgba(197, 160, 89, 0.2)' : '0 0 8px rgba(179, 140, 69, 0.25)'
+                            }
+                        },
+                        '& .MuiOutlinedInput-input': {
+                            padding: '12px 16px',
+                            fontSize: '14px',
+                            '&::placeholder': { color: isDark ? '#5a5043' : '#7A6F5E', opacity: 1 }
                         }
                     },
-                    '& .MuiOutlinedInput-input': {
-                        padding: '12px 16px',
-                        fontSize: '14px',
-                        '&::placeholder': { color: isDark ? '#5a5043' : '#7A6F5E', opacity: 1 }
-                    }
-                }}
+                    // دمج الستايل الإضافي (للتصغير داخل الكرت) إن وُجد
+                    ...(Array.isArray(sx) ? sx : [sx])
+                ]}
             />
         </Box>
     );

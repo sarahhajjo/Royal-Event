@@ -4,11 +4,16 @@ import authReducer from "./features/auth/authSlice";
 import companyDashboardReducer from "./features/company-dashboard/companyDashboardSlice";
 import directoryReducer from "./features/admin-dashboard/directorySlice";
 import arrangementReducer from "./features/company-dashboard/add-components/addition_slices/arrangementSlice";
+import addProductReducer from './features/company-dashboard/add-components/addition_slices/addProductSlice';
+import addhallReducer from './features/company-dashboard/add-components/addition_slices/addhallSlice.js';
+
 export const store = configureStore({
     reducer: {
         auth: authReducer,
         companyDashboard: companyDashboardReducer,
         directory: directoryReducer,
         arrangement: arrangementReducer,
+        addProduct: addProductReducer,
+        addhall: addhallReducer,
     }
 });

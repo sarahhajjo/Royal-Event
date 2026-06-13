@@ -11,7 +11,7 @@ import TopPerformingServices from './dashboard-components/TopPerformingServices'
 import AddProductPage from './add-components/AddProductPage.jsx';
 import PublishHallPage from "./add-components/PublishHallPage.jsx";
 import ArrangementPage from "./add-components/ArrangementPage.jsx";
-
+import MyCatalogPage from "./MyCatalog-components/MyCatalogPage.jsx"; // تأكدي من مسار الملف الصحيح
 function CompanyDashboardPage() {
     const [activeTab, setActiveTab] = useState('dashboard');
     const theme = useTheme();
@@ -111,6 +111,12 @@ function CompanyDashboardPage() {
                         </Box>
                     )}
 
+                    {/* ضعي هذا الجزء مع بقية شروط الـ activeTab */}
+                    {activeTab === 'my_catalog' && (
+                        <Box className="animate-fade-in" sx={{ width: '100%', p: 4 }}>
+                            <MyCatalogPage />
+                        </Box>
+                    )}
                     {['request', 'request_status', 'my_offers', 'job_offers', 'job_applicants'].includes(activeTab) && (
                         <Typography className="animate-fade-in" sx={{ color: isDark ? '#ffffff' : '#2B211E', textAlign: 'left', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: "'Playfair Display', serif", fontSize: '1.8rem' }}>
                             {activeTab.replace('_', ' ')} Content

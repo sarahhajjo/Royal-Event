@@ -1,50 +1,46 @@
+
 import React from "react";
 import { Box, Avatar, Typography, IconButton, Divider } from "@mui/material";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import { T, typography, infoButtonSx, avatarBaseSx, rowWrapperSx } from "../Theme";
 
 /**
- * UserRow
+ * CompanyRow
  * Props:
- *   user: { id, name, avatarUrl?, avatarLetter?, title, email, phone }
+ *   company: { id, name, logoUrl?, logoLetter?, rep, email, phone }
  *   showDivider – boolean (default true)
  *   onInfo(id)
  */
-export default function UserRow({ user, showDivider = true, onInfo }) {
-    const { id, name, avatarUrl, avatarLetter, title, email, phone } = user;
+export default function CompanyRow({ company, showDivider = true, onInfo }) {
+    const { id, name, logoUrl, logoLetter, rep, email, phone } = company;
 
     return (
         <>
             <Box sx={rowWrapperSx}>
-                {/* Portrait */}
+                {/* Logo */}
                 <Avatar
-                    src={avatarUrl}
+                    src={logoUrl}
                     alt={name}
                     variant="rounded"
-                    sx={{
-                        ...avatarBaseSx,
-                        width:  54,
-                        height: 54,
-                        filter: avatarUrl ? T.avatarFilter : "none",
-                    }}
+                    sx={{ ...avatarBaseSx, width: 52, height: 52 }}
                 >
-                    {!avatarUrl && (avatarLetter ?? name?.[0])}
+                    {!logoUrl && (logoLetter ?? name?.[0])}
                 </Avatar>
 
-                {/* Identity */}
+                {/* Name + Rep */}
                 <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Typography sx={{ ...typography.rowName, color: T.textPrimary }}>
+                    <Typography sx={{ color: T.textPrimary, fontWeight: 700, fontSize: "0.97rem", lineHeight: 1.3 }}>
                         {name}
                     </Typography>
                     <Typography sx={{ ...typography.rowSub }}>
-                        {title}
+                        Rep: {rep}
                     </Typography>
                 </Box>
 
-                {/* Correspondence */}
+                {/* Contact */}
                 <Box sx={{ textAlign: "right", flexShrink: 0 }}>
                     <Typography sx={{ ...typography.rowContact }}>{email}</Typography>
-                    {phone && <Typography sx={{ ...typography.rowContact }}>{phone}</Typography>}
+                    <Typography sx={{ ...typography.rowContact }}>{phone}</Typography>
                 </Box>
 
                 {/* Info */}
@@ -57,3 +53,19 @@ export default function UserRow({ user, showDivider = true, onInfo }) {
         </>
     );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
