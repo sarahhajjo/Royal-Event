@@ -14,6 +14,7 @@ const login = async (userData) => {
 
     // حفظ التوكن فور نجاح تسجيل الدخول
     if (response.data.data && response.data.data.access_token) {
+        console.log(localStorage.getItem('token'));
         localStorage.setItem('token', response.data.data.access_token);
     }
     return response.data;

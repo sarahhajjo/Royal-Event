@@ -11,7 +11,8 @@ import TopPerformingServices from './dashboard-components/TopPerformingServices'
 import AddProductPage from './add-components/AddProductPage.jsx';
 import PublishHallPage from "./add-components/PublishHallPage.jsx";
 import ArrangementPage from "./add-components/ArrangementPage.jsx";
-import MyCatalogPage from "./MyCatalog-components/MyCatalogPage.jsx"; // تأكدي من مسار الملف الصحيح
+import MyCatalogPage from "./MyCatalog-components/MyCatalogPage.jsx";
+import CreateJobOfferPage from "./JobOffers-components/CreateJobOfferPage.jsx"; // تأكدي من مسار الملف الصحيح
 function CompanyDashboardPage() {
     const [activeTab, setActiveTab] = useState('dashboard');
     const theme = useTheme();
@@ -117,7 +118,13 @@ function CompanyDashboardPage() {
                             <MyCatalogPage />
                         </Box>
                     )}
-                    {['request', 'request_status', 'my_offers', 'job_offers', 'job_applicants'].includes(activeTab) && (
+                    {activeTab === 'job_offers' && (
+                        <Box className="animate-fade-in" sx={{ width: '100%', p: 4 }}>
+                            <CreateJobOfferPage />
+                        </Box>
+                    )}
+
+                    {['request', 'request_status', 'my_offers', 'job_applicants'].includes(activeTab) && (
                         <Typography className="animate-fade-in" sx={{ color: isDark ? '#ffffff' : '#2B211E', textAlign: 'left', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: "'Playfair Display', serif", fontSize: '1.8rem' }}>
                             {activeTab.replace('_', ' ')} Content
                         </Typography>

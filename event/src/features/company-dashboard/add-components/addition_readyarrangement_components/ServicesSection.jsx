@@ -73,14 +73,7 @@ const ServicesSection = () => {
                             </Box>
                         </Grid>
 
-                        <Grid item xs={12} md={4}>
-                            <Typography sx={{ color: theme.palette.primary.main , fontWeight: 'bold', mb: 1, fontSize: '0.8rem' }}>SERVICE START DATE</Typography>
-                            <TextField fullWidth type="date" InputLabelProps={{ shrink: true }} sx={{ bgcolor: isDark ? 'rgba(0, 0, 0, 0.4)' : 'rgba(255, 255, 255, 0.6)', '& input': { color: theme.palette.text.secondary } }} />
-                        </Grid>
-                        <Grid item xs={12} md={4}>
-                            <Typography sx={{ color: theme.palette.primary.main , fontWeight: 'bold', mb: 1, fontSize: '0.8rem' }}>SERVICE END DATE</Typography>
-                            <TextField fullWidth type="date" InputLabelProps={{ shrink: true }} sx={{ bgcolor: isDark ? 'rgba(0, 0, 0, 0.4)' : 'rgba(255, 255, 255, 0.6)', '& input': { color: theme.palette.text.secondary } }} />
-                        </Grid>
+
                     </Grid>
 
                     {/* ملخص الموظفين المختارين */}

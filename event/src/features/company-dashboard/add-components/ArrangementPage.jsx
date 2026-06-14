@@ -4,7 +4,9 @@ import MediaPreview from './addition_readyarrangement_components/MediaPreview';
 import GeneralInfoForm from './addition_readyarrangement_components/GeneralInfoForm';
 import InventorySection from "./addition_readyarrangement_components/InventorySection.jsx";
 import ServicesSection from "./addition_readyarrangement_components/ServicesSection.jsx";
-import AdditionalInfoSection from "./addition_readyarrangement_components/AdditionalInfoSection.jsx"; // تأكدي من الاستيراد
+import AdditionalInfoSection from "./addition_readyarrangement_components/AdditionalInfoSection.jsx";
+// 💡 استيراد قسم التاريخ الجديد
+import ScheduleSection from "./addition_readyarrangement_components/ScheduleSection.jsx";
 
 const ArrangementPage = () => {
     const theme = useTheme();
@@ -50,15 +52,22 @@ const ArrangementPage = () => {
                 </Grid>
             </Grid>
 
-            {/* الأقسام الإضافية */}
+            {/* قسم المخزون */}
             <Box sx={{ mt: 4, ml: '-3%', width: '100%' }}>
                 <InventorySection />
             </Box>
 
-            {/* قسم الخدمات الجديد */}
+            {/* 💡 قسم التواريخ الجديد (فوق الخدمات) */}
+            <Box sx={{ mt: 4, ml: '-3%', width: '100%' }}>
+                <ScheduleSection />
+            </Box>
+
+            {/* قسم الخدمات */}
             <Box sx={{ mt: 4, ml: '-3%', width: '100%' }}>
                 <ServicesSection />
             </Box>
+
+            {/* قسم المعلومات الإضافية */}
             <Box sx={{ mt: 4, ml: '-3%', width: '100%' }}>
                 <AdditionalInfoSection />
             </Box>

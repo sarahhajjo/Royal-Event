@@ -14,7 +14,8 @@ const arrangementSlice = createSlice({
         loading: false,
         servicesEnabled: true,
         selectedStaff: [],
-        date: null
+        date: null,
+        scheduleDates: null,
     },
     reducers: {
         removeProduct: (state, action) => {
@@ -25,6 +26,9 @@ const arrangementSlice = createSlice({
         removeStaff: (state, action) => {
             state.selectedStaff = state.selectedStaff.filter(staff => staff.id !== action.payload);
         },
+        setScheduleDates: (state, action) => {
+            state.scheduleDates = action.payload;
+        },
 
     },
     extraReducers: (builder) => {
@@ -34,5 +38,5 @@ const arrangementSlice = createSlice({
     }
 });
 
-export const { removeProduct, toggleServices, addStaff, removeStaff } = arrangementSlice.actions;
+export const { removeProduct, toggleServices, addStaff, removeStaff,setScheduleDates } = arrangementSlice.actions;
 export default arrangementSlice.reducer;

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, Typography, Paper, useTheme, alpha, Chip, Button, Switch, FormControlLabel, Alert } from '@mui/material';
+import { Box, Typography, Paper, useTheme, alpha, Chip, Button, Switch, FormControlLabel, Alert, RadioGroup, Radio } from '@mui/material';
 import { StaticDatePicker, LocalizationProvider, TimePicker } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs from 'dayjs';
@@ -7,22 +7,56 @@ import dayjs from 'dayjs';
 export default function DateAndTime({ data, setData }) {
     const theme = useTheme();
     const isDark = theme.palette.mode === 'dark';
+
     const [isAllDay, setIsAllDay] = useState(data.isAllDay || false);
+    // 💡 حالة جديدة لتتبع وضع التحديد (نطاق متصل أم أيام متفرقة)
+    const [selectionMode, setSelectionMode] = useState(data.selectionMode || 'range');
     const [error, setError] = useState('');
 
     const timeToMinutes = (timeStr) => {
         const [hours, minutes] = timeStr.split(':').map(Number);
         return hours * 60 + minutes;
     };
-
-    // ─── منطق الروزنامة (مع ميزة الاستثناء) ───
+    const getExcludedDates = (start, end, selected) => {
+        if (!start || !end) return [];
+        let excluded = [];
+        let current = dayjs(start);
+        while (current.isBefore(end, 'day')) {
+            current = current.add(1, 'day');
+            if (!selected.includes(current.format('YYYY-MM-DD'))) {
+                excluded.push(current.format('YYYY-MM-DD'));
+            }
+        }
+        return excluded;
+    };
+    // ─── منطق الروزنامة ───
     const excludedDates = data.excludedDates || [];
+    const selectedDates = data.selectedDates || []; // مصفوفة الأيام المتفرقة
 
     const handleDateClick = (clickedDate) => {
         if (!clickedDate) return;
         const dateStr = clickedDate.format('YYYY-MM-DD');
 
-        // إذا كان هناك بداية ونهاية، والنقر وقع ضمن النطاق -> استثناء أو إلغاء استثناء
+        if (selectionMode === 'multiple') {
+            const isAlreadySelected = selectedDates.includes(dateStr);
+            const newSelected = isAlreadySelected
+                ? selectedDates.filter(d => d !== dateStr)
+                : [...selectedDates, dateStr];
+
+            if (newSelected.length > 0) {
+                const sortedDates = [...newSelected].sort((a, b) => dayjs(a).valueOf() - dayjs(b).valueOf());
+                const start = dayjs(sortedDates[0]);
+                const end = dayjs(sortedDates[sortedDates.length - 1]);
+                const newExcluded = getExcludedDates(start, end, newSelected);
+
+                setData({ ...data, selectedDates: newSelected, startDate: start, endDate: end, excludedDates: newExcluded, selectionMode: 'multiple' });
+            } else {
+                setData({ ...data, selectedDates: [], startDate: null, endDate: null, excludedDates: [] });
+            }
+            return;
+        }
+
+        // منطق النطاق العادي
         if (data.startDate && data.endDate && clickedDate.isAfter(data.startDate, 'day') && clickedDate.isBefore(data.endDate, 'day')) {
             const newExcluded = excludedDates.includes(dateStr)
                 ? excludedDates.filter(d => d !== dateStr)
@@ -31,7 +65,6 @@ export default function DateAndTime({ data, setData }) {
             return;
         }
 
-        // منطق التحديد: من - إلى
         if (!data.startDate || (data.startDate && data.endDate)) {
             setData({ ...data, startDate: clickedDate, endDate: null, excludedDates: [] });
         } else if (data.startDate && !data.endDate) {
@@ -48,29 +81,34 @@ export default function DateAndTime({ data, setData }) {
         if (outsideCurrentMonth) return <Box sx={{ width: 36, height: 36, margin: '2px auto' }} />;
 
         const dateStr = day.format('YYYY-MM-DD');
-        const isExcluded = excludedDates.includes(dateStr);
-        const isStart = data.startDate && day.isSame(data.startDate, 'day');
-        const isEnd = data.endDate && day.isSame(data.endDate, 'day');
-        const isBetween = data.startDate && data.endDate && day.isAfter(data.startDate, 'day') && day.isBefore(data.endDate, 'day');
-        const isToday = dayjs().isSame(day, 'day');
-
         let bgColor = 'transparent';
         let borderStyle = 'none';
         let textColor = isDark ? '#eee0da' : '#2B211E';
 
-        if (disabled) { textColor = isDark ? alpha('#eee0da', 0.2) : alpha('#2B211E', 0.2); }
-        else if (isStart || isEnd) { bgColor = theme.palette.primary.main; textColor = '#131110'; }
-        else if (isBetween) {
-            if (isExcluded) {
-                borderStyle = `2px solid ${theme.palette.primary.main}`;
-                textColor = theme.palette.primary.main;
-            } else {
-                bgColor = alpha(theme.palette.primary.main, 0.15);
+        if (disabled) {
+            textColor = isDark ? alpha('#eee0da', 0.2) : alpha('#2B211E', 0.2);
+        } else if (selectionMode === 'multiple') {
+            const isSelected = selectedDates.includes(dateStr);
+            const isExcluded = excludedDates.includes(dateStr);
+            if (isSelected) {
+                bgColor = theme.palette.primary.main;
+                textColor = '#131110';
+            } else if (isExcluded) {
+                borderStyle = `1px dashed ${theme.palette.primary.main}`;
                 textColor = theme.palette.primary.main;
             }
-        }
+        } else {
+            const isExcluded = excludedDates.includes(dateStr);
+            const isStart = data.startDate && day.isSame(data.startDate, 'day');
+            const isEnd = data.endDate && day.isSame(data.endDate, 'day');
+            const isBetween = data.startDate && data.endDate && day.isAfter(data.startDate, 'day') && day.isBefore(data.endDate, 'day');
 
-        if (isToday && !isStart && !isEnd && !isBetween) { borderStyle = `1px solid ${theme.palette.text.primary}`; }
+            if (isStart || isEnd) { bgColor = theme.palette.primary.main; textColor = '#131110'; }
+            else if (isBetween) {
+                if (isExcluded) { borderStyle = `2px solid ${theme.palette.primary.main}`; textColor = theme.palette.primary.main; }
+                else { bgColor = alpha(theme.palette.primary.main, 0.15); textColor = theme.palette.primary.main; }
+            }
+        }
 
         return (
             <Box {...other} onClick={(e) => { e.stopPropagation(); e.preventDefault(); if (!disabled) handleDateClick(day); }}
@@ -78,7 +116,8 @@ export default function DateAndTime({ data, setData }) {
                      backgroundColor: bgColor, border: borderStyle, borderRadius: '50%', width: '36px', height: '36px',
                      display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: disabled ? 'default' : 'pointer', margin: '2px auto',
                      color: textColor, opacity: disabled ? 0.6 : 1,
-                     '&:hover': { backgroundColor: disabled ? 'transparent' : (isStart || isEnd) ? theme.palette.primary.main : alpha(theme.palette.primary.main, 0.3) }
+                     transition: 'all 0.5s ease',
+                     '&:hover': { backgroundColor: disabled ? 'transparent' : (bgColor !== 'transparent') ? theme.palette.primary.main : alpha(theme.palette.primary.main, 0.3) }
                  }}
             >{day.date()}</Box>
         );
@@ -131,15 +170,33 @@ export default function DateAndTime({ data, setData }) {
     const inputStyle = { '& .MuiOutlinedInput-root': { height: '48px', backgroundColor: isDark ? 'rgba(0, 0, 0, 0.4)' : 'rgba(255, 255, 255, 0.6)', color: isDark ? '#eee0da' : '#2B211E', borderRadius: '4px', border: isDark ? '1px solid rgba(78, 70, 57, 0.3)' : '1px solid rgba(179, 140, 69, 0.35)', '& fieldset': { borderColor: 'transparent' } } };
 
     return (
-        <Paper className="date-time-section" sx={{ p: 4, backgroundColor: theme.palette.background.paper, border: `1px solid ${theme.palette.divider}`, borderRadius: '8px', height: '100%', display: 'flex', flexDirection: 'column' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 3, borderBottom: `1px solid ${theme.palette.divider}`, pb: 1.5 }}>
+        <Paper className="date-time-section" sx={{ p: 4, backgroundColor: theme.palette.background.paper, border: `1px solid ${theme.palette.divider}`, borderRadius: '8px', height: '100%', display: 'flex', flexDirection: 'column' }}>            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 3, borderBottom: `1px solid ${theme.palette.divider}`, pb: 1.5 }}>
                 <Typography sx={{ fontSize: '16px' }}>📅</Typography>
                 <Typography sx={{ fontWeight: 'bold', fontSize: '16px', letterSpacing: '0.02em' }}>Date & Time</Typography>
             </Box>
 
             <LocalizationProvider dateAdapter={AdapterDayjs}>
-                <Box sx={{ border: `1px solid ${theme.palette.divider}`, borderRadius: '8px', mb: 3, bgcolor: isDark ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.5)', display: 'flex', justifyContent: 'center' }}>
-                    <StaticDatePicker displayStaticWrapperAs="desktop" disablePast value={data.startDate || null} onChange={() => { }} slots={{ day: renderCustomDay }} slotProps={{ actionBar: { actions: [] } }} sx={{ backgroundColor: 'transparent', '& .MuiPickersToolbar-root': { display: 'none' } }} />
+                {/* 💡 أزرار اختيار وضع التحديد */}
+                <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Typography sx={{ fontSize: '12px', fontWeight: 'bold', color: theme.palette.text.secondary, textTransform: 'uppercase' }}>
+                        Selection Mode
+                    </Typography>
+                    <RadioGroup
+                        row
+                        value={selectionMode}
+                        onChange={(e) => {
+                            const mode = e.target.value;
+                            setSelectionMode(mode);
+                            setData({ ...data, selectionMode: mode });
+                        }}
+                    >
+                        <FormControlLabel value="range" control={<Radio size="small" />} label={<Typography sx={{ fontSize: '12px' }}>Date Range</Typography>} />
+                        <FormControlLabel value="multiple" control={<Radio size="small" />} label={<Typography sx={{ fontSize: '12px' }}>Multiple Days</Typography>} />
+                    </RadioGroup>
+                </Box>
+
+                <Box sx={{ border: `1px solid ${theme.palette.divider}`, borderRadius: '8px', mb: 3, bgcolor: isDark ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.5)', display: 'flex', justifyContent: 'center'}}>
+                    <StaticDatePicker displayStaticWrapperAs="desktop" disablePast value={selectionMode === 'range' ? (data.startDate || null) : null} onChange={() => { }} slots={{ day: renderCustomDay }} slotProps={{ actionBar: { actions: [] } }} sx={{ backgroundColor: 'transparent', '& .MuiPickersToolbar-root': { display: 'none' } }} />
                 </Box>
 
                 <FormControlLabel

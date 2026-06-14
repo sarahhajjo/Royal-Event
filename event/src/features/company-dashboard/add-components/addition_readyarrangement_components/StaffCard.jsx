@@ -2,35 +2,39 @@ import React from 'react';
 import { Box, Typography, Avatar, useTheme } from '@mui/material';
 import PhoneIcon from '@mui/icons-material/Phone';
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
+import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 
-const StaffCard = ({ name, role, phone, isSelected, isAvailable }) => {
+const StaffCard = ({ name, role, phone, isSelected, isAvailable, availableDates }) => {
     const theme = useTheme();
 
     return (
         <Box sx={{
-            width: 320,
-            bgcolor: '#1a1817', // لون الخلفية الداكن
-            border: '1px solid #c5a059', // إطار ذهبي
-            borderRadius: 3,
-            p: 2,
+            width: 250,
+            bgcolor: '#1a1817',
+            border: '1px solid #c5a059',
+            borderRadius: 2,
+            p: 1.5,
             position: 'relative',
             display: 'flex',
             flexDirection: 'column',
-            gap: 2,
-            boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+            gap: 1.5,
+            boxShadow: '0 4px 10px rgba(0,0,0,0.2)',
+            // 💡 إذا لم يكن متاحاً، نقلل السطوع الكلي للكرت ليبدو معطلاً (disabled)
+            opacity: isAvailable ? 1 : 0.6,
+            transition: 'opacity 0.3s ease'
         }}>
             {/* الجزء العلوي: الصورة والاسم */}
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                 <Avatar
-                    src="https://via.placeholder.com/60" // استبدليها برابط الصورة الفعلي
+                    src="https://via.placeholder.com/48"
                     alt={name}
-                    sx={{ width: 60, height: 60, border: '2px solid #333' }}
+                    sx={{ width: 48, height: 48, border: '1.5px solid #333' }}
                 />
                 <Box>
-                    <Typography sx={{ color: '#fff', fontWeight: 'bold', fontSize: '1.1rem', lineHeight: 1.2 }}>
+                    <Typography sx={{ color: '#fff', fontWeight: 'bold', fontSize: '0.95rem', lineHeight: 1.2 }}>
                         {name}
                     </Typography>
-                    <Typography sx={{ color: '#c5a059', fontSize: '0.9rem' }}>
+                    <Typography sx={{ color: '#c5a059', fontSize: '0.75rem' }}>
                         {role}
                     </Typography>
                 </Box>
@@ -39,14 +43,14 @@ const StaffCard = ({ name, role, phone, isSelected, isAvailable }) => {
                 {isSelected && (
                     <Box sx={{
                         position: 'absolute',
-                        top: 10,
-                        right: 10,
+                        top: 8,
+                        right: 8,
                         bgcolor: '#c5a059',
                         color: '#000',
-                        fontSize: '0.7rem',
+                        fontSize: '0.6rem',
                         fontWeight: 'bold',
-                        px: 1,
-                        py: 0.3,
+                        px: 0.8,
+                        py: 0.2,
                         borderRadius: 1
                     }}>
                         SELECTED
@@ -54,20 +58,37 @@ const StaffCard = ({ name, role, phone, isSelected, isAvailable }) => {
                 )}
             </Box>
 
-            {/* رقم الهاتف */}
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, color: '#d1cdc7' }}>
-                <PhoneIcon fontSize="small" />
-                <Typography sx={{ fontSize: '0.95rem' }}>{phone}</Typography>
+            {/* رقم الهاتف والتواريخ المتاحة */}
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.8, color: '#d1cdc7', mt: 0.5 }}>
+
+                {/* 💡 رقم الهاتف (أضفنا شرط ليظهر فقط إذا كان هناك رقم فعلياً) */}
+                {phone && (
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <PhoneIcon sx={{ fontSize: '1.1rem' }} />
+                        <Typography sx={{ fontSize: '0.8rem' }}>{phone}</Typography>
+                    </Box>
+                )}
+
+                {/* התواريخ المتاحة */}
+                {availableDates && (
+                    <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
+                        <CalendarTodayIcon sx={{ fontSize: '1.1rem', mt: 0.2 }} />
+                        <Typography sx={{ fontSize: '0.75rem', letterSpacing: '0.02em', lineHeight: 1.4 }}>
+                            {availableDates}
+                        </Typography>
+                    </Box>
+                )}
             </Box>
 
             {/* حالة التوفر */}
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <FiberManualRecordIcon sx={{ fontSize: '0.8rem', color: isAvailable ? '#00c853' : '#f44336' }} />
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8, mt: 0.5 }}>
+                <FiberManualRecordIcon sx={{ fontSize: '0.7rem', color: isAvailable ? '#00c853' : '#f44336' }} />
                 <Typography sx={{
                     color: isAvailable ? '#00c853' : '#f44336',
-                    fontSize: '0.85rem',
+                    fontSize: '0.7rem',
                     fontWeight: 'bold',
-                    textTransform: 'uppercase'
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.02em'
                 }}>
                     {isAvailable ? 'AVAILABLE FOR SELECTED DATE' : 'NOT AVAILABLE'}
                 </Typography>
@@ -75,14 +96,5 @@ const StaffCard = ({ name, role, phone, isSelected, isAvailable }) => {
         </Box>
     );
 };
-
-// مثال على الاستخدام:
-// <StaffCard
-//    name="Jameson Sterling"
-//    role="Lead Photographer"
-//    phone="+1 (555) 012-9844"
-//    isSelected={true}
-//    isAvailable={true}
-// />
 
 export default StaffCard;
