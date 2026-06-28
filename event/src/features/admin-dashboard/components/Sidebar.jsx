@@ -23,13 +23,14 @@ const T = {
     btnText:     "#FFFFFF",
 };
 
+// ✅ تم تعديل المسارات (paths) لتتطابق تماماً مع App.jsx
 const NAV_ITEMS = [
-    { label: "Overview",          path: "/admin-dashboard/overview",   icon: <DashboardOutlinedIcon fontSize="small" /> },
-    { label: "Pending Approvals", path: "/admin-dashboard/approvals",  icon: <PendingActionsOutlinedIcon fontSize="small" /> },
-    { label: "User Management",   path: "/admin-dashboard/users",      icon: <PeopleAltOutlinedIcon fontSize="small" /> },
+    { label: "Overview",          path: "/admin-dashboard",             icon: <DashboardOutlinedIcon fontSize="small" /> },
+    { label: "Pending Approvals", path: "/admin-dashboard/approvals",   icon: <PendingActionsOutlinedIcon fontSize="small" /> },
+    { label: "User Management",   path: "/admin-dashboard/users",       icon: <PeopleAltOutlinedIcon fontSize="small" /> },
     { label: "Freelancers",       path: "/admin-dashboard/freelancers", icon: <WorkOutlineOutlinedIcon fontSize="small" /> },
-    { label: "Company Directory", path: "/admin-dashboard",            icon: <BusinessOutlinedIcon fontSize="small" /> },
-    { label: "System Settings",   path: "/admin-dashboard/settings",   icon: <SettingsOutlinedIcon fontSize="small" /> },
+    { label: "Company Directory", path: "/admin-dashboard/companies",   icon: <BusinessOutlinedIcon fontSize="small" /> },
+    { label: "System Settings",   path: "/admin-dashboard/settings",    icon: <SettingsOutlinedIcon fontSize="small" /> },
 ];
 
 /**
@@ -84,13 +85,11 @@ export default function Sidebar({ activeItem = "Overview", onCreateEvent }) {
 
             {/* Nav items */}
             <List disablePadding sx={{ flex: 1, pt: 1.5 }}>
-                {/* التعديل هنا: أضفنا استخراج الـ path من المصفوفة */}
                 {NAV_ITEMS.map(({ label, path, icon }) => {
                     const isActive = activeItem === label;
                     return (
                         <ListItemButton
                             key={label}
-                            // التعديل هنا: استخدمنا navigate(path) بدل onNavClick
                             onClick={() => navigate(path)}
                             sx={{
                                 mx: 1.5,
@@ -108,10 +107,15 @@ export default function Sidebar({ activeItem = "Overview", onCreateEvent }) {
                             </ListItemIcon>
                             <ListItemText
                                 primary={label}
-                                primaryTypographyProps={{
-                                    fontSize: "0.83rem",
-                                    fontWeight: isActive ? 700 : 500,
-                                    color: isActive ? T.gold : T.textMuted,
+                                // ✅ التخلص من التحذير الخاص بالـ Typography داخل الـ ListItemText
+                                slotProps={{
+                                    primary: {
+                                        sx: {
+                                            fontSize: "0.83rem",
+                                            fontWeight: isActive ? 700 : 500,
+                                            color: isActive ? T.gold : T.textMuted,
+                                        }
+                                    }
                                 }}
                             />
                         </ListItemButton>
@@ -120,28 +124,7 @@ export default function Sidebar({ activeItem = "Overview", onCreateEvent }) {
             </List>
 
             {/* Create Event CTA */}
-            <Box sx={{ p: 2.5 }}>
-                <Button
-                    fullWidth
-                    variant="contained"
-                    startIcon={<AddIcon />}
-                    onClick={onCreateEvent}
-                    sx={{
-                        bgcolor: T.gold,
-                        color: T.btnText,
-                        fontWeight: 800,
-                        fontSize: "0.72rem",
-                        letterSpacing: 2,
-                        textTransform: "uppercase",
-                        py: 1.5,
-                        borderRadius: "6px",
-                        boxShadow: "none",
-                        "&:hover": { bgcolor: "#6e5820", boxShadow: "none" },
-                    }}
-                >
-                    Create Event
-                </Button>
-            </Box>
+
         </Box>
     );
 }

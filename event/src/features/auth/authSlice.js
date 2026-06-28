@@ -9,6 +9,7 @@ export const loginUser = createAsyncThunk('auth/login', async (userData, thunkAP
     }
 });
 
+
 export const registerUser = createAsyncThunk('auth/register', async (userData, thunkAPI) => {
     try {
         return await authService.register(userData);

@@ -1,21 +1,20 @@
 import React from "react";
+import { useNavigate } from "react-router-dom"; // 1. أضف هذا السطر
 import { Box, Avatar, Typography, IconButton, Divider } from "@mui/material";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import { T, typography, infoButtonSx, avatarBaseSx, rowWrapperSx } from "../Theme";
 
-/**
- * UserRow
- * Props:
- *   user: { id, name, avatarUrl?, avatarLetter?, title, email, phone }
- *   showDivider – boolean (default true)
- *   onInfo(id)
- */
 export default function UserRow({ user, showDivider = true, onInfo }) {
     const { id, name, avatarUrl, avatarLetter, title, email, phone } = user;
+    const navigate = useNavigate(); // 2. عرف الـ hook
 
     return (
         <>
-            <Box sx={rowWrapperSx}>
+            {/* 3. أضف onClick هنا للـ Box الرئيسي */}
+            <Box
+                sx={{ ...rowWrapperSx, cursor: 'pointer', '&:hover': { bgcolor: '#f5f2eb' } }}
+                onClick={() => navigate(`/admin-dashboard/user/${id}`)}
+            >
                 {/* Portrait */}
                 <Avatar
                     src={avatarUrl}
@@ -48,7 +47,10 @@ export default function UserRow({ user, showDivider = true, onInfo }) {
                 </Box>
 
                 {/* Info */}
-                <IconButton size="small" onClick={() => onInfo?.(id)} sx={infoButtonSx}>
+                <IconButton size="small" onClick={(e) => {
+                    e.stopPropagation(); // يمنع تفعيل الـ onClick الخاص بالصف عند الضغط على أيقونة المعلومات
+                    onInfo?.(id);
+                }} sx={infoButtonSx}>
                     <InfoOutlinedIcon sx={{ fontSize: 15 }} />
                 </IconButton>
             </Box>

@@ -7,19 +7,21 @@ const register = async (userData) => {
 };
 
 const login = async (userData) => {
-    // إرسال البيانات كـ x-www-form-urlencoded كما هو مطلوب في الـ API الخاص بك
     const response = await api.post(`/auth/login`, new URLSearchParams(userData).toString(), {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
     });
 
-    // حفظ التوكن فور نجاح تسجيل الدخول
+    // التحقق من وصول البيانات
     if (response.data.data && response.data.data.access_token) {
-        console.log(localStorage.getItem('token'));
-        localStorage.setItem('token', response.data.data.access_token);
+        const token = response.data.data.access_token;
+        localStorage.setItem('token', token);
+
+        // هنا سنطبع التوكن مباشرة من الاستجابة (Response)
+        console.log("تم استلام التوكن بنجاح:", token);
     }
+
     return response.data;
 };
-
 const getCategories = async () => {
     const response = await api.get(`/categories`);
     return response.data;

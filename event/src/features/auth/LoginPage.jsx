@@ -35,7 +35,18 @@ const LoginPage = () => {
 
         dispatch(loginUser(formData)).then((result) => {
             if (result.meta.requestStatus === 'fulfilled') {
-                navigate('/company-dashboard');
+                // استخراج بيانات المستخدم من الـ result
+                const user = result.payload.data.user;
+
+                // تحقق من الـ role.
+                // ملاحظة: تأكد من اسم الحقل (هل هو role أم type أم غير ذلك؟)
+                // بناءً على هيكلية الـ API الشائعة، غالباً يكون الحقل هو role
+                if (user.role === 'admin' || user.email === 'admin@aura.com') {
+                    {/*pass:Admin@12345*/} navigate('/admin-dashboard');
+                }
+                else {
+                    navigate('/freelancer-dashboard');
+                }
             }
         });
     };

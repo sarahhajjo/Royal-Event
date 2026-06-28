@@ -1,86 +1,75 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
     Box, Typography, TextField, InputAdornment,
     Divider, Button,
 } from "@mui/material";
-import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
-import TuneOutlinedIcon   from "@mui/icons-material/TuneOutlined";
-import SortOutlinedIcon   from "@mui/icons-material/SortOutlined";
-
-// ── Shared layout components ──────────────────────────────────────────────────
-import Sidebar from "./components/Sidebar";   // adjust path to your project structure
-import TopBar  from "./components/TopBar";
-
-// ── Page-specific component ───────────────────────────────────────────────────
+import SearchOutlinedIcon  from "@mui/icons-material/SearchOutlined";
+import TuneOutlinedIcon    from "@mui/icons-material/TuneOutlined";
+import SortOutlinedIcon    from "@mui/icons-material/SortOutlined";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import Sidebar      from "./components/Sidebar";
+import TopBar       from "./components/TopBar";
+import TabSwitcher  from "./components/TabSwitcher";
 import FreelancerRow from "./components/FreelancerRow";
 
-// ── Fixed light-mode tokens ───────────────────────────────────────────────────
-const T = {
-    pageBg:      "#FAF7F0",
-    border:      "#E8DFC8",
-    gold:        "#8a6f28",
-    goldLabel:   "#A89450",
-    textPrimary: "#1C1712",
-    textMuted:   "#7A6F5E",
-};
+import {
+    fetchAllFreelancers,
+    updateFreelancerStatus,
+} from "./directorySlice";
 
-// ── Demo data (swap with useSelector later) ───────────────────────────────────
-const ALL_FREELANCERS = [
-    { id: 1,  name: "Alexander Sterling", avatarUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&q=80", contact: "a.sterling@aurelian-partners.com", expertise: "Asset Management" },
-    { id: 2,  name: "Helena Vane",        avatarUrl: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&q=80", contact: "+44 20 7946 0128",                 expertise: "Strategic Compliance" },
-    { id: 3,  name: "Marcus Thorne",      avatarUrl: "https://images.unsplash.com/photo-1463453091185-61582044d556?w=120&q=80", contact: "m.thorne@thames-ledger.com",       expertise: "Tax Architecture" },
-    { id: 4,  name: "Sophia Laurent",     avatarUrl: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=120&q=80", contact: "s.laurent@heritage-ops.com",       expertise: "Crisis Communications" },
-    { id: 5,  name: "Julian Pembroke",    avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&q=80", contact: "pembroke.j@aurelian-reserve.com",  expertise: "Risk Mitigation" },
-    { id: 6,  name: "Isabelle Cross",     avatarUrl: "https://images.unsplash.com/photo-1487530811015-780eeecb5b87?w=120&q=80", contact: "i.cross@crossventures.com",        expertise: "Wealth Structuring" },
-    { id: 7,  name: "Damien Ashworth",    avatarLetter: "D",                                                                    contact: "d.ashworth@meridian.co",           expertise: "Corporate Governance" },
-    { id: 8,  name: "Reina Valcourt",     avatarUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&q=80", contact: "r.valcourt@prestige-ib.com",       expertise: "Private Equity" },
-    { id: 9,  name: "Charles Montfort",   avatarLetter: "C",                                                                    contact: "c.montfort@montfort-adv.com",      expertise: "Due Diligence" },
-    { id: 10, name: "Nadia Osei",         avatarUrl: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=120&q=80", contact: "n.osei@osei-capital.com",          expertise: "Regulatory Affairs" },
-    { id: 11, name: "Felix Brandow",      avatarLetter: "F",                                                                    contact: "f.brandow@brandow-co.com",         expertise: "Investment Strategy" },
-    { id: 12, name: "Miriam Steele",      avatarUrl: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=120&q=80",    contact: "m.steele@steele-consult.com",       expertise: "Mergers & Acquisitions" },
-];
+import { T } from "./Theme";
 
 export default function FreelancerDirectoryPage({ onNavClick, activeNav = "Freelancers" }) {
-    const [search, setSearch] = useState("");
+    const dispatch = useDispatch();
+    const { freelancers, freelancerLoading } = useSelector((state) => state.directory);
+    const navigate = useNavigate();
+    const [search, setSearch]   = useState("");
+    const [tab,    setTab]      = useState("Pending");
 
+    // جلب البيانات عند التحميل
+    useEffect(() => {
+        dispatch(fetchAllFreelancers());
+    }, [dispatch]);
+
+    // فلترة + بحث
     const filtered = useMemo(() => {
-        if (!search.trim()) return ALL_FREELANCERS;
+        // tab → "Pending" | "Accepted" | "Rejected"  →  مفتاح Redux: pending / accepted / rejected
+        const key = tab.toLowerCase();
+        const data = freelancers[key] || [];
+        if (!search.trim()) return data;
         const q = search.toLowerCase();
-        return ALL_FREELANCERS.filter(
-            (f) =>
-                f.name.toLowerCase().includes(q) ||
-                f.expertise.toLowerCase().includes(q) ||
-                f.contact?.toLowerCase().includes(q)
+        return data.filter((f) =>
+            f.brand_name?.toLowerCase().includes(q) ||
+            f.user?.first_name?.toLowerCase().includes(q) ||
+            f.user?.last_name?.toLowerCase().includes(q) ||
+            f.user?.email?.toLowerCase().includes(q)
         );
-    }, [search]);
+    }, [search, tab, freelancers]);
 
-    const handleSearch = (e) => { setSearch(e.target.value); };
+    // ✅ onUpdateStatus يقبل reason كـ param ثالث (اختياري للـ companies)
+    const handleUpdateStatus = (id, status, reason = "") => {
+        dispatch(updateFreelancerStatus({ id, status, reason }));
+    };
 
     return (
         <Box sx={{ display: "flex", minHeight: "100vh", bgcolor: T.pageBg, fontFamily: "'Inter','Segoe UI',sans-serif" }}>
-
-            {/* Shared Sidebar */}
-            <Sidebar
-                activeItem={activeNav}
-                onNavClick={onNavClick}
-                onCreateEvent={() => console.log("Create Event")}
-            />
+            <Sidebar activeItem={activeNav} onNavClick={onNavClick} />
 
             <Box sx={{ flex: 1, ml: "240px", display: "flex", flexDirection: "column" }}>
+                <TopBar title="Freelancer Directory" user={{ name: "Admin", role: "Superuser" }} />
 
-                {/* Shared TopBar */}
-                <TopBar
-                    title="Freelancer Directory"
-                    user={{ name: "Admin", role: "Superuser" }}
-                    notifCount={0}
-                    onNotifClick={() => {}}
-                    onAvatarClick={() => {}}
-                />
-
-                <Box component="main" sx={{ mt: "64px", flex: 1, px: { xs: 3, md: 5 }, pt: 4, pb: 4, display: "flex", flexDirection: "column", height: "calc(100vh - 64px)" }}>
-
-                    {/* Page heading */}
-                    <Box sx={{ mb: 3, flexShrink: 0 }}>
+                <Box
+                    component="main"
+                    sx={{
+                        mt: "64px", flex: 1,
+                        px: { xs: 3, md: 5 }, pt: 4, pb: 4,
+                        display: "flex", flexDirection: "column",
+                        height: "calc(100vh - 64px)",
+                    }}
+                >
+                    {/* ── Header ── */}
+                    <Box sx={{ mb: 2, flexShrink: 0 }}>
                         <Typography sx={{ color: T.goldLabel, fontSize: "0.68rem", letterSpacing: 2, textTransform: "uppercase", fontWeight: 700, mb: 0.5 }}>
                             Management Suite
                         </Typography>
@@ -89,44 +78,57 @@ export default function FreelancerDirectoryPage({ onNavClick, activeNav = "Freel
                         </Typography>
                     </Box>
 
-                    {/* Inline search */}
+                    {/* ── Tabs ── */}
+                    <TabSwitcher
+                        tabs={["Accepted", "Pending", "Rejected"]}
+                        activeTab={tab}
+                        onTabChange={setTab}
+                    />
+
+                    {/* ── Search ── */}
                     <Box sx={{ mb: 4, flexShrink: 0 }}>
                         <TextField
                             fullWidth
-                            placeholder="Search by name, expertise, or contact..."
+                            placeholder="Search by name or email..."
                             value={search}
-                            onChange={handleSearch}
+                            onChange={(e) => setSearch(e.target.value)}
                             variant="outlined"
                             size="small"
+                            // تأكد أن InputProps تبدأ بـ I كبيرة وتكتب هكذا تماماً
+                            InputProps={{
+                                startAdornment: (
+                                    <InputAdornment position="start">
+                                        <SearchOutlinedIcon />
+                                    </InputAdornment>
+                                ),
+                            }}
                             sx={{
                                 "& .MuiOutlinedInput-root": {
-                                    bgcolor: "transparent", borderRadius: "6px", fontSize: "0.83rem", color: T.textPrimary,
+                                    bgcolor: "transparent",
+                                    borderRadius: "6px",
+                                    fontSize: "0.83rem",
+                                    color: T.textPrimary,
                                     "& fieldset": { borderColor: "#C8BA90" },
                                     "&:hover fieldset": { borderColor: T.gold + "99" },
                                     "&.Mui-focused fieldset": { borderColor: T.gold },
                                 },
                                 "& input::placeholder": { color: T.textMuted, opacity: 1, fontSize: "0.8rem" },
                             }}
-                            InputProps={{
-                                startAdornment: (
-                                    <InputAdornment position="start">
-                                        <SearchOutlinedIcon sx={{ color: T.textMuted, fontSize: 17 }} />
-                                    </InputAdornment>
-                                ),
-                            }}
                         />
                     </Box>
 
-                    {/* Count + Filter/Sort */}
+                    {/* ── Count + Filter/Sort ── */}
                     <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1.5, flexShrink: 0 }}>
                         <Typography sx={{ color: T.textPrimary, fontWeight: 700, fontSize: "0.88rem" }}>
-                            Displaying {filtered.length} Certified Partner{filtered.length !== 1 ? "s" : ""}
+                            Displaying {filtered.length} Freelancer{filtered.length !== 1 ? "s" : ""}
                         </Typography>
                         <Box sx={{ display: "flex", gap: 2 }}>
-                            {[{ label: "Filter", icon: <TuneOutlinedIcon sx={{ fontSize: 15 }} /> }, { label: "Sort", icon: <SortOutlinedIcon sx={{ fontSize: 15 }} /> }].map(({ label, icon }) => (
+                            {[
+                                { label: "Filter", icon: <TuneOutlinedIcon sx={{ fontSize: 15 }} /> },
+                                { label: "Sort",   icon: <SortOutlinedIcon  sx={{ fontSize: 15 }} /> },
+                            ].map(({ label, icon }) => (
                                 <Button key={label} startIcon={icon}
-                                        sx={{ color: T.textMuted, fontSize: "0.75rem", fontWeight: 700, letterSpacing: 1.2, textTransform: "uppercase", p: 0, minWidth: 0, "&:hover": { color: T.gold, bgcolor: "transparent" } }}
-                                >
+                                        sx={{ color: T.textMuted, fontSize: "0.75rem", fontWeight: 700, letterSpacing: 1.2, textTransform: "uppercase", p: 0, minWidth: 0, "&:hover": { color: T.gold, bgcolor: "transparent" } }}>
                                     {label}
                                 </Button>
                             ))}
@@ -135,34 +137,39 @@ export default function FreelancerDirectoryPage({ onNavClick, activeNav = "Freel
 
                     <Divider sx={{ borderColor: T.border, mb: 0, flexShrink: 0 }} />
 
-                    {/* Scrollable List Container */}
-                    <Box sx={{
-                        flex: 1,
-                        overflowY: "auto",
-                        pr: 1, // padding for the scrollbar
-                        "&::-webkit-scrollbar": { width: "6px" },
-                        "&::-webkit-scrollbar-track": { bgcolor: "transparent" },
-                        "&::-webkit-scrollbar-thumb": { bgcolor: T.border, borderRadius: "4px" },
-                        "&:hover::-webkit-scrollbar-thumb": { bgcolor: T.gold + "99" },
-                    }}>
-                        {filtered.length === 0 ? (
-                            <Box sx={{ py: 8, textAlign: "center" }}>
-                                <Typography sx={{ color: T.textMuted, fontSize: "0.88rem" }}>No freelancers match your search.</Typography>
-                            </Box>
-                        ) : (
-                            filtered.map((f, index) => (
-                                <FreelancerRow
-                                    key={f.id}
-                                    freelancer={f}
-                                    showDivider={index < filtered.length - 1}
-                                    onInfo={(id) => console.log("Freelancer info:", id)}
-                                />
-                            ))
-                        )}
-                    </Box>
+                    {/* ── List ── */}
+                    {freelancerLoading ? (
+                        <Box sx={{ py: 8, textAlign: "center" }}>
+                            <Typography sx={{ color: T.textMuted }}>Loading freelancers...</Typography>
+                        </Box>
+                    ) : (
+                        <Box sx={{
+                            flex: 1, overflowY: "auto", pr: 1,
+                            "&::-webkit-scrollbar": { width: "6px" },
+                            "&::-webkit-scrollbar-track": { bgcolor: "transparent" },
+                            "&::-webkit-scrollbar-thumb": { bgcolor: T.border, borderRadius: "4px" },
+                        }}>
+                            {filtered.length === 0 ? (
+                                <Box sx={{ py: 8, textAlign: "center" }}>
+                                    <Typography sx={{ color: T.textMuted, fontSize: "0.88rem" }}>
+                                        No freelancers found in this category.
+                                    </Typography>
+                                </Box>
+                            ) : (
+                                filtered.map((f, index) => (
+                                    <FreelancerRow
+                                        key={f.id}
+                                        freelancer={f}
+                                        showDivider={index < filtered.length - 1}
 
-                    <Divider sx={{ borderColor: T.border, mt: 0, flexShrink: 0 }} />
-
+                                        onInfo={(id) => console.log("Info:", id)}
+                                        onUpdateStatus={handleUpdateStatus}
+                                        onClick={(id) => navigate(`/admin-dashboard/freelancers/${id}`)}
+                                    />
+                                ))
+                            )}
+                        </Box>
+                    )}
                 </Box>
             </Box>
         </Box>
