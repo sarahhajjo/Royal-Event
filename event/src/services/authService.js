@@ -62,6 +62,10 @@ const verifyEmailOTP = async (data) => {
     }
     return response.data;
 };
-
-const authService = { register, login, getCategories, getDistricts, verifyOTP, setupProfile, setupfreelancerProfile, verifyEmailOTP };
+const resendOTP = async (data) => {
+    // نبعت البيانات كـ JSON (لأن الباك إند بيستقبلها هيك)
+    const response = await api.post(`/otp/resend`, data);
+    return response.data;
+};
+const authService = { register, login, getCategories, getDistricts, verifyOTP, setupProfile, setupfreelancerProfile, verifyEmailOTP ,resendOTP};
 export default authService;

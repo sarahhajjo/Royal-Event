@@ -1,14 +1,14 @@
-import React, { useState, useRef } from 'react';
+import React, { useRef } from 'react';
 import { Box, Typography, Paper, useTheme, Divider, IconButton } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import CollectionsIcon from '@mui/icons-material/Collections';
 import DeleteIcon from '@mui/icons-material/Delete';
 
-const MediaPreview = () => {
+// 💡 استقبال الـ Props من المدير (ArrangementPage)
+const MediaPreview = ({ mediaFiles, setMediaFiles }) => {
     const theme = useTheme();
     const isDark = theme.palette.mode === 'dark';
 
-    const [mediaFiles, setMediaFiles] = useState([]);
     const fileInputRef = useRef(null);
 
     const handleBoxClick = () => {
@@ -49,23 +49,16 @@ const MediaPreview = () => {
             borderRadius: 2,
             bgcolor: isDark ? '#261d19' : '#E5D9B8'
         }}>
-            {/* العنوان داخل الصندوق */}
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, bgcolor: isDark ? '#261d19' : '#E5D9B8' }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                     <CollectionsIcon sx={{ color: '#A5AA93', fontSize: 21 }} />
-                    <Typography sx={{
-                        color: theme.palette.text.primary,
-                        fontSize: '0.8rem',
-                        fontWeight: 'bold',
-                        letterSpacing: '0.02rem'
-                    }}>
+                    <Typography sx={{ color: theme.palette.text.primary, fontSize: '0.8rem', fontWeight: 'bold', letterSpacing: '0.02rem' }}>
                         ARRANGEMENT PREVIEW
                     </Typography>
                 </Box>
                 <Divider sx={{ borderColor: theme.palette.divider }} />
             </Box>
 
-            {/* حقل الإدخال المخفي */}
             <input
                 type="file"
                 multiple
@@ -75,7 +68,6 @@ const MediaPreview = () => {
                 onChange={handleFileChange}
             />
 
-            {/* صندوق العرض والرفع */}
             <Paper
                 elevation={0}
                 onClick={handleBoxClick}
@@ -89,7 +81,7 @@ const MediaPreview = () => {
                     flexWrap: 'wrap',
                     alignItems: mediaFiles.length > 0 ? 'flex-start' : 'center',
                     justifyContent: mediaFiles.length > 0 ? 'flex-start' : 'center',
-                    alignContent: mediaFiles.length > 0 ? 'flex-start' : 'center', // 💡 تعديل هام لتوسيط المحتوى الفارغ
+                    alignContent: mediaFiles.length > 0 ? 'flex-start' : 'center',
                     gap: 2,
                     p: 2,
                     overflowY: 'auto',
@@ -102,16 +94,7 @@ const MediaPreview = () => {
                 }}
             >
                 {mediaFiles.length === 0 ? (
-                    // 💡 غلاف جديد لضمان بقاء النصوص والأيقونة في المنتصف 100%
-                    <Box sx={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        textAlign: 'center',
-                        width: '100%',
-                        height: '100%'
-                    }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', width: '100%', height: '100%' }}>
                         <CloudUploadIcon sx={{ fontSize: 36, color: theme.palette.primary.main, mb: 1 }} />
                         <Typography sx={{ color: theme.palette.primary.main, fontWeight: 'bold', fontSize: '0.9rem', mb: 0.5 }}>
                             Upload High-Res Media
@@ -122,36 +105,16 @@ const MediaPreview = () => {
                     </Box>
                 ) : (
                     mediaFiles.map((media, index) => (
-                        <Box
-                            key={index}
-                            sx={{
-                                position: 'relative',
-                                width: '100px',
-                                height: '100px',
-                                borderRadius: 1,
-                                overflow: 'hidden',
-                                boxShadow: theme.shadows[2],
-                            }}
-                        >
+                        <Box key={index} sx={{ position: 'relative', width: '100px', height: '100px', borderRadius: 1, overflow: 'hidden', boxShadow: theme.shadows[2] }}>
                             {media.type.startsWith('video') ? (
                                 <video src={media.preview} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                             ) : (
                                 <img src={media.preview} alt={`preview-${index}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                             )}
-
                             <IconButton
                                 size="small"
                                 onClick={(e) => handleRemove(index, e)}
-                                sx={{
-                                    position: 'absolute',
-                                    top: 4,
-                                    right: 4,
-                                    bgcolor: 'rgba(0,0,0,0.6)',
-                                    color: '#fff',
-                                    width: 24,
-                                    height: 24,
-                                    '&:hover': { bgcolor: 'error.main' }
-                                }}
+                                sx={{ position: 'absolute', top: 4, right: 4, bgcolor: 'rgba(0,0,0,0.6)', color: '#fff', width: 24, height: 24, '&:hover': { bgcolor: 'error.main' } }}
                             >
                                 <DeleteIcon sx={{ fontSize: 14 }} />
                             </IconButton>

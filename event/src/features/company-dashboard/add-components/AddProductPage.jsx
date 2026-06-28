@@ -36,9 +36,8 @@ function AddProductPage() {
     const [hasVariants, setHasVariants] = useState('yes');
     const [variantCount, setVariantCount] = useState(1);
 
-    // 👈 تجهيز الحالة الابتدائية لمتغيرات المنتج لتشمل الوقت والتواريخ بشكل آمن
     const [variants, setVariants] = useState([{
-        color: '', price: '', stock: '', image: null,
+        color: '', price: '', stock: '', images: [], // Initialize images as an array
         startDate: null, endDate: null, excludedDates: [], shiftRanges: [], isAllDay: false
     }]);
 
@@ -52,15 +51,18 @@ function AddProductPage() {
     const handlePublish = (status) => {
         const validVariants = variants.filter(v => v.price);
 
+        // 💡 طباعة حالة الكروت قبل المعالجة لنتأكد من وجود الصور
+        console.log("🛑 RAW VARIANTS STATE BEFORE PUBLISH:", JSON.parse(JSON.stringify(validVariants)));
+
         const payload = {
             category_id: coreDetails.categoryId,
             district_id: coreDetails.districtId,
             title: { en: coreDetails.name, ar: coreDetails.name },
             description: { en: coreDetails.description, ar: coreDetails.description },
-            listing_type: "physical_product", // 👈 بما أنه منتج مادي، لارافيل لن يهتم للتواريخ والشفتات حسب سطر 62 في الريكويست
+            listing_type: "physical_product",
             material_composition: coreDetails.material,
             status: status,
-            moderation_status: status, // لارافيل يتوقعها هكذا
+            moderation_status: status,
             secondary_contact_number: logisticData.secondaryPhone || null,
             cancel_before_acceptance: policies.beforeAccept,
             cancel_after_acceptance: policies.afterAccept,
@@ -78,21 +80,17 @@ function AddProductPage() {
                     currency: v.currency || 'USD',
                 };
 
-                // 👈 معالجة التواريخ والشفتات فقط إذا وجدت (وإن كانت غير مطلوبة للمنتج المادي)
                 if (v.startDate && typeof v.startDate.format === 'function') {
-                    // إذا كان هناك تاريخ بداية ونهاية، لارافيل يتوقع "date_range"
                     if (v.endDate) {
                         variantPayload.date_range = {
                             start_date: v.startDate.format('YYYY-MM-DD'),
                             end_date: v.endDate.format('YYYY-MM-DD'),
                             slots: v.shiftRanges?.map(s => ({
-                                // قص الثواني ليتوافق مع لارافيل H:i
                                 start_time: s.start.substring(0, 5),
                                 end_time: s.end.substring(0, 5)
                             })) || []
                         };
                     } else {
-                        // إذا كان تاريخ يوم واحد فقط، نرسله كـ "availabilities"
                         variantPayload.availabilities = [{
                             available_date: v.startDate.format('YYYY-MM-DD'),
                             slots: v.shiftRanges?.map(s => ({
@@ -107,7 +105,9 @@ function AddProductPage() {
             })
         };
 
-        console.log("Payload sent:", payload);
+        // 💡 طباعة الـ Payload النهائي للتأكد من إرساله بشكل صحيح
+        console.log("🚀 FINAL PAYLOAD SENT TO BACKEND:", JSON.parse(JSON.stringify(payload)));
+
         dispatch(publishProduct(payload));
     };
 
@@ -115,16 +115,55 @@ function AddProductPage() {
         setHasVariants(choice);
         if (choice === 'no') {
             setVariantCount(1);
-            // 👇 التأكد من إضافة images: [] هنا
             setVariants([{ color: '', price: '', stock: '', images: [], startDate: null, endDate: null, excludedDates: [], shiftRanges: [], isAllDay: false }]);
         }
     };
 
     const handleCountChange = (value) => {
         const num = parseInt(value, 10) || 1;
-        const safeNum = Math.max(1, Math.min(num, 20));
+        const safeNum = Math.max(1, Math.min(num, 20)); // الحد الأقصى 20 والحد الأدنى 1
         setVariantCount(safeNum);
-        setVariants(Array.from({ length: safeNum }, () => ({ color: '', price: '', stock: '', image: null, startDate: null, endDate: null, excludedDates: [], shiftRanges: [], isAllDay: false })));
+
+        setVariants(prev => {
+            const newVariants = [...prev];
+
+            if (safeNum > prev.length) {
+                // إذا زاد العدد: نضيف كروت جديدة فارغة دون المساس بالقديمة
+                const diff = safeNum - prev.length;
+                for (let i = 0; i < diff; i++) {
+                    newVariants.push({
+                        color: '', price: '', stock: '', images: [],
+                        startDate: null, endDate: null, excludedDates: [],
+                        shiftRanges: [], isAllDay: false
+                    });
+                }
+            } else if (safeNum < prev.length) {
+                // إذا نقص العدد: نحذف الكروت الزائدة من الأخير
+                newVariants.length = safeNum;
+            }
+
+            return newVariants;
+        });
+    };
+
+    // دوال التحديث لتجنب فقدان البيانات (Stale Closure)
+    const handleVariantUpdate = (index, field, value) => {
+        setVariants((prevVariants) => {
+            const newVariants = [...prevVariants];
+            newVariants[index] = {
+                ...newVariants[index],
+                [field]: value
+            };
+            return newVariants;
+        });
+    };
+
+    const handleUpdateFullObject = (index, updatedVariant) => {
+        setVariants((prevVariants) => {
+            const newVariants = [...prevVariants];
+            newVariants[index] = updatedVariant;
+            return newVariants;
+        });
     };
 
     return (
@@ -243,7 +282,6 @@ function AddProductPage() {
                     </Grid>
                 </Grid>
 
-                {/* 👈 التعديل لضمان السكرول الأفقي للكروت */}
                 <Box sx={{ display: 'flex', gap: 2.5, overflowX: 'auto', pb: 2, width: '100%' }}>
                     {variants.map((v, index) => (
                         <VariantCard
@@ -251,20 +289,9 @@ function AddProductPage() {
                             index={index}
                             variantData={v}
                             hasVariants={hasVariants}
-
-                            // 👇 التعديل هنا: نرسل للكرت معلومة تخبره إذا كان وحيداً أم لا
                             isSingle={variants.length === 1}
-
-                            onUpdate={(i, field, value) => {
-                                const newV = [...variants];
-                                newV[i] = { ...newV[i], [field]: value };
-                                setVariants(newV);
-                            }}
-                            onUpdateFullObject={(i, newData) => {
-                                const newV = [...variants];
-                                newV[i] = newData;
-                                setVariants(newV);
-                            }}
+                            onUpdate={handleVariantUpdate}
+                            onUpdateFullObject={handleUpdateFullObject}
                         />
                     ))}
                 </Box>

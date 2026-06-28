@@ -1,4 +1,4 @@
-import api from '../api'; // 👈 استيراد المعترض المركزي من المجلد السابق
+import api from '../api';
 
 const getCategories = async () => {
     const response = await api.get(`/categories`);
@@ -11,7 +11,6 @@ const getDistricts = async () => {
 };
 
 const createListing = async (listingData) => {
-    // التوكن والهيدرز تضاف تلقائياً الآن!
     const response = await api.post(`/listings`, listingData);
     return response.data;
 };
@@ -23,7 +22,6 @@ const createHall = async (hallData) => {
 
 const getMyListings = async () => {
     const response = await api.get(`/listings`);
-    console.log("البيانات الخام من السيرفر:", response.data.data);
     return response.data.data;
 };
 
@@ -31,14 +29,37 @@ const uploadTempImage = async (file) => {
     const formData = new FormData();
     formData.append('image', file);
 
-    // نغير الـ Content-Type هنا فقط لكي ندعم رفع الصور
     const response = await api.post(`/uploads/temp`, formData, {
-        headers: {
-            'Content-Type': 'multipart/form-data'
-        }
+        headers: { 'Content-Type': 'multipart/form-data' }
     });
     return response.data;
 };
 
-const additionService = { getCategories, getDistricts, createListing, createHall, getMyListings, uploadTempImage };
+const getMyProducts = async () => {
+    const response = await api.get(`/provider/my-products`);
+    return response.data.data;
+};
+
+const getListingById = async (id) => {
+    const response = await api.get(`/listings/${id}`);
+    return response.data.data;
+};
+
+// 💡 [جديد] الدالة المسؤولة عن إرسال التنسيق الجاهز
+const createArrangement = async (arrangementData) => {
+    const response = await api.post(`/arrangements`, arrangementData);
+    return response.data;
+};
+
+const additionService = {
+    getCategories,
+    getDistricts,
+    createListing,
+    createHall,
+    getMyListings,
+    uploadTempImage,
+    getMyProducts,
+    getListingById,
+    createArrangement // 👈 لا تنسي التصدير
+};
 export default additionService;

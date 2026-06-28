@@ -4,12 +4,15 @@ import Button from '../../../components/Button';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import MuiButton from '@mui/material/Button';
-import Alert from '@mui/material/Alert'; // 1. استيراد Alert للتنبيه
-function OTPVerificationForm({ onBack, onVerify }) {
+import Alert from '@mui/material/Alert';
+
+// 💡 1. أضفنا onResend للـ Props
+function OTPVerificationForm({ onBack, onVerify, onResend }) {
     const theme = useTheme();
     const [otp, setOtp] = useState(new Array(6).fill(""));
     const [timer, setTimer] = useState(59);
-    const [error, setError] = useState(''); // 2. إضافة حالة للخطأ
+    const [error, setError] = useState('');
+    const [successMsg, setSuccessMsg] = useState(''); // 💡 2. رسالة نجاح الإرسال
 
     useEffect(() => {
         if (timer > 0) {
@@ -22,44 +25,56 @@ function OTPVerificationForm({ onBack, onVerify }) {
         const value = e.target.value;
         if (isNaN(value)) return false;
 
-        // تحديث الرمز: هنا نستخدم القيمة مباشرة
         setOtp(prev => prev.map((data, idx) => (idx === index ? value : data)));
 
-        // الانتقال للخانة التالية
         if (value && e.target.nextSibling) {
             e.target.nextSibling.focus();
         }
     };
+
     const handleKeyDown = (e, index) => {
         if (e.key === "Backspace" && !otp[index] && e.target.previousSibling) {
             e.target.previousSibling.focus();
         }
     };
+
     const handleSubmit = async () => {
         setError('');
+        setSuccessMsg('');
         const code = otp.join("");
         if (code.length < 6) {
             setError('Please enter the full 6-digit code.');
             return;
         }
 
-        // ننتظر نتيجة الـ onVerify (يجب أن يكون الدالة الأصلية في RegisterPage ترجع Promise أو نتيجة)
         const isSuccess = await onVerify(code);
         if (isSuccess === false) {
             setError('Invalid verification code. Please try again.');
         }
     };
 
-    const handleResend = () => {
-        setTimer(59);
+    // 💡 3. تعديل دالة الإعادة لتستدعي الـ onResend من الـ Props
+    const handleResend = async () => {
         setError('');
-        // هنا يمكنك إضافة استدعاء API لإعادة إرسال الكود
-        console.log("Resending code...");
+        setSuccessMsg('');
+
+        if (onResend) {
+            const isSent = await onResend();
+            if (isSent) {
+                setTimer(59);
+                setSuccessMsg('A new code has been sent successfully.');
+            } else {
+                setError('Failed to resend code. Please try again later.');
+            }
+        } else {
+            // في حال لم يتم تمرير onResend (كحالة احتياطية)
+            setTimer(59);
+        }
     };
+
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4, width: '100%' }} className="animate-fade-in">
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.8, textAlign: 'center', alignItems: 'center' }}>
-                {/* مؤشر التقدم */}
                 <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
                     <Box sx={{ width: 32, height: 2, backgroundColor: theme.palette.mode === 'dark' ? '#261d19' : '#d1c5b4', borderRadius: '4px' }} />
                     <Box sx={{ width: 32, height: 2, backgroundColor: '#c5a059', borderRadius: '4px' }} />
@@ -74,7 +89,6 @@ function OTPVerificationForm({ onBack, onVerify }) {
                 </Typography>
             </Box>
 
-            {/* حقول الإدخال */}
             <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 1 }}>
                 {otp.map((data, index) => (
                     <Box
@@ -85,7 +99,7 @@ function OTPVerificationForm({ onBack, onVerify }) {
                         value={data}
                         onChange={e => handleChange(e, index)}
                         onFocus={e => e.target.select()}
-                        onKeyDown={e => handleKeyDown(e, index)} // التعديل هنا
+                        onKeyDown={e => handleKeyDown(e, index)}
                         sx={{
                             width: '48px',
                             height: '56px',
@@ -107,9 +121,13 @@ function OTPVerificationForm({ onBack, onVerify }) {
                     />
                 ))}
             </Box>
+
+            {/* 💡 4. عرض رسائل الخطأ أو النجاح */}
             {error && <Alert severity="error" sx={{ fontSize: '12px' }}>{error}</Alert>}
+            {successMsg && <Alert severity="success" sx={{ fontSize: '12px' }}>{successMsg}</Alert>}
+
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, mt: 2 }}>
-                <Button text="VERIFY & CONTINUE →" onClick={() => onVerify(otp.join(""))} />
+                <Button text="VERIFY & CONTINUE →" onClick={handleSubmit} /> {/* 💡 كان في خطأ بسيط هون، استدعينا handleSubmit */}
 
                 <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
                     <Typography variant="caption" sx={{ color: theme.palette.text.secondary, letterSpacing: '0.15em', fontWeight: 500, fontSize: '11px' }}>
@@ -131,8 +149,8 @@ function OTPVerificationForm({ onBack, onVerify }) {
                         }}
                     >
                         RESEND CODE
-                        </MuiButton>
-                    </Box>
+                    </MuiButton>
+                </Box>
 
                 <MuiButton
                     onClick={onBack}

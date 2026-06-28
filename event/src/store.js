@@ -7,7 +7,8 @@ import arrangementReducer from "./features/company-dashboard/add-components/addi
 import addProductReducer from './features/company-dashboard/add-components/addition_slices/addProductSlice';
 import addhallReducer from './features/company-dashboard/add-components/addition_slices/addhallSlice.js';
 import jobOfferReducer from './features/company-dashboard/JobOffers-components/CreateJobOfferSlice';
-
+import myCatalogReducer from './features/company-dashboard/MyCatalog-components/myCatalogSlice';
+import providerProfileReducer from './features/company-dashboard/componyProfileSettings/providerProfileSlice.js'; // تأكدي من المسار
 export const store = configureStore({
     reducer: {
         auth: authReducer,
@@ -17,6 +18,8 @@ export const store = configureStore({
         addProduct: addProductReducer,
         addhall: addhallReducer,
         jobOffer: jobOfferReducer,
+        myCatalog: myCatalogReducer,
+        providerProfile: providerProfileReducer,
 
     }
 });

@@ -23,19 +23,21 @@ const ScheduleSection = () => {
     // 💡 إرسال التواريخ للريدكس كل ما المستخدم يختار أو يغير تاريخ
     useEffect(() => {
         dispatch(setScheduleDates({
+            selectionMode: dateTimeData.selectionMode, // 💡 لتحديد نوع التواريخ
             startDate: dateTimeData.startDate ? dateTimeData.startDate.format('YYYY-MM-DD') : null,
             endDate: dateTimeData.endDate ? dateTimeData.endDate.format('YYYY-MM-DD') : null,
-            selectedDates: dateTimeData.selectedDates
+            selectedDates: dateTimeData.selectedDates,
+            isAllDay: dateTimeData.isAllDay,
+            shiftRanges: dateTimeData.shiftRanges // 💡 لإرسال الشفتات
         }));
-    }, [dateTimeData.startDate, dateTimeData.endDate, dateTimeData.selectedDates, dispatch]);
-
+    }, [dateTimeData, dispatch]);
     return (
         <Box sx={{
             p: 4,
             bgcolor: isDark ? '#261d19' : '#E5D9B8',
             border: `1px solid ${theme.palette.divider}`,
             borderRadius: 3,
-            width: '100%'
+            width: 1020
         }}>
             <Typography sx={{ color: theme.palette.primary.main, fontWeight: 'bold', mb: 3, fontSize: '1rem', letterSpacing: '0.02em' }}>
                 ARRANGEMENT SCHEDULE
