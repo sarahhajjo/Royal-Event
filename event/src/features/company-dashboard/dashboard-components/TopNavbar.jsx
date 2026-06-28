@@ -9,9 +9,10 @@ import SearchIcon from '@mui/icons-material/Search';
 // استدعاء أيقونات التبديل
 import LightModeIcon from '@mui/icons-material/LightMode';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
-import { ColorModeContext } from '../../../main'; // 🚀 استيراد سياق قلب الألوان
+import { ColorModeContext } from '../../../main';
 
-function TopNavbar() {
+// 💡 1. إضافة onProfileClick كـ Prop
+function TopNavbar({ onProfileClick }) {
     const { mode, toggleColorMode } = useContext(ColorModeContext);
 
     return (
@@ -53,7 +54,6 @@ function TopNavbar() {
             {/* Action Icons Section */}
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
 
-                {/* ☀️/🌙 الزر السحري لتحويل النمط بالكامل مع تأثيرات ارتداد الماوس */}
                 <IconButton onClick={toggleColorMode} sx={{ color: mode === 'dark' ? '#c5a059' : '#b38c45', transition: 'transform 0.2s', '&:active': { transform: 'scale(0.9)' } }}>
                     {mode === 'dark' ? <LightModeIcon /> : <DarkModeIcon />}
                 </IconButton>
@@ -61,7 +61,20 @@ function TopNavbar() {
                 <IconButton sx={{ color: mode === 'dark' ? '#eee0da' : '#2B211E' }}><NotificationsNoneIcon /></IconButton>
 
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, ml: 2 }}>
-                    <Avatar sx={{ width: 32, height: 32, border: mode === 'dark' ? '1px solid #c5a059' : '1px solid #b38c45', backgroundColor: mode === 'dark' ? '#1c1512' : '#EFE4C9' }} src="/path-to-avatar.jpg" />
+                    {/* 💡 2. ربط الـ onClick بالـ Avatar وإضافة cursor pointer */}
+                    <Avatar
+                        onClick={onProfileClick}
+                        sx={{
+                            width: 32,
+                            height: 32,
+                            border: mode === 'dark' ? '1px solid #c5a059' : '1px solid #b38c45',
+                            backgroundColor: mode === 'dark' ? '#1c1512' : '#EFE4C9',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
+                            '&:hover': { transform: 'scale(1.05)' }
+                        }}
+                        src="/path-to-avatar.jpg"
+                    />
                     <Box sx={{ backgroundColor: mode === 'dark' ? 'rgba(197, 160, 89, 0.2)' : 'rgba(179, 140, 69, 0.1)', p: 0.5, borderRadius: '4px', display: 'flex' }}>
                         <SearchIcon sx={{ color: mode === 'dark' ? '#c5a059' : '#b38c45', fontSize: '16px' }} />
                     </Box>

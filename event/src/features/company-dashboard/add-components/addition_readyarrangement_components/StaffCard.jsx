@@ -6,35 +6,50 @@ import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 
 const StaffCard = ({ name, role, phone, isSelected, isAvailable, availableDates }) => {
     const theme = useTheme();
+    const isDark = theme.palette.mode === 'dark';
 
     return (
         <Box sx={{
             width: 250,
-            bgcolor: '#1a1817',
-            border: '1px solid #c5a059',
+            // 💡 تغيير الخلفية والحدود لتناسب أي وضع
+            bgcolor: theme.palette.background.paper,
+            border: isSelected
+                ? `2px solid ${theme.palette.primary.main}`
+                : `1px solid ${isDark ? '#333' : '#e0e0e0'}`,
             borderRadius: 2,
             p: 1.5,
             position: 'relative',
             display: 'flex',
             flexDirection: 'column',
             gap: 1.5,
-            boxShadow: '0 4px 10px rgba(0,0,0,0.2)',
-            // 💡 إذا لم يكن متاحاً، نقلل السطوع الكلي للكرت ليبدو معطلاً (disabled)
+            boxShadow: theme.shadows[2],
             opacity: isAvailable ? 1 : 0.6,
-            transition: 'opacity 0.3s ease'
+            transition: 'all 0.3s ease'
         }}>
             {/* الجزء العلوي: الصورة والاسم */}
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                 <Avatar
                     src="https://via.placeholder.com/48"
                     alt={name}
-                    sx={{ width: 48, height: 48, border: '1.5px solid #333' }}
+                    sx={{
+                        width: 48,
+                        height: 48,
+                        border: `1.5px solid ${isDark ? '#333' : '#ddd'}`
+                    }}
                 />
                 <Box>
-                    <Typography sx={{ color: '#fff', fontWeight: 'bold', fontSize: '0.95rem', lineHeight: 1.2 }}>
+                    <Typography sx={{
+                        color: theme.palette.text.primary,
+                        fontWeight: 'bold',
+                        fontSize: '0.95rem',
+                        lineHeight: 1.2
+                    }}>
                         {name}
                     </Typography>
-                    <Typography sx={{ color: '#c5a059', fontSize: '0.75rem' }}>
+                    <Typography sx={{
+                        color: theme.palette.primary.main,
+                        fontSize: '0.75rem'
+                    }}>
                         {role}
                     </Typography>
                 </Box>
@@ -45,8 +60,8 @@ const StaffCard = ({ name, role, phone, isSelected, isAvailable, availableDates 
                         position: 'absolute',
                         top: 8,
                         right: 8,
-                        bgcolor: '#c5a059',
-                        color: '#000',
+                        bgcolor: theme.palette.primary.main,
+                        color: theme.palette.primary.contrastText,
                         fontSize: '0.6rem',
                         fontWeight: 'bold',
                         px: 0.8,
@@ -59,9 +74,8 @@ const StaffCard = ({ name, role, phone, isSelected, isAvailable, availableDates 
             </Box>
 
             {/* رقم الهاتف والتواريخ المتاحة */}
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.8, color: '#d1cdc7', mt: 0.5 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.8, color: theme.palette.text.secondary, mt: 0.5 }}>
 
-                {/* 💡 رقم الهاتف (أضفنا شرط ليظهر فقط إذا كان هناك رقم فعلياً) */}
                 {phone && (
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <PhoneIcon sx={{ fontSize: '1.1rem' }} />
@@ -69,7 +83,6 @@ const StaffCard = ({ name, role, phone, isSelected, isAvailable, availableDates 
                     </Box>
                 )}
 
-                {/* התواريخ المتاحة */}
                 {availableDates && (
                     <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
                         <CalendarTodayIcon sx={{ fontSize: '1.1rem', mt: 0.2 }} />
@@ -82,15 +95,18 @@ const StaffCard = ({ name, role, phone, isSelected, isAvailable, availableDates 
 
             {/* حالة التوفر */}
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8, mt: 0.5 }}>
-                <FiberManualRecordIcon sx={{ fontSize: '0.7rem', color: isAvailable ? '#00c853' : '#f44336' }} />
+                <FiberManualRecordIcon sx={{
+                    fontSize: '0.7rem',
+                    color: isAvailable ? '#2e7d32' : '#d32f2f' // ألوان قياسية تظهر في كلا الوضعين
+                }} />
                 <Typography sx={{
-                    color: isAvailable ? '#00c853' : '#f44336',
+                    color: isAvailable ? '#2e7d32' : '#d32f2f',
                     fontSize: '0.7rem',
                     fontWeight: 'bold',
                     textTransform: 'uppercase',
                     letterSpacing: '0.02em'
                 }}>
-                    {isAvailable ? 'AVAILABLE FOR SELECTED DATE' : 'NOT AVAILABLE'}
+                    {isAvailable ? 'AVAILABLE' : 'NOT AVAILABLE'}
                 </Typography>
             </Box>
         </Box>

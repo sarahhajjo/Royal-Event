@@ -66,7 +66,13 @@ export const verifyOTPEmail = createAsyncThunk('auth/verifyEmailOTP', async (dat
     }
 });
 // في extraReducers
-
+export const resendOtpUser = createAsyncThunk('auth/resendOTP', async (data, thunkAPI) => {
+    try {
+        return await authService.resendOTP(data);
+    } catch (error) {
+        return thunkAPI.rejectWithValue(error.response?.data?.message || 'Resend OTP failed');
+    }
+});
 const authSlice = createSlice({
     name: 'auth',
     initialState: {

@@ -55,6 +55,7 @@ const LoginPage = () => {
         <Box sx={{ minHeight: '100vh', backgroundColor: isDark ? '#18120f' : '#FAF0D5', display: 'flex', flexDirection: { xs: 'column', md: 'row' }, color: isDark ? '#eee0da' : '#2B211E', overflow: 'hidden', transition: 'background-color 0.3s' }}>
 
             {/* الجناح الأيسر - التصميم الفخم */}
+            {/* الجناح الأيسر - التصميم الفخم */}
             <Box sx={{
                 display: { xs: 'none', md: 'flex' },
                 width: '50%',
@@ -66,17 +67,22 @@ const LoginPage = () => {
                 overflow: 'hidden',
                 borderRight: isDark ? '1px solid rgba(78, 70, 57, 0.25)' : '1px solid rgba(179, 140, 69, 0.25)'
             }}>
-                <Box sx={{ position: 'absolute', inset: 0, backgroundImage: `linear-gradient(to right, rgba(24, 18, 15, 0.55), rgba(24, 18, 15, 0.85)), url('https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&q=80&w=1200')`, backgroundSize: 'cover', backgroundPosition: 'center', transition: 'transform 1.8s cubic-bezier(0.19, 1, 0.22, 1)', '&:hover': { transform: 'scale(1.12)' } }} />
-                <Box sx={{ position: 'relative', zIndex: 10, color: isDark ? '#c5a059' : '#b38c45', textTransform: 'uppercase', fontSize: '13px', fontWeight: 'bold', letterSpacing: '0.25em' }}>✦ Royal Events ✦</Box>
+                {/* 💡 زيادة درجة التعتيم في الـ Overlay لتظهر النصوص بوضوح */}
+                <Box sx={{ position: 'absolute', inset: 0, backgroundImage: `linear-gradient(to right, rgba(24, 18, 15, 0.7), rgba(24, 18, 15, 0.7)), url('https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&q=80&w=1200')`, backgroundSize: 'cover', backgroundPosition: 'center', transition: 'transform 1.8s cubic-bezier(0.19, 1, 0.22, 1)', '&:hover': { transform: 'scale(1.12)' } }} />
+
+                {/* 💡 ألوان ثابتة ذهبية تبرز دائماً فوق الصورة */}
+                <Box sx={{ position: 'relative', zIndex: 10, color: '#c5a059', textTransform: 'uppercase', fontSize: '13px', fontWeight: 'bold', letterSpacing: '0.25em' }}>✦ Royal Events ✦</Box>
+
                 <Box sx={{ position: 'relative', zIndex: 10, maxWidth: '460px' }}>
-                    <Typography variant="h2" sx={{ fontFamily: "'Playfair Display', serif", color: isDark ? '#c5a059' : '#b38c45', fontWeight: 300, mb: 3, fontSize: '3.2rem', lineHeight: 1.15 }}>
-                        Welcome to <br /><Box component="span" sx={{ color: isDark ? '#ffffff' : '#2B211E', fontWeight: 400 }}>Bespoke Luxury</Box>
+                    <Typography variant="h2" sx={{ fontFamily: "'Playfair Display', serif", color: '#ffffff', fontWeight: 300, mb: 3, fontSize: '3.2rem', lineHeight: 1.15 }}>
+                        Welcome to <br /><Box component="span" sx={{ color: '#c5a059', fontWeight: 400 }}>Bespoke Luxury</Box>
                     </Typography>
-                    <Typography variant="body1" sx={{ color: isDark ? '#d1c5b4' : '#5A5043', fontSize: '14px', fontWeight: 300, lineHeight: 1.7 }}>
+                    <Typography variant="body1" sx={{ color: '#e0e0e0', fontSize: '14px', fontWeight: 300, lineHeight: 1.7 }}>
                         Sign in to manage and orchestrate exclusive experiences, connecting with elite partners and creators globally.
                     </Typography>
                 </Box>
-                <Box sx={{ position: 'relative', zIndex: 10, fontSize: '11px', color: isDark ? '#8a7f70' : '#7A6F5E', letterSpacing: '0.15em' }}>&copy; 2026 Royal Events International.</Box>
+
+                <Box sx={{ position: 'relative', zIndex: 10, fontSize: '11px', color: '#c5a059', letterSpacing: '0.15em' }}>&copy; 2026 Royal Events International.</Box>
             </Box>
 
             {/* الجناح الأيمن - نموذج الدخول */}
@@ -111,9 +117,9 @@ const LoginPage = () => {
                             <InputField label="Email or Phone" value={formData.identity} onChange={(e) => handleChange(e, 'identity')} />
                             <InputField label="Password" type="password" value={formData.password} onChange={(e) => handleChange(e, 'password')} />
                             <Button text={loading ? "OPENING GATES..." : "ENTER PORTAL"} type="submit" disabled={loading} />
-                            <button type="button" onClick={() => navigate('/admin-dashboard')} style={{ marginTop: '10px', padding: '10px', background: '#ccc', cursor: 'pointer' }}>
-                                GO TO ADMIN (Quick Link)
-                            </button>
+                            {/*<button type="button" onClick={() => navigate('/admin-dashboard')} style={{ marginTop: '10px', padding: '10px', background: '#ccc', cursor: 'pointer' }}>*/}
+                            {/*    GO TO ADMIN (Quick Link)*/}
+                            {/*</button>*/}
                         </form>
 
                         <Box sx={{ textAlign: 'center' }}>

@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import {Paper, Box, Typography, alpha, Chip, Button, Switch, FormControlLabel, Autocomplete} from '@mui/material';
+import { Paper, Box, Typography, alpha, Chip, Button, Switch, FormControlLabel, Autocomplete } from '@mui/material';
 import FileUploadIcon from '@mui/icons-material/FileUpload';
 import CloseIcon from '@mui/icons-material/Close';
 import { useTheme } from '@mui/material/styles';
@@ -8,12 +8,11 @@ import { StaticDatePicker, LocalizationProvider, TimePicker } from '@mui/x-date-
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs from 'dayjs';
 import { createFilterOptions } from '@mui/material/Autocomplete';
-// 👈 تأكدي من ضبط مسار استيراد الخدمة حسب مشروعك
 import additionService from '../../../../services/companyService/additionService';
 import TextField from "@mui/material/TextField";
 import RadioGroup from "@mui/material/RadioGroup";
 import Radio from "@mui/material/Radio";
-import currencyCodes from 'currency-codes'; // 👈 استيراد المكتبة
+import currencyCodes from 'currency-codes';
 
 const VariantCard = ({ index, variantData, hasVariants, onUpdate, onUpdateFullObject, isSingle }) => {
     const theme = useTheme();
@@ -25,9 +24,11 @@ const VariantCard = ({ index, variantData, hasVariants, onUpdate, onUpdateFullOb
     const [isUploading, setIsUploading] = useState(false);
 
     const excludedDates = variantData?.excludedDates || [];
+    const selectedDates = variantData?.selectedDates || [];
     const shiftRanges = variantData?.shiftRanges || [];
     const isAllDay = variantData?.isAllDay || false;
     const images = variantData?.images || [];
+    const selectionMode = variantData?.selectionMode || 'range';
     const filter = createFilterOptions();
 
     const allCurrencies = currencyCodes.data.map(c => ({
@@ -35,30 +36,81 @@ const VariantCard = ({ index, variantData, hasVariants, onUpdate, onUpdateFullOb
         code: c.code
     }));
 
-    const updateVariant = (updates) => {
-        onUpdateFullObject(index, { ...variantData, ...updates });
+    const getSelectedDates = () => {
+        if (!variantData?.startDate) return [];
+        let dates = [];
+        let curr = dayjs(variantData.startDate);
+        const end = variantData.endDate ? dayjs(variantData.endDate) : curr;
+
+        while (curr.isBefore(end, 'day') || curr.isSame(end, 'day')) {
+            const dStr = curr.format('YYYY-MM-DD');
+            if (!excludedDates.includes(dStr)) {
+                dates.push(dStr);
+            }
+            curr = curr.add(1, 'day');
+        }
+        return dates;
     };
 
-    // ─── منطق الروزنامة ───
     const handleDateClick = (clickedDate) => {
         if (!clickedDate) return;
         const dateStr = clickedDate.format('YYYY-MM-DD');
-        const { startDate, endDate } = variantData;
 
-        if (startDate && endDate && clickedDate.isAfter(startDate, 'day') && clickedDate.isBefore(endDate, 'day')) {
-            const newExcluded = excludedDates.includes(dateStr) ? excludedDates.filter(d => d !== dateStr) : [...excludedDates, dateStr];
-            updateVariant({ excludedDates: newExcluded });
-            return;
-        }
+        if (selectionMode === 'range') {
+            const { startDate, endDate } = variantData;
 
-        if (!startDate || (startDate && endDate)) {
-            updateVariant({ startDate: clickedDate, endDate: null, excludedDates: [] });
-        } else if (startDate && !endDate) {
-            if (clickedDate.isBefore(startDate, 'day')) {
-                updateVariant({ startDate: clickedDate, endDate: null, excludedDates: [] });
-            } else {
-                updateVariant({ endDate: clickedDate });
+            if (startDate && endDate &&
+                (clickedDate.isSame(startDate, 'day') || clickedDate.isAfter(startDate, 'day')) &&
+                (clickedDate.isSame(endDate, 'day') || clickedDate.isBefore(endDate, 'day'))) {
+
+                let newExcluded = [...excludedDates];
+                if (newExcluded.includes(dateStr)) {
+                    newExcluded = newExcluded.filter(d => d !== dateStr);
+                } else {
+                    newExcluded.push(dateStr);
+                }
+                onUpdate(index, 'excludedDates', newExcluded);
+                return;
             }
+
+            if (!startDate || (startDate && endDate)) {
+                onUpdateFullObject(index, { ...variantData, startDate: clickedDate, endDate: null, excludedDates: [] });
+            } else if (startDate && !endDate) {
+                if (clickedDate.isBefore(startDate, 'day')) {
+                    onUpdateFullObject(index, { ...variantData, startDate: clickedDate, endDate: null, excludedDates: [] });
+                } else {
+                    onUpdate(index, 'endDate', clickedDate);
+                }
+            }
+        } else {
+            let currentSelected = getSelectedDates();
+
+            if (currentSelected.includes(dateStr)) {
+                currentSelected = currentSelected.filter(d => d !== dateStr);
+            } else {
+                currentSelected.push(dateStr);
+            }
+
+            if (currentSelected.length === 0) {
+                onUpdateFullObject(index, { ...variantData, startDate: null, endDate: null, excludedDates: [] });
+                return;
+            }
+
+            currentSelected.sort((a, b) => dayjs(a).valueOf() - dayjs(b).valueOf());
+            const newStart = dayjs(currentSelected[0]);
+            const newEnd = currentSelected.length > 1 ? dayjs(currentSelected[currentSelected.length - 1]) : null;
+
+            const newExcluded = [];
+            if (newEnd) {
+                let curr = dayjs(newStart).add(1, 'day');
+                while (curr.isBefore(newEnd, 'day')) {
+                    const s = curr.format('YYYY-MM-DD');
+                    if (!currentSelected.includes(s)) newExcluded.push(s);
+                    curr = curr.add(1, 'day');
+                }
+            }
+
+            onUpdateFullObject(index, { ...variantData, startDate: newStart, endDate: newEnd, excludedDates: newExcluded });
         }
     };
 
@@ -67,26 +119,56 @@ const VariantCard = ({ index, variantData, hasVariants, onUpdate, onUpdateFullOb
         if (outsideCurrentMonth) return <Box sx={{ flex: 1, height: '40px', m: '0 2px' }} />;
 
         const dateStr = day.format('YYYY-MM-DD');
-        const isExcluded = excludedDates.includes(dateStr);
-        const isStart = variantData.startDate && day.isSame(variantData.startDate, 'day');
-        const isEnd = variantData.endDate && day.isSame(variantData.endDate, 'day');
-        const isBetween = variantData.startDate && variantData.endDate && day.isAfter(variantData.startDate, 'day') && day.isBefore(variantData.endDate, 'day');
         const isToday = dayjs().isSame(day, 'day');
 
         let bgColor = 'transparent', borderStyle = 'none', textColor = isDark ? '#eee0da' : '#2B211E';
 
-        if (disabled) { textColor = isDark ? alpha('#eee0da', 0.2) : alpha('#2B211E', 0.2); }
-        else if (isStart || isEnd) { bgColor = theme.palette.primary.main; textColor = '#131110'; }
-        else if (isBetween) {
-            if (isExcluded) { borderStyle = `2px solid ${theme.palette.primary.main}`; textColor = theme.palette.primary.main; }
-            else { bgColor = alpha(theme.palette.primary.main, 0.15); textColor = theme.palette.primary.main; }
+        if (disabled) {
+            textColor = isDark ? alpha('#eee0da', 0.2) : alpha('#2B211E', 0.2);
+        } else if (selectionMode === 'range') {
+            const isStart = variantData.startDate && day.isSame(variantData.startDate, 'day');
+            const isEnd = variantData.endDate && day.isSame(variantData.endDate, 'day');
+            const isBetween = variantData.startDate && variantData.endDate && day.isAfter(variantData.startDate, 'day') && day.isBefore(variantData.endDate, 'day');
+            const isExcluded = excludedDates.includes(dateStr);
+
+            if (isExcluded && (isBetween || isStart || isEnd)) {
+                borderStyle = `1px solid ${theme.palette.primary.main}`;
+                textColor = theme.palette.primary.main;
+                bgColor = 'transparent';
+            } else if (isStart || isEnd) {
+                bgColor = theme.palette.primary.main;
+                textColor = '#131110';
+            } else if (isBetween) {
+                bgColor = alpha(theme.palette.primary.main, 0.15);
+                textColor = theme.palette.primary.main;
+            }
+        } else {
+            const currentSelected = getSelectedDates();
+            const isSelected = currentSelected.includes(dateStr);
+            const isExcluded = excludedDates.includes(dateStr);
+
+            if (isSelected) {
+                bgColor = theme.palette.primary.main;
+                textColor = '#131110';
+            } else if (isExcluded) {
+                borderStyle = `1px solid ${theme.palette.primary.main}`;
+                textColor = theme.palette.primary.main;
+            }
         }
-        if (isToday && !isStart && !isEnd && !isBetween) { borderStyle = `1px solid ${theme.palette.text.primary}`; }
+
+        if (isToday && bgColor === 'transparent' && borderStyle === 'none' && !disabled) {
+            borderStyle = `1px solid ${theme.palette.text.primary}`;
+        }
 
         return (
             <Box sx={{ flex: 1, height: '40px', m: '0 2px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <Box {...other} onClick={(e) => { e.stopPropagation(); e.preventDefault(); if (!disabled) handleDateClick(day); }}
-                     sx={{ backgroundColor: bgColor, border: borderStyle, borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: disabled ? 'default' : 'pointer', color: textColor, opacity: disabled ? 0.6 : 1, fontSize: '0.85rem', '&:hover': { backgroundColor: disabled ? 'transparent' : (isStart || isEnd) ? theme.palette.primary.main : alpha(theme.palette.primary.main, 0.3) } }}
+                     sx={{
+                         backgroundColor: bgColor, border: borderStyle, borderRadius: '50%', width: '32px', height: '32px',
+                         display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: disabled ? 'default' : 'pointer',
+                         color: textColor, opacity: disabled ? 0.6 : 1, fontSize: '0.85rem',
+                         '&:hover': { backgroundColor: disabled ? 'transparent' : (bgColor !== 'transparent' && borderStyle === 'none' ? theme.palette.primary.main : alpha(theme.palette.primary.main, 0.3)) }
+                     }}
                 >
                     {day.date()}
                 </Box>
@@ -94,43 +176,36 @@ const VariantCard = ({ index, variantData, hasVariants, onUpdate, onUpdateFullOb
         );
     };
 
-    // ─── منطق الشفتات ───
     const handleAddShift = () => {
         if (draftStart && draftEnd && draftStart.isValid() && draftEnd.isValid() && draftStart.isBefore(draftEnd)) {
             const newShift = { start: draftStart.format('HH:mm'), end: draftEnd.format('HH:mm'), startLabel: draftStart.format('hh:mm A'), endLabel: draftEnd.format('hh:mm A') };
-            updateVariant({ shiftRanges: [...shiftRanges, newShift] });
+            onUpdate(index, 'shiftRanges', [...shiftRanges, newShift]);
             setDraftStart(null); setDraftEnd(null);
         }
     };
 
-    const handleDeleteShift = (idx) => updateVariant({ shiftRanges: shiftRanges.filter((_, i) => i !== idx) });
+    const handleDeleteShift = (idx) => onUpdate(index, 'shiftRanges', shiftRanges.filter((_, i) => i !== idx));
 
-    // ─── منطق الصور المؤقتة (الربط مع Backend) ───
     const handleFileChange = async (event) => {
         const newFiles = Array.from(event.target.files);
         if (newFiles.length === 0) return;
 
         setIsUploading(true);
+        let currentImages = [...images];
 
         for (const file of newFiles) {
-            // إنشاء رابط محلي للعرض الفوري (Blob)
             const localPreview = URL.createObjectURL(file);
-
             try {
                 const response = await additionService.uploadTempImage(file);
                 if (response && response.temp_path) {
-                    // نحفظ كلاً من الرابط المحلي للـ Preview ومسار السيرفر للـ Payload
-                    const newImageObj = {
-                        preview: localPreview,
-                        tempPath: response.temp_path
-                    };
-
-                    onUpdate(index, 'images', [...images, newImageObj]);
+                    currentImages.push({ preview: localPreview, tempPath: response.temp_path });
                 }
             } catch (error) {
                 console.error("Error uploading image:", error);
             }
         }
+
+        onUpdate(index, 'images', currentImages);
         setIsUploading(false);
         if (fileInputRef.current) fileInputRef.current.value = "";
     };
@@ -173,10 +248,31 @@ const VariantCard = ({ index, variantData, hasVariants, onUpdate, onUpdateFullOb
                 <Typography variant="subtitle2" sx={{ color: isDark ? '#c5a059' : '#b38c45', fontWeight: 'bold', fontSize: '12px', textTransform: 'uppercase' }}>
                     VARIANT {index + 1}
                 </Typography>
-                <FormControlLabel control={<Switch checked={isAllDay} size="small" onChange={(e) => updateVariant({ isAllDay: e.target.checked })} />} label={<Typography sx={{ fontSize: '10px', fontWeight: 'bold', color: theme.palette.text.secondary }}>ALL DAY</Typography>} sx={{ m: 0 }} />
             </Box>
 
-            {/* 1. الروزنامة */}
+            {/* 💡 التعديل هنا: استخدام nowrap و space-between لضمان بقائهم على سطر واحد */}
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1, mt: 1, width: '100%' }}>
+                <Typography variant="caption" sx={{ color: isDark ? '#9a8f80' : '#7A6F5E', fontWeight: 'bold', textTransform: 'uppercase', fontSize: '10px', whiteSpace: 'nowrap' }}>
+                    SELECTION MODE
+                </Typography>
+                <RadioGroup
+                    row
+                    sx={{ flexWrap: 'nowrap' }} // 👈 هذه تمنعهم من النزول لسطر ثاني
+                    value={selectionMode}
+                    onChange={(e) => onUpdateFullObject(index, {
+                        ...variantData,
+                        selectionMode: e.target.value,
+                        startDate: null,
+                        endDate: null,
+                        excludedDates: [],
+                        selectedDates: []
+                    })}
+                >
+                    <FormControlLabel value="range" control={<Radio size="small" sx={{ color: isDark ? '#c5a059' : '#b38c45', '&.Mui-checked': { color: isDark ? '#c5a059' : '#b38c45' }, p: 0.5 }} />} label={<Typography sx={{ fontSize: '11px', color: isDark ? '#fff' : '#2B211E', whiteSpace: 'nowrap' }}>Date Range</Typography>} sx={{ m: 0, mr: 1.5 }} />
+                    <FormControlLabel value="multiple" control={<Radio size="small" sx={{ color: isDark ? '#c5a059' : '#b38c45', '&.Mui-checked': { color: isDark ? '#c5a059' : '#b38c45' }, p: 0.5 }} />} label={<Typography sx={{ fontSize: '11px', color: isDark ? '#fff' : '#2B211E', whiteSpace: 'nowrap' }}>Multiple Days</Typography>} sx={{ m: 0 }} />
+                </RadioGroup>
+            </Box>
+
             <LocalizationProvider dateAdapter={AdapterDayjs}>
                 <Box sx={{
                     borderRadius: '6px', bgcolor: isDark ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.4)',
@@ -192,11 +288,25 @@ const VariantCard = ({ index, variantData, hasVariants, onUpdate, onUpdateFullOb
                     '& .MuiPickersCalendarHeader-label': { color: isDark ? '#eee0da' : '#2B211E', fontWeight: 'bold', fontSize: '13px' },
                     '& .MuiIconButton-root': { color: isDark ? '#c5a059' : '#b38c45' }
                 }}>
-                    <StaticDatePicker displayStaticWrapperAs="desktop" disablePast value={variantData?.startDate || null} onChange={() => { }} slots={{ day: renderCustomDay }} slotProps={{ actionBar: { actions: [] } }} sx={{ backgroundColor: 'transparent', '& .MuiPickersToolbar-root': { display: 'none' } }} />
+                    <StaticDatePicker
+                        displayStaticWrapperAs="desktop"
+                        disablePast
+                        value={selectionMode === 'range' ? (variantData?.startDate || null) : null}
+                        onChange={() => { }}
+                        slots={{ day: renderCustomDay }}
+                        slotProps={{ actionBar: { actions: [] } }}
+                        sx={{ backgroundColor: 'transparent', '& .MuiPickersToolbar-root': { display: 'none' } }}
+                    />
                 </Box>
             </LocalizationProvider>
 
-            {/* 2. الشفتات وزر الإضافة */}
+            <Box sx={{ mt: 0.5, mb: 0.5 }}>
+                <FormControlLabel
+                    control={<Switch checked={isAllDay} size="small" onChange={(e) => onUpdate(index, 'isAllDay', e.target.checked)} sx={{ '& .MuiSwitch-switchBase.Mui-checked': { color: '#c5a059' }, '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { backgroundColor: '#c5a059' } }} />}
+                    label={<Typography sx={{ fontSize: '12px', fontWeight: 'bold', color: isDark ? '#fff' : '#2B211E' }}>All Day (No specific shifts)</Typography>}
+                />
+            </Box>
+
             {!isAllDay && (
                 <Box>
                     <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -216,7 +326,6 @@ const VariantCard = ({ index, variantData, hasVariants, onUpdate, onUpdateFullOb
                 </Box>
             )}
 
-            {/* 3. صندوق رفع وإدارة الصور */}
             <Box sx={{
                 border: isDark ? '1px dashed rgba(78, 70, 57, 0.6)' : '1px dashed rgba(179, 140, 69, 0.6)',
                 borderRadius: '4px', p: 1,
@@ -235,7 +344,6 @@ const VariantCard = ({ index, variantData, hasVariants, onUpdate, onUpdateFullOb
                                 position: 'relative', width: '55px', height: '55px', flexShrink: 0,
                                 borderRadius: '4px', overflow: 'hidden', border: `1px solid ${theme.palette.divider}`
                             }}>
-                                {/* العرض من الرابط المحلي (Blob) مباشرة */}
                                 <img
                                     src={imgObj.preview}
                                     alt={`variant-img-${imgIdx}`}
@@ -276,25 +384,22 @@ const VariantCard = ({ index, variantData, hasVariants, onUpdate, onUpdateFullOb
 
             {hasVariants === 'yes' && (<CustomInputField label="Color Name" value={variantData?.color || ''} onChange={(e) => onUpdate(index, 'color', e.target.value)} sx={smallInputStyle} />)}
 
-            {/* الحقول الجديدة: نوع السعر والعملة */}
             <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: 2, mt: 1 }}>
-                {/* 1. نوع السعر (Fixed / Hourly) */}
                 <Box sx={{ flex: 1 }}>
                     <Typography variant="caption" sx={{ color: theme.palette.text.secondary, fontWeight: 'bold', display: 'block', mb: 0.5 }}>PRICE TYPE</Typography>
-                    <RadioGroup row value={variantData?.priceType || 'fixed'} onChange={(e) => updateVariant({ priceType: e.target.value })}>
+                    <RadioGroup row value={variantData?.priceType || 'fixed'} onChange={(e) => onUpdate(index, 'priceType', e.target.value)}>
                         <FormControlLabel value="fixed" control={<Radio size="small" />} label={<Typography sx={{fontSize:'12px'}}>Fixed</Typography>} />
                         <FormControlLabel value="hourly" control={<Radio size="small" />} label={<Typography sx={{fontSize:'12px'}}>Hourly</Typography>} />
                     </RadioGroup>
                 </Box>
 
-                {/* 2. اختيار العملة (بجانب النوع) */}
                 <Box sx={{ flex: 1 }}>
                     <Autocomplete
                         filterOptions={(options, state) => filter(options, state)}
                         options={allCurrencies}
                         getOptionLabel={(option) => option.label}
                         value={allCurrencies.find(c => c.code === variantData?.currency) || null}
-                        onChange={(event, newValue) => updateVariant({ currency: newValue ? newValue.code : '' })}
+                        onChange={(event, newValue) => onUpdate(index, 'currency', newValue ? newValue.code : '')}
                         renderInput={(params) => (
                             <TextField
                                 {...params}

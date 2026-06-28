@@ -17,7 +17,8 @@ import CompanyProfileForm from './components/CompanyProfileForm';
 import AccountTypeForm from './components/AccountTypeForm';
 
 import { useDispatch } from 'react-redux';
-import {registerUser, verifyOTPEmail, verifyOTPUser} from './authSlice';
+// 💡 التعديل 1: إضافة resendOtpUser للـ import
+import {registerUser, verifyOTPEmail, verifyOTPUser, resendOtpUser} from './authSlice';
 
 function RegisterPage() {
     const theme = useTheme();
@@ -35,6 +36,17 @@ function RegisterPage() {
         confirmPassword: ''
     });
 
+    // 💡 التعديل 2: استخدام formData.contactInfo بدل userPhone الوهمي
+    const handleResendOtp = async () => {
+        try {
+            const actionResult = await dispatch(resendOtpUser({ identity: formData.contactInfo })).unwrap();
+            return true;
+        } catch (error) {
+            console.error("Resend OTP error:", error);
+            return false;
+        }
+    };
+
     const handleChange = (field, value) => {
         setFormData(prev => ({ ...prev, [field]: value }));
         if (error) setError('');
@@ -48,7 +60,6 @@ function RegisterPage() {
         return { isValid: false, type: null };
     };
 
-    // في دالة handleFirstStepSubmit
     const handleFirstStepSubmit = (e) => {
         if (e) e.preventDefault();
 
@@ -63,7 +74,7 @@ function RegisterPage() {
             identity: formData.contactInfo,
             password: formData.password,
             password_confirmation: formData.confirmPassword,
-            role: 'provider' // دائماً provider
+            role: 'provider'
         };
 
         dispatch(registerUser(registerPayload)).then((result) => {
@@ -76,31 +87,35 @@ function RegisterPage() {
         });
     };
 
-// في دالة handleVerifyOTP للتأكد من الانتقال الصحيح
     const handleVerifyOTP = async (code) => {
         setError('');
         const infoValidation = validateContactInfo(formData.contactInfo);
 
         let result;
         if (infoValidation.type === 'email') {
-            result = await dispatch(verifyOTPEmail({ email: formData.contactInfo, otp: code }));
+            // 💡 التعديل هنا: توحيد الإرسال ليكون identity
+            result = await dispatch(verifyOTPEmail({ identity: formData.contactInfo, code: code }));
         } else {
-            result = await dispatch(verifyOTPUser({ phone: formData.contactInfo, code: code }));
+            // 💡 التعديل هنا: إرسال identity بدلاً من phone
+            result = await dispatch(verifyOTPUser({ identity: formData.contactInfo, code: code }));
         }
 
         if (result.meta.requestStatus === 'fulfilled') {
+            // 💡 حفظ التوكن الذي يرجعه التحقق في الـ Local Storage فوراً
+            if(result.payload?.data?.access_token) {
+                localStorage.setItem('token', result.payload.data.access_token);
+            }
+
             if (accountType === 'freelancer') setStep(3);
             else setStep(4);
-            return true; // نجح
+            return true;
         } else {
-            return false; // فشل
+            return false;
         }
     };
 
     const handleFinalSubmit = (profileData) => {
-        // هنا يتم إرسال بيانات البروفايل (Company/Freelancer Profile)
         console.log("Finalizing profile:", profileData);
-        // dispatch(setupProviderProfile(profileData));
         navigate('/company-dashboard');
     };
 
@@ -112,11 +127,11 @@ function RegisterPage() {
                 <Box sx={{ position: 'relative', zIndex: 10, color: '#c5a059', textTransform: 'uppercase', fontSize: '13px', fontWeight: 'bold', letterSpacing: '0.25em' }}>✦ Royal Events ✦</Box>
                 <Box sx={{ position: 'relative', zIndex: 10, maxWidth: '440px', mt: 'auto', mb: 3, textAlign: 'left' }}>
                     <Typography variant="caption" sx={{ color: '#c5a059', letterSpacing: '0.2em', textTransform: 'uppercase', fontWeight: 600, mb: 1, display: 'block', fontSize: '11px' }}>Heritage & Excellence</Typography>
-                    <Typography variant="h3" sx={{ fontFamily: "'Playfair Display', serif", color: '#c5a059', fontWeight: 300, mb: 1.5, fontSize: '2.5rem', lineHeight: 1.25 }}>
+                    <Typography variant="h3" sx={{ fontFamily: "'Playfair Display', serif", color:'#ffffff', fontWeight: 300, mb: 1.5, fontSize: '2.5rem', lineHeight: 1.25 }}>
                         A portal to refined <br />
-                        <Box component="span" sx={{ color: theme.palette.text.primary, fontWeight: 400 }}>experiences and bespoke luxury.</Box>
+                        <Box component="span" sx={{ color: '#c5a059', fontWeight: 400 }}>experiences and bespoke luxury.</Box>
                     </Typography>
-                    <Typography variant="body2" sx={{ color: theme.palette.text.secondary, fontSize: '12px', fontWeight: 300, lineHeight: 1.6 }}>Join an exclusive collective where meticulous craftsmanship meets timeless elegance.</Typography>
+                    <Typography variant="body2" sx={{ color:'#e0e0e0', fontSize: '12px', fontWeight: 300, lineHeight: 1.6 }}>Join an exclusive collective where meticulous craftsmanship meets timeless elegance.</Typography>
                 </Box>
                 <Box sx={{ position: 'relative', zIndex: 10, fontSize: '11px', color: '#8a7f70', opacity: 0.7 }}>© 2026 Royal Events International.</Box>
             </Box>
@@ -141,42 +156,35 @@ function RegisterPage() {
                                 <InputField label="Email or Phone" id="contactInfo" name="identity" value={formData.contactInfo} onChange={(e) => handleChange('contactInfo', e.target.value)} />
                                 <InputField label="Password" id="password" name="password" type="password" value={formData.password} onChange={(e) => handleChange('password', e.target.value)} />
                                 <InputField label="Confirm Password" id="confirmPassword" name="password_confirmation" type="password" value={formData.confirmPassword} onChange={(e) => handleChange('confirmPassword', e.target.value)} />
-                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mt: 1 }}>
-                                    <Typography sx={{ color: '#c5a059', fontFamily: "'Inter', sans-serif", fontSize: '10px', fontWeight: 600, letterSpacing: '0.2em', textTransform: 'uppercase', textAlign: 'center' }}>
-                                        Membership Category
-                                    </Typography>
-
-                                </Box>
 
                                 {error && <Alert severity="error" sx={{ backgroundColor: 'rgba(244, 67, 54, 0.04)', color: '#ffcdd2', border: '1px solid rgba(183, 28, 28, 0.25)', fontSize: '12px', py: 0.6 }}>{error}</Alert>}
                                 <Box sx={{ pt: 1 }}><Button text="CONTINUE" type="submit" /></Box>
                             </form>
                             <Typography sx={{ color: theme.palette.text.secondary, fontSize: '13px', mt: 1, textAlign: 'center' }}>Already have an account?
-                                <Box
-                                    component="span"
-                                    onClick={() => navigate('/')}
-                                    sx={{ color: '#c5a059', cursor: 'pointer', fontWeight: 500, textDecoration: 'underline' }}
-                                >
+                                <Box component="span" onClick={() => navigate('/')} sx={{ color: '#c5a059', cursor: 'pointer', fontWeight: 500, textDecoration: 'underline' }}>
                                     Sign In
                                 </Box>
                             </Typography>
                         </Box>
                     )}
 
-                    {step === 2 && <OTPVerificationForm onBack={() => setStep(1)} onVerify={handleVerifyOTP} />}
+                    {/* 💡 التعديل 3: تمرير الدوال الصحيحة الموجودة بالصفحة */}
+                    {step === 2 && <OTPVerificationForm
+                        onBack={() => setStep(1)}
+                        onVerify={handleVerifyOTP}
+                        onResend={handleResendOtp}
+                    />}
 
-                    {/* خطوة اختيار النوع الجديدة */}
                     {step === 3 && (
                         <AccountTypeForm
                             onBack={() => setStep(2)}
                             onContinue={(type) => {
-                                setAccountType(type); // تخزين الاختيار (freelancer/company)
-                                setStep(4); // الانتقال لخطوة إكمال الملف
+                                setAccountType(type);
+                                setStep(4);
                             }}
                         />
                     )}
 
-                    {/* خطوة إكمال الملف الشخصي */}
                     {step === 4 && accountType === 'freelancer' && (
                         <FreelancerProfileForm onBack={() => setStep(3)} onSubmit={handleFinalSubmit} accountType={accountType} />
                     )}

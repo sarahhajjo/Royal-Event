@@ -1,104 +1,47 @@
-import React, { useState } from "react";
-import {
-    Box,
-    Typography,
-    Tabs,
-    Tab,
-    Button,
-    Stack,
-    Paper,
-} from "@mui/material";
+import React, { useState, useEffect } from "react";
+import { Box, Typography, Tabs, Tab, Button, Stack, Paper, CircularProgress } from "@mui/material";
 import InventoryOutlinedIcon from "@mui/icons-material/InventoryOutlined";
 import { useTheme } from "@mui/material/styles";
+import { useDispatch, useSelector } from 'react-redux';
+import dayjs from 'dayjs';
 
 import ArrangementCard from "./components/ArrangementCard";
 import HallCard from "./components/HallCard";
 import ProductCard from "./components/ProductCard";
 import OfferSection from "./components/OfferSection";
+import Halldetailpage from "./details-hall/Halldetailpage";
+import Productdetailpage from "./details-hall/Productdetailpage";
+// 💡 استدعاء صفحة تفاصيل التنسيق
+import Arrangmentdetailpage from "./details-hall/Arrangmentdetailpage";
 
-// ─── Demo data ───────────────────────────────────────────────────────────────
-const ARRANGEMENTS = [
-    {
-        id: 1,
-        image: "https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=400&q=80",
-        category: "Luxury Wedding",
-        title: "Royal Andalusia Palace Arrangement",
-        rating: 4.9,
-        price: 7500,
-        currency: "SAR",
-        availableFrom: "Oct 15",
-        availableTo: "Oct 22, 2024",
-        eventType: "Grand Ceremonies",
-        status: "confirmed",
-    },
-    {
-        id: 2,
-        image: "https://images.unsplash.com/photo-1497366216548-37526070297c?w=400&q=80",
-        category: "Business Meet",
-        title: "Elite Executive Arrangement",
-        rating: 4.7,
-        price: 4200,
-        currency: "SAR",
-        availableFrom: "Oct 25",
-        availableTo: "Oct 30, 2024",
-        eventType: "Corporate Meetings",
-        status: "confirmed",
-    },
-];
-
-const PRODUCTS_PUBLISHED = [
-    {
-        id: 101,
-        image: "https://images.unsplash.com/photo-1612198790700-588f7b3e6c29?w=400&q=80",
-        category: "Home Decor",
-        title: "Premium Crystal Vase Set",
-        rating: 4.8,
-        price: 450,
-        currency: "SAR",
-        colorOptions: ["#c0c0c0", "#1a1a2e", "#4a90d9"],
-        extraColors: 3,
-        availableFrom: "Oct 15",
-        availableTo: "Oct 22, 2024",
-        status: "published",
-    },
-    {
-        id: 102,
-        image: "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=400&q=80",
-        category: "Furniture",
-        title: "Venice Golden Occasional Chair",
-        rating: 4.6,
-        price: 120,
-        currency: "SAR",
-        colorOptions: ["#f5f0e8", "#c9a84c"],
-        extraColors: 0,
-        availableFrom: "Oct 15",
-        availableTo: "Oct 22, 2024",
-        status: "published",
-    },
-];
-
-const PRODUCTS_SAVED = [];
-
-const HALLS = [
-    {
-        id: 201,
-        image: "https://images.unsplash.com/photo-1541532713592-79a0317b6b77?w=400&q=80",
-        category: "Banquet Hall",
-        title: "Grand Crystal Ballroom",
-        rating: 4.9,
-        price: 15000,
-        currency: "SAR",
-        location: "Al-Nakheel District, Riyadh",
-        date: "Nov 10, 2024",
-        timeFrom: "08:00 AM",
-        timeTo: "11:00 PM",
-        status: "confirmed",
-    },
-];
+// 💡 استيراد الأكشنز من الـ Slice (بما فيها التنسيقات)
+import { fetchMyProducts, fetchMyServices, fetchMyArrangements } from "./myCatalogSlice";
 
 const PAGE_TABS = ["Pending", "Approved", "Rejected", "Cancelled"];
 
-// ─── Products sub-tab toggle ─────────────────────────────────────────────────
+// ─── Helper: معالجة مسار الصور ────────────────────────────────────────────────
+const fixImageUrl = (url) => {
+    if (!url) return "https://via.placeholder.com/400x300?text=No+Image";
+    const BACKEND_URL = 'http://127.0.0.1:8000';
+
+    let finalUrl = url;
+
+    // 💡 إذا كان الرابط يحتوي على /uploads/ ولكن لا يحتوي على /storage/، نقوم بإجبار إضافتها
+    if (finalUrl.includes('/uploads/') && !finalUrl.includes('/storage/')) {
+        finalUrl = finalUrl.replace('/uploads/', '/storage/uploads/');
+    }
+
+    // إذا كان الرابط كامل (http)، نرجعه بعد التعديل
+    if (finalUrl.startsWith('http')) return finalUrl;
+
+    // إذا كان مساراً جزئياً (Relative Path)
+    const cleanPath = finalUrl.startsWith('/') ? finalUrl : `/${finalUrl}`;
+    if (cleanPath.startsWith('/storage/')) return `${BACKEND_URL}${cleanPath}`;
+
+    return `${BACKEND_URL}/storage${cleanPath}`;
+};
+
+// ─── Products sub-tab toggle ──────────────────────────────────────────────────
 function ProductsToggle({ value, onChange }) {
     const theme = useTheme();
     const isDark = theme.palette.mode === 'dark';
@@ -112,17 +55,10 @@ function ProductsToggle({ value, onChange }) {
                     disableRipple
                     onClick={() => onChange(label.toLowerCase())}
                     sx={{
-                        px: 2,
-                        py: 0.6,
-                        borderRadius: 0,
-                        fontSize: "0.75rem",
-                        fontWeight: 600,
-                        textTransform: "none",
+                        px: 2, py: 0.6, borderRadius: 0, fontSize: "0.75rem", fontWeight: 600, textTransform: "none",
                         bgcolor: value === label.toLowerCase() ? theme.palette.primary.main : "transparent",
                         color: value === label.toLowerCase() ? theme.palette.background.default : theme.palette.text.secondary,
-                        "&:hover": {
-                            bgcolor: value === label.toLowerCase() ? theme.palette.primary.main : (isDark ? 'rgba(197, 160, 89, 0.05)' : 'rgba(179, 140, 69, 0.05)'),
-                        },
+                        "&:hover": { bgcolor: value === label.toLowerCase() ? theme.palette.primary.main : (isDark ? 'rgba(197, 160, 89, 0.05)' : 'rgba(179, 140, 69, 0.05)') },
                     }}
                 >
                     {label}
@@ -132,23 +68,14 @@ function ProductsToggle({ value, onChange }) {
     );
 }
 
-// ─── Empty state ─────────────────────────────────────────────────────────────
+// ─── Empty state ──────────────────────────────────────────────────────────────
 function EmptyState({ message, hint }) {
     const theme = useTheme();
     const isDark = theme.palette.mode === 'dark';
     const borderColor = isDark ? 'rgba(78, 70, 57, 0.2)' : 'rgba(179, 140, 69, 0.2)';
 
     return (
-        <Paper
-            elevation={0}
-            sx={{
-                bgcolor: theme.palette.background.paper,
-                border: `1px solid ${borderColor}`,
-                borderRadius: "12px",
-                py: 5,
-                textAlign: "center",
-            }}
-        >
+        <Paper elevation={0} sx={{ bgcolor: theme.palette.background.paper, border: `1px solid ${borderColor}`, borderRadius: "12px", py: 5, textAlign: "center" }}>
             <InventoryOutlinedIcon sx={{ fontSize: 36, color: theme.palette.text.secondary, mb: 1.5 }} />
             <Typography sx={{ color: theme.palette.text.primary, fontWeight: 600, mb: 0.5 }}>{message}</Typography>
             <Typography sx={{ color: theme.palette.text.secondary, fontSize: "0.8rem" }}>{hint}</Typography>
@@ -156,7 +83,7 @@ function EmptyState({ message, hint }) {
     );
 }
 
-// ─── Sub-section label (Saved Drafts / Published Products) ───────────────────
+// ─── Sub-section label ────────────────────────────────────────────────────────
 function SubSectionLabel({ icon, label }) {
     const theme = useTheme();
     return (
@@ -167,8 +94,19 @@ function SubSectionLabel({ icon, label }) {
     );
 }
 
-// ─── Main page ────────────────────────────────────────────────────────────────
-export default function MyCatalogPage() {
+// ─── Main Page ────────────────────────────────────────────────────────────────
+export default function MyCatalogPage({
+                                          externalHallId = null,
+                                          externalProductId = null,
+                                          externalArrangementId = null, // 💡 إضافة معرف التنسيق
+                                          onClearHall = null,
+                                          onClearProduct = null,
+                                          onClearArrangement = null,    // 💡 تفريغ التنسيق
+                                          onSelectHall = null,
+                                          onSelectProduct = null,
+                                          onSelectArrangement = null,   // 💡 تحديد التنسيق
+                                      }) {
+    // 💡 1 تعني التاب "Approved"
     const [pageTab, setPageTab] = useState(1);
     const [productTab, setProductTab] = useState("published");
 
@@ -176,11 +114,138 @@ export default function MyCatalogPage() {
     const isDark = theme.palette.mode === 'dark';
     const borderColor = isDark ? 'rgba(78, 70, 57, 0.2)' : 'rgba(179, 140, 69, 0.2)';
 
+    const dispatch = useDispatch();
+
+    // 💡 سحب البيانات من الستيت وتضمين arrangements
+    const { products = [], services: halls = [], arrangements = [], loading = false } = useSelector((state) => state.myCatalog || {});
+
+    useEffect(() => {
+        dispatch(fetchMyProducts());
+        dispatch(fetchMyServices());
+        dispatch(fetchMyArrangements()); // 💡 جلب التنسيقات
+    }, [dispatch]);
+
     const handleEdit = (id) => console.log("Edit", id);
-    const handleView = (id) => console.log("View", id);
     const handleDelete = (id) => console.log("Delete", id);
 
-    const displayedProducts = productTab === "published" ? PRODUCTS_PUBLISHED : PRODUCTS_SAVED;
+    // ── Detail modes ──
+    if (externalHallId !== null) return <Halldetailpage hallId={externalHallId} onBack={onClearHall} />;
+    if (externalProductId !== null) return <Productdetailpage productId={externalProductId} onBack={onClearProduct} />;
+    // 💡 فتح صفحة تفاصيل التنسيق
+    if (externalArrangementId !== null) return <Arrangmentdetailpage arrangementId={externalArrangementId} onBack={onClearArrangement} />;
+
+
+    // ─── Mapping & Filtering Logic ───
+
+    // 1. تحديد الحالة الفعالة بناءً على التاب الذي يختاره المستخدم
+    // 0 = Pending, 1 = Approved, 2 = Rejected, 3 = Cancelled
+    const tabStatuses = ["pending_approval", "approved", "rejected", "cancelled"];
+    const activeStatusFilter = tabStatuses[pageTab];
+
+    // ── تحويل وتجهيز التنسيقات (Arrangements) ──
+    const mappedArrangements = arrangements.map(arr => {
+        let availableFrom = null;
+        let availableTo = null;
+        if (arr.availabilities?.length > 0) {
+            availableFrom = dayjs(arr.availabilities[0].available_date).format('MMM DD');
+            availableTo = dayjs(arr.availabilities[arr.availabilities.length - 1].available_date).format('MMM DD, YYYY');
+        }
+
+        const rawImage = arr.images?.[0]?.url || arr.images?.[0]?.path;
+
+        return {
+            id: arr.id,
+            image: fixImageUrl(rawImage),
+            category: arr.category?.name?.en || arr.category?.name || "Arrangement",
+            title: arr.title?.en || arr.title || "Untitled Arrangement",
+            rating: 5.0,
+            price: arr.price || 0,
+            currency: arr.currency || "SAR",
+            availableFrom,
+            availableTo,
+            eventType: "Custom Event",
+            status: arr.moderation_status // حالة التنسيق (pending_approval, approved, ...)
+        };
+    });
+
+    const displayedArrangements = mappedArrangements.filter(a => a.status === activeStatusFilter);
+
+
+    // ── تحويل وتجهيز المنتجات (Products) ──
+    const mappedProducts = products.map(p => {
+        const mainVariant = p.variants?.[0] || {};
+        const availabilities = mainVariant.availabilities || [];
+
+        let availableFrom = null;
+        let availableTo = null;
+        if (availabilities.length > 0) {
+            availableFrom = dayjs(availabilities[0].available_date).format('MMM DD');
+            availableTo = dayjs(availabilities[availabilities.length - 1].available_date).format('MMM DD, YYYY');
+        }
+
+        const rawImage = p.image?.url || p.image?.path || mainVariant.images?.[0]?.url || mainVariant.images?.[0]?.path;
+
+        return {
+            id: p.id,
+            image: fixImageUrl(rawImage),
+            category: p.category?.name?.en || p.category?.name || "Product",
+            title: p.title?.en || p.title || "Untitled",
+            rating: 4.8,
+            reviewCount: null,
+            price: mainVariant.price || 0,
+            currency: mainVariant.currency || "SAR",
+            colorOptions: p.variants?.map(v => v.name?.en || v.name) || [],
+            extraColors: p.variants?.length > 3 ? p.variants.length - 3 : 0,
+            availableFrom,
+            availableTo,
+            status: p.moderation_status || p.status
+        };
+    });
+
+    const displayedProducts = mappedProducts.filter(p => {
+        if (productTab === "saved") return p.status === "draft";
+        return p.status === activeStatusFilter;
+    });
+
+    // ── تحويل وتجهيز الصالات (Halls / Services) ──
+    const mappedHalls = halls.map(h => {
+        const mainVariant = h.variants?.[0] || {};
+        const availabilities = mainVariant.availabilities || [];
+
+        let date = null;
+        let timeFrom = null;
+        let timeTo = null;
+
+        if (availabilities.length > 0) {
+            date = dayjs(availabilities[0].available_date).format('MMM DD, YYYY');
+            const slots = availabilities[0].slots || [];
+            if (slots.length > 0) {
+                timeFrom = slots[0].start_time ? dayjs(`2024-01-01T${slots[0].start_time}`).format('hh:mm A') : '';
+                timeTo = slots[0].end_time ? dayjs(`2024-01-01T${slots[0].end_time}`).format('hh:mm A') : '';
+            }
+        }
+
+        const rawImage = h.images?.[0]?.url || h.images?.[0]?.path;
+
+        return {
+            id: h.id,
+            image: fixImageUrl(rawImage),
+            category: h.category?.name?.en || h.category?.name || "Banquet Hall",
+            title: h.title?.en || h.title || "Untitled Hall",
+            rating: 4.9,
+            reviewCount: null,
+            price: mainVariant.price || 0,
+            currency: mainVariant.currency || "SAR",
+            location: h.district?.name?.en || h.district?.name || "Unknown Location",
+            date,
+            timeFrom,
+            timeTo,
+            status: h.status
+        };
+    });
+
+    const displayedHalls = mappedHalls.filter(h => h.status === activeStatusFilter);
+
 
     return (
         <Box sx={{ width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}>
@@ -189,136 +254,115 @@ export default function MyCatalogPage() {
                 {/* Page heading */}
                 <Box sx={{ mb: 4, textAlign: 'left' }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mt: 1, mb: 1 }}>
-                        <Box
-                            sx={{
-                                width: 14,
-                                height: 14,
-                                border: `2px solid ${theme.palette.primary.main}`,
-                                transform: 'rotate(45deg)',
-                                boxShadow: `0 0 10px ${theme.palette.primary.main}40`,
-                                flexShrink: 0
-                            }}
-                        />
-                        <Typography variant="h3" sx={{
-                            fontFamily: "'Playfair Display', serif",
-                            fontSize: '2.5rem',
-                            color: theme.palette.primary.main,
-                            fontWeight: 500,
-                            m: 0
-                        }}>
+                        <Box sx={{ width: 14, height: 14, border: `2px solid ${theme.palette.primary.main}`, transform: 'rotate(45deg)', boxShadow: `0 0 10px ${theme.palette.primary.main}40`, flexShrink: 0 }} />
+                        <Typography variant="h3" sx={{ fontFamily: "'Playfair Display', serif", fontSize: '2.5rem', color: theme.palette.primary.main, fontWeight: 500, m: 0 }}>
                             My Catalog
                         </Typography>
                     </Box>
-
                     <Typography variant="body2" sx={{ color: theme.palette.text.secondary, fontWeight: 300 }}>
                         Manage and organize all your available offers on the Aurelian Reserve platform
                     </Typography>
                 </Box>
 
-                {/* ── Page-level tab bar ─────────────────────────────────────────── */}
+                {/* Page-level tab bar */}
                 <Box sx={{ borderBottom: `1px solid ${borderColor}`, mb: 4 }}>
-                    <Tabs
-                        value={pageTab}
-                        onChange={(_, v) => setPageTab(v)}
-                        variant="fullWidth"
-                        sx={{
-                            minHeight: 44,
-                            "& .MuiTabs-indicator": { bgcolor: theme.palette.primary.main, height: 2 },
-                        }}
-                    >
-                        {PAGE_TABS.map((label, i) => (
-                            <Tab
-                                key={label}
-                                label={label}
-                                sx={{
-                                    color: theme.palette.text.secondary,
-                                    fontSize: "0.8rem",
-                                    fontWeight: 600,
-                                    textTransform: "none",
-                                    minHeight: 44,
-                                    px: 2,
-                                    "&.Mui-selected": { color: theme.palette.primary.main },
-                                }}
-                            />
+                    <Tabs value={pageTab} onChange={(_, v) => setPageTab(v)} variant="fullWidth" sx={{ minHeight: 44, "& .MuiTabs-indicator": { bgcolor: theme.palette.primary.main, height: 2 } }}>
+                        {PAGE_TABS.map((label) => (
+                            <Tab key={label} label={label} sx={{ color: theme.palette.text.secondary, fontSize: "0.8rem", fontWeight: 600, textTransform: "none", minHeight: 44, px: 2, "&.Mui-selected": { color: theme.palette.primary.main } }} />
                         ))}
                     </Tabs>
                 </Box>
 
-                {/* ── Ready Arrangements section ─────────────────────────────── */}
-                <OfferSection title="Ready Arrangements">
-                    {ARRANGEMENTS.map((arr) => (
-                        <ArrangementCard
-                            key={arr.id}
-                            arrangement={arr}
-                            onEdit={handleEdit}
-                            onView={handleView}
-                            onDelete={handleDelete}
-                        />
-                    ))}
-                </OfferSection>
-
-                {/* ── Products section ───────────────────────────────────────── */}
-                <OfferSection
-                    title="Products"
-                    headerRight={<ProductsToggle value={productTab} onChange={setProductTab} />}
-                >
-                    {productTab === "saved" && (
-                        <Box>
-                            <SubSectionLabel
-                                icon={
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                        <path d="M22 10V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v4M22 10l-2 10H4L2 10M22 10H2" />
-                                    </svg>
-                                }
-                                label="Saved Drafts"
-                            />
-                            {displayedProducts.length === 0 ? (
-                                <EmptyState
-                                    message="No saved products in draft"
-                                    hint="Your unfinished product listings will appear here."
-                                />
+                {loading ? (
+                    <Box sx={{ display: 'flex', justifyContent: 'center', p: 5 }}>
+                        <CircularProgress color="primary" />
+                    </Box>
+                ) : (
+                    <>
+                        {/* 💡 Arrangements Section */}
+                        <OfferSection title="Ready Arrangements">
+                            {displayedArrangements.length === 0 ? (
+                                <EmptyState message={`No ${PAGE_TABS[pageTab].toLowerCase()} arrangements`} hint="Change the tab above to see other packages." />
                             ) : (
                                 <Stack spacing={2}>
-                                    {displayedProducts.map((p) => (
-                                        <ProductCard key={p.id} product={p} onEdit={handleEdit} onView={handleView} onDelete={handleDelete} />
+                                    {displayedArrangements.map((arr) => (
+                                        <ArrangementCard
+                                            key={arr.id}
+                                            arrangement={{...arr, status: PAGE_TABS[pageTab].toLowerCase()}}
+                                            onEdit={handleEdit}
+                                            onView={() => onSelectArrangement?.(arr.id)}
+                                            onDelete={handleDelete}
+                                        />
                                     ))}
                                 </Stack>
                             )}
-                        </Box>
-                    )}
+                        </OfferSection>
 
-                    {productTab === "published" && (
-                        <Box>
-                            <SubSectionLabel
-                                icon={
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                        <circle cx="12" cy="12" r="10" />
-                                        <path d="m9 12 2 2 4-4" />
-                                    </svg>
-                                }
-                                label="Published Products"
-                            />
-                            <Stack spacing={2}>
-                                {PRODUCTS_PUBLISHED.map((p) => (
-                                    <ProductCard key={p.id} product={p} onEdit={handleEdit} onView={handleView} onDelete={handleDelete} />
-                                ))}
-                            </Stack>
-                        </Box>
-                    )}
-                </OfferSection>
+                        {/* Products Section */}
+                        <OfferSection title="Products" headerRight={<ProductsToggle value={productTab} onChange={setProductTab} />}>
+                            {productTab === "saved" && (
+                                <Box>
+                                    <SubSectionLabel icon={<InventoryOutlinedIcon sx={{fontSize: 14}}/>} label="Saved Drafts" />
+                                    {displayedProducts.length === 0 ? (
+                                        <EmptyState message="No saved products in draft" hint="Your unfinished product listings will appear here." />
+                                    ) : (
+                                        <Stack spacing={2}>
+                                            {displayedProducts.map((p) => (
+                                                <ProductCard
+                                                    key={p.id}
+                                                    product={{...p, status: 'saved'}}
+                                                    onEdit={handleEdit}
+                                                    onView={() => onSelectProduct?.(p.id)}
+                                                    onDelete={handleDelete}
+                                                />
+                                            ))}
+                                        </Stack>
+                                    )}
+                                </Box>
+                            )}
 
-                {/* ── Halls for Rent section ─────────────────────────────────── */}
-                <OfferSection title="Halls for Rent">
-                    {HALLS.map((hall) => (
-                        <HallCard
-                            key={hall.id}
-                            hall={hall}
-                            onEdit={handleEdit}
-                            onView={handleView}
-                            onDelete={handleDelete}
-                        />
-                    ))}
-                </OfferSection>
+                            {productTab === "published" && (
+                                <Box>
+                                    <SubSectionLabel icon={<InventoryOutlinedIcon sx={{fontSize: 14}}/>} label={`Products (${PAGE_TABS[pageTab]})`} />
+                                    {displayedProducts.length === 0 ? (
+                                        <EmptyState message={`No ${PAGE_TABS[pageTab].toLowerCase()} products`} hint="Change the tab above to see other products." />
+                                    ) : (
+                                        <Stack spacing={2}>
+                                            {displayedProducts.map((p) => (
+                                                <ProductCard
+                                                    key={p.id}
+                                                    product={{...p, status: 'published'}}
+                                                    onEdit={handleEdit}
+                                                    onView={() => onSelectProduct?.(p.id)}
+                                                    onDelete={handleDelete}
+                                                />
+                                            ))}
+                                        </Stack>
+                                    )}
+                                </Box>
+                            )}
+                        </OfferSection>
+
+                        {/* Halls for Rent Section */}
+                        <OfferSection title="Halls for Rent">
+                            {displayedHalls.length === 0 ? (
+                                <EmptyState message={`No ${PAGE_TABS[pageTab].toLowerCase()} halls available`} hint="Change the tab above to see other halls." />
+                            ) : (
+                                <Stack spacing={2}>
+                                    {displayedHalls.map((hall) => (
+                                        <HallCard
+                                            key={hall.id}
+                                            hall={{...hall, status: PAGE_TABS[pageTab].toLowerCase()}}
+                                            onEdit={handleEdit}
+                                            onView={() => onSelectHall?.(hall.id)}
+                                            onDelete={handleDelete}
+                                        />
+                                    ))}
+                                </Stack>
+                            )}
+                        </OfferSection>
+                    </>
+                )}
             </Box>
         </Box>
     );
