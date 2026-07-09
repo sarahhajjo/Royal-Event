@@ -7,7 +7,7 @@ import MuiButton from '@mui/material/Button';
 import Alert from '@mui/material/Alert';
 
 // 💡 1. أضفنا onResend للـ Props
-function OTPVerificationForm({ onBack, onVerify, onResend }) {
+function OTPVerificationForm({ onBack, onVerify, onResend, email }) {
     const theme = useTheme();
     const [otp, setOtp] = useState(new Array(6).fill(""));
     const [timer, setTimer] = useState(59);
@@ -38,6 +38,7 @@ function OTPVerificationForm({ onBack, onVerify, onResend }) {
         }
     };
 
+    // داخل ملف OTPVerificationForm.jsx
     const handleSubmit = async () => {
         setError('');
         setSuccessMsg('');
@@ -47,6 +48,7 @@ function OTPVerificationForm({ onBack, onVerify, onResend }) {
             return;
         }
 
+        // هنا نقوم بتمرير الكود فقط، ولكن سنقوم بتعديل الأب ليعرف الإيميل
         const isSuccess = await onVerify(code);
         if (isSuccess === false) {
             setError('Invalid verification code. Please try again.');

@@ -10,17 +10,31 @@ import ProductOptionsPricing from './details-product/ProductOptionsPricing';
 import AvailabilityCalendar  from './detailshall-components/Availabilitycalendar';
 import BookingPipeline       from './detailshall-components/BookingPipeline';
 
-const fixImageUrl = (url) => {
-    if (!url) return "https://via.placeholder.com/1200x600?text=No+Image";
-    const BACKEND_URL = 'http://127.0.0.1:8000';
-    let finalUrl = url;
-    if (finalUrl.includes('/uploads/') && !finalUrl.includes('/storage/')) {
-        finalUrl = finalUrl.replace('/uploads/', '/storage/uploads/');
+const fixImageUrl = (img) => {
+    // 1. استخراج الرابط سواء كان نصاً مباشراً أو بداخل كائن (Object)
+    const url = typeof img === 'object' && img !== null
+        ? (img.url || img.path || img.temp_path)
+        : img;
+
+    if (!url || typeof url !== 'string') {
+        return "https://via.placeholder.com/400x300?text=No+Image";
     }
-    if (finalUrl.startsWith('http')) return finalUrl;
-    const cleanPath = finalUrl.startsWith('/') ? finalUrl : `/${finalUrl}`;
-    if (cleanPath.startsWith('/storage/')) return `${BACKEND_URL}${cleanPath}`;
-    return `${BACKEND_URL}/storage${cleanPath}`;
+
+    if (url.startsWith('http')) return url;
+
+    const BACKEND_URL = 'http://127.0.0.1:8000';
+    let cleanPath = url.startsWith('/') ? url : `/${url}`;
+
+    // 2. معالجة مسارات Laravel Storage بشكل آمن
+    if (cleanPath.includes('/uploads/') && !cleanPath.includes('/storage/')) {
+        cleanPath = cleanPath.replace('/uploads/', '/storage/uploads/');
+    }
+
+    if (!cleanPath.startsWith('/storage/')) {
+        cleanPath = `/storage${cleanPath}`;
+    }
+
+    return `${BACKEND_URL}${cleanPath}`;
 };
 
 const getHexFromColorName = (name) => {
@@ -65,9 +79,9 @@ export default function Productdetailpage({ productId, onBack }) {
         colorHex:       getHexFromColorName(v.name?.en),
 
         // 💡 الصور الآن موجودة بداخل الـ variant نفسه في JSON
-        images:         v.images?.length > 0
-            ? v.images.map(img => fixImageUrl(img.path))
-            : [fixImageUrl(null)], // أو صورة افتراضية
+        images: v.images?.length > 0
+            ? v.images.map(img => fixImageUrl(img)) // الدالة ستتعرف تلقائياً إذا كان img نصاً أو كائناً
+            : [fixImageUrl(null)],
 
         quantity:       v.stock || 0,
         price:          v.price || 0,
@@ -90,8 +104,8 @@ export default function Productdetailpage({ productId, onBack }) {
         primaryPhone:   providerData.user?.phone || 'No phone provided',
         secondaryPhone: '',
 
-        district:    rawProduct.district?.name_en || rawProduct.district?.name_ar || 'Unknown District',
-        category:    rawProduct.category?.name_en || rawProduct.category?.name_ar || 'Unknown Category',
+        district:    rawProduct.district?.name || 'Unknown District',
+        category:    rawProduct.category?.name || 'Unknown Category',
     };
     const cancellationPolicies = {
         beforeAcceptance: rawProduct.cancel_before_acceptance,

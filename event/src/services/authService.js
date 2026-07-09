@@ -55,8 +55,10 @@ const verifyOTP = async (data) => {
 };
 
 const verifyEmailOTP = async (data) => {
-    const response = await api.post(`/auth/verify-email-otp`, null, {
-        params: { email: data.email, otp: data.otp }
+    // نغير طريقة الإرسال من params إلى إرسالها كـ Body
+    // ونستخدم URLSearchParams لتتوافق مع طبيعة طلبات الـ API عندك
+    const response = await api.post(`/auth/verify-email-otp`, new URLSearchParams(data).toString(), {
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
     });
 
     if (response.data.data?.access_token) {

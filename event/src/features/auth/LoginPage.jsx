@@ -24,6 +24,8 @@ const LoginPage = () => {
         if (localError) setLocalError('');
     };
 
+    // داخل LoginPage.jsx - دالة handleSubmit
+    // داخل LoginPage.jsx - دالة handleSubmit
     const handleSubmit = (e) => {
         e.preventDefault();
         setLocalError('');
@@ -35,22 +37,28 @@ const LoginPage = () => {
 
         dispatch(loginUser(formData)).then((result) => {
             if (result.meta.requestStatus === 'fulfilled') {
-                // استخراج بيانات المستخدم من الـ result
                 const user = result.payload.data.user;
+                const role = user.roles[0]?.name; // استخراج الدور من المصفوفة
 
-                // تحقق من الـ role.
-                // ملاحظة: تأكد من اسم الحقل (هل هو role أم type أم غير ذلك؟)
-                // بناءً على هيكلية الـ API الشائعة، غالباً يكون الحقل هو role
-                if (user.role === 'admin' || user.email === 'admin@aura.com') {
-                    {/*pass:Admin@12345*/} navigate('/admin-dashboard');
+                if (role === 'admin' || user.email === 'admin@aura.com') {
+                    navigate('/admin-dashboard');
+                }
+                else if (role === 'provider') {
+                    // التحقق من نوع المزود كما هو وارد في بيانات الـ API
+                    if (user.provider_type === 'freelancer') {
+                        navigate('/freelancer-dashboard');
+                    } else {
+                        // الافتراضي للشركات
+                        navigate('/company-dashboard');
+                    }
                 }
                 else {
-                    navigate('/freelancer-dashboard');
+                    // في حال وجود دور آخر غير معرف، نرسله للرئيسية أو صفحة فارغة
+                    navigate('/');
                 }
             }
         });
     };
-
     return (
         <Box sx={{ minHeight: '100vh', backgroundColor: isDark ? '#18120f' : '#FAF0D5', display: 'flex', flexDirection: { xs: 'column', md: 'row' }, color: isDark ? '#eee0da' : '#2B211E', overflow: 'hidden', transition: 'background-color 0.3s' }}>
 

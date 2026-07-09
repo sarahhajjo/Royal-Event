@@ -33,23 +33,26 @@ function FreelancerProfileForm({ onBack, onSubmit }) {
     };
     const handleSubmit = (e) => {
         e.preventDefault();
-        if (!profileData.agreeToTerms) return;
 
+        // التحقق من الموافقة على الشروط
+        if (!profileData.agreeToTerms) {
+            // يفضل وضع Alert أو رسالة خطأ هنا مستقبلاً
+            return;
+        }
+
+        // تجهيز البيانات
         const payload = {
             brand_name: profileData.brandName,
             provider_type: 'freelancer',
             national_id: profileData.idNumber,
             experience_years: parseInt(profileData.experience),
-            // نرسل الـ ID المختار من القائمة
             categories: profileData.specialty ? [parseInt(profileData.specialty)] : [],
             portfolio: profileData.portfolio || null
         };
 
-        dispatch(setupfreelancerProfile(payload)).then((result) => {
-            if (result.meta.requestStatus === 'fulfilled') {
-                // الانتقال للداشبورد هنا
-            }
-        });
+        // 💡 السحر هنا: استدعاء الدالة الممررة من صفحة الـ Register
+        // هذه الدالة ستقوم بالـ dispatch والانتقال للداشبورد تلقائياً
+        onSubmit(payload);
     };
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3.5, width: '100%' }} className="animate-fade-in">

@@ -12,7 +12,6 @@
   "dependencies": {
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
-
     "@mui/icons-material": "^9.1.1",
     "@mui/material": "^9.1.1",
     "@mui/x-date-pickers": "^9.4.0",
@@ -21,6 +20,7 @@
     "axios": "^1.16.1",
     "currency-codes": "^2.2.0",
     "dayjs": "^1.11.21",
+    "firebase": "^12.15.0",
     "i18next": "^26.2.0",
     "i18next-browser-languagedetector": "^8.2.1",
     "react": "^19.2.6",

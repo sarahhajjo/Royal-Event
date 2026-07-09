@@ -87,25 +87,26 @@ function RegisterPage() {
         });
     };
 
-    const handleVerifyOTP = async (code) => {
+    const handleVerifyOTP = async (code) => { // الـ code يأتي من المكون
         setError('');
         const infoValidation = validateContactInfo(formData.contactInfo);
 
         let result;
+        // formData.contactInfo موجودة هنا في الـ Scope الخاص بـ RegisterPage
+        const payload = { identity: formData.contactInfo, otp: code };
+
         if (infoValidation.type === 'email') {
-            // 💡 التعديل هنا: توحيد الإرسال ليكون identity
-            result = await dispatch(verifyOTPEmail({ identity: formData.contactInfo, code: code }));
+            // نرسل الإيميل والكود
+            result = await dispatch(verifyOTPEmail({ email: formData.contactInfo, otp: code }));
         } else {
-            // 💡 التعديل هنا: إرسال identity بدلاً من phone
-            result = await dispatch(verifyOTPUser({ identity: formData.contactInfo, code: code }));
+            // نرسل رقم الهاتف والكود
+            result = await dispatch(verifyOTPUser(payload));
         }
 
         if (result.meta.requestStatus === 'fulfilled') {
-            // 💡 حفظ التوكن الذي يرجعه التحقق في الـ Local Storage فوراً
             if(result.payload?.data?.access_token) {
                 localStorage.setItem('token', result.payload.data.access_token);
             }
-
             if (accountType === 'freelancer') setStep(3);
             else setStep(4);
             return true;
@@ -115,8 +116,13 @@ function RegisterPage() {
     };
 
     const handleFinalSubmit = (profileData) => {
-        console.log("Finalizing profile:", profileData);
-        navigate('/company-dashboard');
+
+        // التوجيه بناءً على نوع الحساب الذي اخترتِهِ في الخطوة الثالثة (AccountTypeForm)
+        if (accountType === 'freelancer') {
+            navigate('/freelancer-dashboard');
+        } else {
+            navigate('/company-dashboard');
+        }
     };
 
     return (
