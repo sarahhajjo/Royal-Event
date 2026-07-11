@@ -1,17 +1,17 @@
 import React from 'react';
-import { Box, Button, CircularProgress } from '@mui/material';
-import { useTheme } from '@mui/material/styles';
+import {Box, Button, CircularProgress} from '@mui/material';
+import {useTheme} from '@mui/material/styles';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import { useSelector } from 'react-redux';
+import {useSelector} from 'react-redux';
 
 // ── Components ──────────────────────────────────────────
-import Herosection          from './detailshall-components/Herosection';
-import Generalinfo          from './detailshall-components/Generalinfo';
-import Policiespricing      from './detailshall-components/Policiespricing';
+import Herosection from './detailshall-components/Herosection';
+import Generalinfo from './detailshall-components/Generalinfo';
+import Policiespricing from './detailshall-components/Policiespricing';
 import Availabilitycalendar from './detailshall-components/Availabilitycalendar';
-import Bookingpipeline      from './detailshall-components/Bookingpipeline';
-import ServicesProviders    from './details-arrangment/ServicesProviders';
-import ArrangementProducts  from './details-arrangment/ArrangementProducts';
+import Bookingpipeline from './detailshall-components/Bookingpipeline';
+import ServicesProviders from './details-arrangment/ServicesProviders';
+import ArrangementProducts from './details-arrangment/ArrangementProducts';
 
 const fixImageUrl = (url) => {
     if (!url) return "https://via.placeholder.com/1200x600?text=No+Image";
@@ -26,20 +26,20 @@ const fixImageUrl = (url) => {
     return `${BACKEND_URL}/storage${cleanPath}`;
 };
 
-export default function ArrangmentDetailPage({ arrangementId, onBack }) {
-    const theme  = useTheme();
+export default function ArrangmentDetailPage({arrangementId, onBack}) {
+    const theme = useTheme();
 
-    const { arrangements } = useSelector((state) => state.myCatalog || {});
+    const {arrangements} = useSelector((state) => state.myCatalog || {});
     // 💡 جلب بيانات بروفايل الشركة الحالي من الستيت الموحد
-    const { profile } = useSelector((state) => state.providerProfile || {});
+    const {profile} = useSelector((state) => state.providerProfile || {});
     const providerData = profile?.data || {};
 
     const rawData = arrangements?.find(a => a.id === arrangementId);
 
     if (!rawData) {
         return (
-            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-                <CircularProgress color="primary" />
+            <Box sx={{display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh'}}>
+                <CircularProgress color="primary"/>
             </Box>
         );
     }
@@ -62,9 +62,9 @@ export default function ArrangmentDetailPage({ arrangementId, onBack }) {
 
             productsMap[listId].variants.push({
                 colorName: variant.variant_name?.en || variant.variant_name?.ar || variant.variant_name || 'Default Option',
-                color: { hex: '#c0c0c0' },
+                color: {hex: '#c0c0c0'},
                 price: variant.price || 0,
-                currency: variant.currency || 'USD',
+                currency: variant.currency || rawData.currency ,
                 stock: item.quantity,
                 image: variant.image,
                 priceNote: `Included QTY: ${item.quantity}`,
@@ -98,6 +98,7 @@ export default function ArrangmentDetailPage({ arrangementId, onBack }) {
 
         policies: {
             priceAmount: rawData.price ? rawData.price.toLocaleString() : '0',
+            currency: rawData.currency ,
             capacity: rawData.capacity || 'Not specified',
             priceType: rawData.price_type?.toUpperCase() || 'FIXED',
             cancelPolicies: {
@@ -112,28 +113,56 @@ export default function ArrangmentDetailPage({ arrangementId, onBack }) {
     };
 
     return (
-        <Box sx={{ width: '100%', minHeight: '100%', backgroundColor: theme.palette.background.default, pb: 6 }}>
-            <Box sx={{ position: 'relative', width: '100%' }}>
-                <Herosection data={{ badge: mappedArrangement.badge, name: mappedArrangement.name, description: mappedArrangement.description, images: mappedArrangement.images }} />
-                <Button onClick={onBack} startIcon={<ArrowBackIcon sx={{ fontSize: '1rem !important' }} />} sx={{ position: 'absolute', top: 20, left: 24, zIndex: 10, backgroundColor: theme.palette.mode === 'dark' ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.5)', backdropFilter: 'blur(8px)', color: theme.palette.mode === 'dark' ? '#fff' : '#2B211E', border: '1px solid rgba(255,255,255,0.2)', fontSize: '0.78rem', fontWeight: 600, textTransform: 'none', px: 2, py: 0.8, borderRadius: 2, '&:hover': { backgroundColor: theme.palette.mode === 'dark' ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.8)' } }}>
+        <Box sx={{width: '100%', minHeight: '100%', backgroundColor: theme.palette.background.default, pb: 6}}>
+            <Box sx={{position: 'relative', width: '100%'}}>
+                <Herosection data={{
+                    badge: mappedArrangement.badge,
+                    name: mappedArrangement.name,
+                    description: mappedArrangement.description,
+                    images: mappedArrangement.images
+                }}/>
+                <Button onClick={onBack} startIcon={<ArrowBackIcon sx={{fontSize: '1rem !important'}}/>} sx={{
+                    position: 'absolute',
+                    top: 20,
+                    left: 24,
+                    zIndex: 10,
+                    backgroundColor: theme.palette.mode === 'dark' ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.5)',
+                    backdropFilter: 'blur(8px)',
+                    color: theme.palette.mode === 'dark' ? '#fff' : '#2B211E',
+                    border: '1px solid rgba(255,255,255,0.2)',
+                    fontSize: '0.78rem',
+                    fontWeight: 600,
+                    textTransform: 'none',
+                    px: 2,
+                    py: 0.8,
+                    borderRadius: 2,
+                    '&:hover': {backgroundColor: theme.palette.mode === 'dark' ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.8)'}
+                }}>
                     Back to Catalog
                 </Button>
             </Box>
 
-            <Box sx={{ mt: 3, width: "100%", maxWidth: "1050px", mx: "auto", px: { xs: 2, md: 4 } }}>
-                <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 3, mb: 3, alignItems: 'stretch' }}>
-                    <Box sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-                        <Generalinfo data={mappedArrangement.generalInfo} />
+            <Box sx={{mt: 3, width: "100%", maxWidth: "1050px", mx: "auto", px: {xs: 2, md: 4}}}>
+                <Box sx={{
+                    display: 'flex',
+                    flexDirection: {xs: 'column', md: 'row'},
+                    gap: 3,
+                    mb: 3,
+                    alignItems: 'stretch'
+                }}>
+                    <Box sx={{flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column'}}>
+                        <Generalinfo data={mappedArrangement.generalInfo}/>
                     </Box>
-                    <Box sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-                        <Policiespricing data={mappedArrangement.policies} />
+                    <Box sx={{flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column'}}>
+                        <Policiespricing data={mappedArrangement.policies}/>
                     </Box>
                 </Box>
 
-                <ArrangementProducts products={mappedArrangement.products} />
-                <ServicesProviders services={mappedArrangement.services} />
-                <Availabilitycalendar entityId={mappedArrangement.id} entityType="arrangement" availabilities={rawData.availabilities} />
-                <Bookingpipeline entityId={mappedArrangement.id} entityType="arrangement" />
+                <ArrangementProducts products={mappedArrangement.products}/>
+                <ServicesProviders services={mappedArrangement.services}/>
+                <Availabilitycalendar entityId={mappedArrangement.id} entityType="arrangement"
+                                      availabilities={rawData.availabilities}/>
+                <Bookingpipeline entityId={mappedArrangement.id} entityType="arrangement"/>
             </Box>
         </Box>
     );

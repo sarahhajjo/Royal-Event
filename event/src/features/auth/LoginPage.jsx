@@ -24,41 +24,8 @@ const LoginPage = () => {
         if (localError) setLocalError('');
     };
 
-    // الدالة المسؤولة عن التوجيه بناءً على الدور والحالة
-    const handleLoginSuccess = (user) => {
-        console.log("البيانات المستلمة من السيرفر:", user); // لنرى ما بداخل الكائن
-
-        // 1. التحقق من الأدمن
-        if (user.role === 'admin' || user.email === 'admin@aura.com') {
-            console.log("توجيه للأدمن...");
-            navigate('/admin-dashboard');
-            return;
-        }else {
-            navigate('/freelancer-dashboard');
-        }
-
-        // 2. التحقق من حالة القبول
-       /* console.log("حالة المستخدم:", user.status);
-        if (user.status !== 'approved') {
-            setLocalError("حسابك قيد المراجعة. حالة الحساب الحالية: " + user.status);
-            return;
-        }
-
-        // 3. التوجيه لباقي الأدوار
-        console.log("توجيه بناءً على الدور:", user.role);
-        switch (user.role) {
-            case 'freelancer':
-                navigate('/freelancer-dashboard');
-                break;
-            case 'company':
-                navigate('/company-dashboard');
-                break;
-            default:
-                setLocalError('دور المستخدم غير معروف: ' + user.role);
-                break;
-        }
-    */
-    };
+    // داخل LoginPage.jsx - دالة handleSubmit
+    // داخل LoginPage.jsx - دالة handleSubmit
     const handleSubmit = (e) => {
         e.preventDefault();
         setLocalError('');
@@ -70,13 +37,24 @@ const LoginPage = () => {
 
         dispatch(loginUser(formData)).then((result) => {
             if (result.meta.requestStatus === 'fulfilled') {
-                // التصحيح هنا: الوصول للبيانات بالشكل الصحيح بناءً على الـ console
-                const userData = result.payload?.data?.user;
+                const user = result.payload.data.user;
+                const role = user.roles[0]?.name; // استخراج الدور من المصفوفة
 
-                if (userData) {
-                    handleLoginSuccess(userData);
-                } else {
-                    setLocalError("بيانات المستخدم غير موجودة في الرد!");
+                if (role === 'admin' || user.email === 'admin@aura.com') {
+                    navigate('/admin-dashboard');
+                }
+                else if (role === 'provider') {
+                    // التحقق من نوع المزود كما هو وارد في بيانات الـ API
+                    if (user.provider_type === 'freelancer') {
+                        navigate('/freelancer-dashboard');
+                    } else {
+                        // الافتراضي للشركات
+                        navigate('/company-dashboard');
+                    }
+                }
+                else {
+                    // في حال وجود دور آخر غير معرف، نرسله للرئيسية أو صفحة فارغة
+                    navigate('/');
                 }
             }
         });
@@ -84,6 +62,8 @@ const LoginPage = () => {
     return (
         <Box sx={{ minHeight: '100vh', backgroundColor: isDark ? '#18120f' : '#FAF0D5', display: 'flex', flexDirection: { xs: 'column', md: 'row' }, color: isDark ? '#eee0da' : '#2B211E', overflow: 'hidden', transition: 'background-color 0.3s' }}>
 
+            {/* الجناح الأيسر - التصميم الفخم */}
+            {/* الجناح الأيسر - التصميم الفخم */}
             <Box sx={{
                 display: { xs: 'none', md: 'flex' },
                 width: '50%',
@@ -95,8 +75,10 @@ const LoginPage = () => {
                 overflow: 'hidden',
                 borderRight: isDark ? '1px solid rgba(78, 70, 57, 0.25)' : '1px solid rgba(179, 140, 69, 0.25)'
             }}>
+                {/* 💡 زيادة درجة التعتيم في الـ Overlay لتظهر النصوص بوضوح */}
                 <Box sx={{ position: 'absolute', inset: 0, backgroundImage: `linear-gradient(to right, rgba(24, 18, 15, 0.7), rgba(24, 18, 15, 0.7)), url('https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&q=80&w=1200')`, backgroundSize: 'cover', backgroundPosition: 'center', transition: 'transform 1.8s cubic-bezier(0.19, 1, 0.22, 1)', '&:hover': { transform: 'scale(1.12)' } }} />
 
+                {/* 💡 ألوان ثابتة ذهبية تبرز دائماً فوق الصورة */}
                 <Box sx={{ position: 'relative', zIndex: 10, color: '#c5a059', textTransform: 'uppercase', fontSize: '13px', fontWeight: 'bold', letterSpacing: '0.25em' }}>✦ Royal Events ✦</Box>
 
                 <Box sx={{ position: 'relative', zIndex: 10, maxWidth: '460px' }}>
@@ -111,8 +93,26 @@ const LoginPage = () => {
                 <Box sx={{ position: 'relative', zIndex: 10, fontSize: '11px', color: '#c5a059', letterSpacing: '0.15em' }}>&copy; 2026 Royal Events International.</Box>
             </Box>
 
-            <Box sx={{ width: { xs: '100%', md: '50%' }, display: 'flex', flexDirection: 'column', minHeight: '100vh', boxSizing: 'border-box', backgroundColor: isDark ? '#18120f' : '#FAF0D5' }}>
-                <Box sx={{ flexGrow: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', p: 4 }}>
+            {/* الجناح الأيمن - نموذج الدخول */}
+            {/* الجناح الأيمن - نموذج الدخول */}
+            {/* الجناح الأيمن - نموذج الدخول */}
+            <Box sx={{
+                width: { xs: '100%', md: '50%' },
+                display: 'flex',
+                flexDirection: 'column',
+                minHeight: '100vh', // التأكد من أخذ كامل طول الشاشة
+                boxSizing: 'border-box',
+                backgroundColor: isDark ? '#18120f' : '#FAF0D5'
+            }}>
+
+                {/* المحتوى الرئيسي (النموذج) - يأخذ مساحة المرونة (flexGrow) ليدفع الفوتر للأسفل */}
+                <Box sx={{
+                    flexGrow: 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    p: 4
+                }}>
                     <Box sx={{ width: '100%', maxWidth: '420px', display: 'flex', flexDirection: 'column', gap: 5 }}>
                         <Box>
                             <Typography variant="h3" sx={{ fontFamily: "'Playfair Display', serif", color: isDark ? '#c5a059' : '#b38c45', fontSize: '2.6rem' }}>Sign In</Typography>
@@ -125,6 +125,9 @@ const LoginPage = () => {
                             <InputField label="Email or Phone" value={formData.identity} onChange={(e) => handleChange(e, 'identity')} />
                             <InputField label="Password" type="password" value={formData.password} onChange={(e) => handleChange(e, 'password')} />
                             <Button text={loading ? "OPENING GATES..." : "ENTER PORTAL"} type="submit" disabled={loading} />
+                            {/*<button type="button" onClick={() => navigate('/admin-dashboard')} style={{ marginTop: '10px', padding: '10px', background: '#ccc', cursor: 'pointer' }}>*/}
+                            {/*    GO TO ADMIN (Quick Link)*/}
+                            {/*</button>*/}
                         </form>
 
                         <Box sx={{ textAlign: 'center' }}>
@@ -135,17 +138,40 @@ const LoginPage = () => {
                     </Box>
                 </Box>
 
-                <Box sx={{ width: '100%', pb: 4, pt: 2 }}>
-                    <Box sx={{ borderTop: isDark ? '1px solid rgba(78, 70, 57, 0.2)' : '1px solid rgba(179, 140, 69, 0.2)', mx: 4, mb: 2 }} />
-                    <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', px: 4 }}>
-                        <Typography sx={{ color: isDark ? '#5a5043' : '#7A6F5E', fontSize: '9px', letterSpacing: '0.12em', fontFamily: "'Inter', sans-serif" }}>© 2026 ROYAL EVENTS. ALL RIGHTS RESERVED.</Typography>
+                {/* الـ Footer السفلي */}
+                {/* الـ Footer السفلي مع تعديل المسافات */}
+                <Box sx={{
+                    width: '100%',
+                    pb: 4, // مسافة من أسفل الشاشة
+                    pt: 2
+                }}>
+                    {/* الخط القاسم مع Margin من الأطراف */}
+                    <Box sx={{
+                        borderTop: isDark ? '1px solid rgba(78, 70, 57, 0.2)' : '1px solid rgba(179, 140, 69, 0.2)',
+                        mx: 4, // المسافة من اليمين واليسار (الأطراف)
+                        mb: 2  // مسافة بين الخط والنصوص
+                    }} />
+
+                    {/* صندوق النصوص والروابط */}
+                    <Box sx={{
+                        display: 'flex',
+                        flexDirection: 'row',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        px: 4 // مطابقة لمسافة الخط ليكونوا على نفس الخط
+                    }}>
+                        <Typography sx={{ color: isDark ? '#5a5043' : '#7A6F5E', fontSize: '9px', letterSpacing: '0.12em', fontFamily: "'Inter', sans-serif" }}>
+                            © 2026 ROYAL EVENTS. ALL RIGHTS RESERVED.
+                        </Typography>
                         <Box sx={{ display: 'flex', gap: 2.5 }}>
-                            <Box component="a" href="#" sx={{ color: isDark ? '#5a5043' : '#7A6F5E', textDecoration: 'none', fontSize: '9px', letterSpacing: '0.12em' }}>PRIVACY</Box>
-                            <Box component="a" href="#" sx={{ color: isDark ? '#5a5043' : '#7A6F5E', textDecoration: 'none', fontSize: '9px', letterSpacing: '0.12em' }}>TERMS</Box>
+                            <Box component="a" href="#" sx={{ color: isDark ? '#5a5043' : '#7A6F5E', textDecoration: 'none', fontSize: '9px', letterSpacing: '0.12em', '&:hover': { color: isDark ? '#c5a059' : '#b38c45' } }}>PRIVACY</Box>
+                            <Box component="a" href="#" sx={{ color: isDark ? '#5a5043' : '#7A6F5E', textDecoration: 'none', fontSize: '9px', letterSpacing: '0.12em', '&:hover': { color: isDark ? '#c5a059' : '#b38c45' } }}>TERMS</Box>
                         </Box>
                     </Box>
                 </Box>
             </Box>
+
+
         </Box>
     );
 };

@@ -51,9 +51,6 @@ function AddProductPage() {
     const handlePublish = (status) => {
         const validVariants = variants.filter(v => v.price);
 
-        // 💡 طباعة حالة الكروت قبل المعالجة لنتأكد من وجود الصور
-        console.log("🛑 RAW VARIANTS STATE BEFORE PUBLISH:", JSON.parse(JSON.stringify(validVariants)));
-
         const payload = {
             category_id: coreDetails.categoryId,
             district_id: coreDetails.districtId,
@@ -74,7 +71,8 @@ function AddProductPage() {
                     variant_name: { en: v.color || "Default", ar: v.color || "افتراضي" },
                     price: parseFloat(v.price) || 0,
                     stock_quantity: parseInt(v.stock) || 0,
-                    images: Array.isArray(v.images) ? v.images.map(img => img.tempPath) : [],
+                    // 💡 هنا السحر: تغيير الاسم إلى path ليرضى الباك إند
+                    images: Array.isArray(v.images) ? v.images.map(img => ({ path: img.tempPath })) : [],
                     dynamic_attributes: { color: v.color },
                     price_type: v.priceType || 'fixed',
                     currency: v.currency || 'USD',
@@ -104,9 +102,6 @@ function AddProductPage() {
                 return variantPayload;
             })
         };
-
-        // 💡 طباعة الـ Payload النهائي للتأكد من إرساله بشكل صحيح
-        console.log("🚀 FINAL PAYLOAD SENT TO BACKEND:", JSON.parse(JSON.stringify(payload)));
 
         dispatch(publishProduct(payload));
     };

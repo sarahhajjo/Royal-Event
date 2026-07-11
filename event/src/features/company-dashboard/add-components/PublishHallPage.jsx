@@ -32,26 +32,27 @@ const PublishHallPage = () => {
     const parsedCapacity = parseInt(hallData.capacity) || 1;
 
     const handlePublish = () => {
-        // ─── 1. تجهيز الشفتات (Slots) بالتنسيق الصحيح H:i بدون ثواني ───
+        // ─── 1. تجهيز الشفتات (Slots) بالتنسيق الصحيح ───
         let formattedSlots = [];
 
-        if (hallData.isAllDay || hallData.shiftRanges.length === 0) {
+        if (hallData.isAllDay || !hallData.shiftRanges || hallData.shiftRanges.length === 0) {
             formattedSlots.push({
-                slot_name: { en: "All Day", ar: "يوم كامل" },
+                slot_name: "All Day", // 💡 التعديل: نص عادي بدلاً من Object
                 start_time: "00:00",
                 end_time: "23:59",
                 remaining_capacity: parsedCapacity
             });
         } else {
             formattedSlots = hallData.shiftRanges.map((range, index) => ({
-                slot_name: { en: `Shift ${index + 1}`, ar: `شفت ${index + 1}` },
-                start_time: range.start,
-                end_time: range.end,
+                slot_name: `Shift ${index + 1}`, // 💡 التعديل: نص عادي
+                // 💡 إجبار اقتطاع أول 5 محارف لضمان صيغة H:i (مثال: 05:00)
+                start_time: range.start.substring(0, 5),
+                end_time: range.end.substring(0, 5),
                 remaining_capacity: parsedCapacity
             }));
         }
 
-        // ─── 2. توليد مصفوفة الأيام بدقة (مع تخطي الأيام المستثناة) ───
+        // ─── 2. توليد مصفوفة الأيام ───
         const availabilities = [];
         if (hallData.startDate) {
             let current = dayjs(hallData.startDate);
@@ -83,11 +84,13 @@ const PublishHallPage = () => {
             cancel_after_acceptance: hallData.cancel_after_acceptance,
             cancel_before_payment: hallData.cancel_before_payment,
             is_provider_location_based: true,
-
-            // 👈 التعديل هنا: أضفنا حالة المراجعة لتذهب كطلب بانتظار موافقة الإدارة
             moderation_status: "pending_approval",
 
-            images: hallData.temp_images,
+            // 💡 التعديل الأهم: تغيير temp_path إلى path كما فعلنا بالمنتجات ليرضى الباك إند
+            images: hallData.temp_images?.length > 0
+                ? hallData.temp_images.map(imgPath => ({ path: imgPath }))
+                : [],
+
             variants: [{
                 variant_name: { en: hallData.name || "Default", ar: hallData.name || "افتراضي" },
                 price: parsedPrice,

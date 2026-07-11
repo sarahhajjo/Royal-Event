@@ -20,25 +20,31 @@ import { fetchMyProducts, fetchMyServices, fetchMyArrangements } from "./myCatal
 const PAGE_TABS = ["Pending", "Approved", "Rejected", "Cancelled"];
 
 // ─── Helper: معالجة مسار الصور ────────────────────────────────────────────────
-const fixImageUrl = (url) => {
-    if (!url) return "https://via.placeholder.com/400x300?text=No+Image";
-    const BACKEND_URL = 'http://127.0.0.1:8000';
+const fixImageUrl = (img) => {
+    // 1. استخراج الرابط سواء كان نصاً مباشراً أو بداخل كائن (Object)
+    const url = typeof img === 'object' && img !== null
+        ? (img.url || img.path || img.temp_path)
+        : img;
 
-    let finalUrl = url;
-
-    // 💡 إذا كان الرابط يحتوي على /uploads/ ولكن لا يحتوي على /storage/، نقوم بإجبار إضافتها
-    if (finalUrl.includes('/uploads/') && !finalUrl.includes('/storage/')) {
-        finalUrl = finalUrl.replace('/uploads/', '/storage/uploads/');
+    if (!url || typeof url !== 'string') {
+        return "https://via.placeholder.com/400x300?text=No+Image";
     }
 
-    // إذا كان الرابط كامل (http)، نرجعه بعد التعديل
-    if (finalUrl.startsWith('http')) return finalUrl;
+    if (url.startsWith('http')) return url;
 
-    // إذا كان مساراً جزئياً (Relative Path)
-    const cleanPath = finalUrl.startsWith('/') ? finalUrl : `/${finalUrl}`;
-    if (cleanPath.startsWith('/storage/')) return `${BACKEND_URL}${cleanPath}`;
+    const BACKEND_URL = 'http://127.0.0.1:8000';
+    let cleanPath = url.startsWith('/') ? url : `/${url}`;
 
-    return `${BACKEND_URL}/storage${cleanPath}`;
+    // 2. معالجة مسارات Laravel Storage بشكل آمن
+    if (cleanPath.includes('/uploads/') && !cleanPath.includes('/storage/')) {
+        cleanPath = cleanPath.replace('/uploads/', '/storage/uploads/');
+    }
+
+    if (!cleanPath.startsWith('/storage/')) {
+        cleanPath = `/storage${cleanPath}`;
+    }
+
+    return `${BACKEND_URL}${cleanPath}`;
 };
 
 // ─── Products sub-tab toggle ──────────────────────────────────────────────────
@@ -225,8 +231,7 @@ export default function MyCatalogPage({
             }
         }
 
-        const rawImage = h.images?.[0]?.url || h.images?.[0]?.path;
-
+        const rawImage = h.images?.[0] || mainVariant.images?.[0] || h.image;
         return {
             id: h.id,
             image: fixImageUrl(rawImage),

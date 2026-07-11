@@ -11,6 +11,7 @@ import myCatalogReducer from './features/company-dashboard/MyCatalog-components/
 import providerProfileReducer from './features/company-dashboard/componyProfileSettings/providerProfileSlice.js'; // تأكدي من المسار
 import freelancerOfferReducer from './features/freelancer-dashborad/components/add-service/ServicesSlice.js'
 import OffersSliceReducer from "./features/freelancer-dashborad/components/offers/OffersSlice.js";
+import notificationReducer from './notificationSlice';
 export const store = configureStore({
     reducer: {
         auth: authReducer,
@@ -22,6 +23,7 @@ export const store = configureStore({
         jobOffer: jobOfferReducer,
         myCatalog: myCatalogReducer,
         providerProfile: providerProfileReducer,
+        notifications: notificationReducer,
         freelancerOffer: freelancerOfferReducer,
         OffersSlice :OffersSliceReducer,
     }
