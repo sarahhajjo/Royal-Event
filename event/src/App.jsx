@@ -28,7 +28,9 @@ import ApprovalQueuePage from "./features/admin-dashboard/ApprovalQueuePage.jsx"
 import FreelancerProfilePage from "./features/admin-dashboard/FreelancerProfilePage.jsx";
 import DashboardPage from "./features/admin-dashboard/DashboardPage.jsx";
 import FreelancerDashboardPage from "./features/freelancer-dashborad/pages/FreelancerDashboardPage.jsx";
-import FreelancerAddProductPage from "./features/freelancer-dashborad/pages/FreelancerAddProductPage.jsx";
+import FreelancerAddServicePage from "./features/freelancer-dashborad/pages/FreelancerAddServicePage.jsx";
+import OrderManagementPage from "./features/freelancer-dashborad/pages/OrderManagementPage.jsx";
+import OfferManagementPage from "./features/freelancer-dashborad/pages/OfferManagementPage.jsx";
 
 function App() {
 
@@ -68,7 +70,9 @@ function App() {
                 <Route path="/admin-dashboard/freelancers/:id" element={<FreelancerProfilePage/>}/>
 
                 <Route path="/freelancer-dashboard" element={<FreelancerDashboardPage/>}/>
-                <Route path="/freelancer-dashboard/add-product" element={<FreelancerAddProductPage/>}/>
+                <Route path="/add-service" element={<FreelancerAddServicePage/>}/>
+                <Route path="/order-managment" element={<OrderManagementPage/>}/>
+                <Route path="/freelancer-offer" element={<OfferManagementPage/>}/>
 
                 <Route path="*" element={<Navigate to="/"/>}/>
 

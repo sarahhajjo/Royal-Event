@@ -1,40 +1,41 @@
 @import "tailwindcss";
 
 @theme {
-    /* --- الهوية البصرية الفاخرة لـ Royal Events (Tailwind v4) --- */
-
-    /* النمط الافتراضي (Dark Mode) */
-    --color-royal-dark: #140e0c;
-    --color-royal-bg: #18120f;
-    --color-royal-field: #1c1512;
-    --color-royal-border: #261d19;
-    --color-royal-gold: #c5a059;
-    --color-royal-gold-dark: #a68341;
-    --color-royal-gold-light: #d6b26a;
-    --color-royal-text: #eee0da;
-    --color-royal-muted: #9a8f80;
+    /* الألوان الأساسية التي سنستخدمها في كلاسات Tailwind */
+    --color-bg-default: var(--royal-bg);
+    --color-bg-paper: var(--royal-field);
+    --color-text-primary: var(--royal-text);
+    --color-text-secondary: var(--royal-muted);
+    --color-primary: var(--royal-gold);
+    --color-border: var(--royal-border);
 }
 
-/* 👑 هندسة قلب الألوان الذكية (Light Mode Utilities) */
+/* ── تعريف المتغيرات (CSS Variables) ── */
+:root {
+    /* الديفولت هو Dark Mode (حسب تعريفك الأولي) */
+    --royal-bg: #18120f;
+    --royal-field: #1c1512;
+    --royal-text: #eee0da;
+    --royal-muted: #9a8f80;
+    --royal-gold: #c5a059;
+    --royal-border: #261d19;
+}
+
 .light {
-    --color-royal-dark: #FAF0D5;         /* العاج الملكي الفاخر كخلفية رئيسية */
-    --color-royal-bg: #F4EACF;           /* درجة عاجية أعمق للأبعاد والخلفيات البديلة */
-    --color-royal-field: #EFE4C9;        /* لون خانات المدخلات الفاتحة */
-    --color-royal-border: #E5D9B8;       /* الفواصل والأطر المضيئة */
-
-    --color-royal-gold: #b38c45;         /* جعل الذهبي أغمق قليلاً ليظهر بوضوح فوق العاج */
-    --color-royal-gold-dark: #967233;
-    --color-royal-gold-light: #FFE088;   /* الذهب الساطع لتأثيرات الهوفر الكاشفة */
-
-    --color-royal-text: #2B211E;         /* نصوص فحمي داكن ونبيل لضمان وضوح القراءة الصارم */
-    --color-royal-muted: #7A6F5E;        /* نصوص مساعدة رمادية دافئة ومتزنة */
+    /* إعدادات اللايت مود */
+    --royal-bg: #FAF0D5;
+    --royal-field: #EFE4C9;
+    --royal-text: #2B211E;
+    --royal-muted: #7A6F5E;
+    --royal-gold: #b38c45;
+    --royal-border: #E5D9B8;
 }
 
-/* حركات الـ Fade In */
+.animate-fade-in {
+    animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(8px); }
     to { opacity: 1; transform: translateY(0); }
-}
-.animate-fade-in {
-    animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }

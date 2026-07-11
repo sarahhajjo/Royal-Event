@@ -9,6 +9,8 @@ import addhallReducer from './features/company-dashboard/add-components/addition
 import jobOfferReducer from './features/company-dashboard/JobOffers-components/CreateJobOfferSlice';
 import myCatalogReducer from './features/company-dashboard/MyCatalog-components/myCatalogSlice';
 import providerProfileReducer from './features/company-dashboard/componyProfileSettings/providerProfileSlice.js'; // تأكدي من المسار
+import freelancerOfferReducer from './features/freelancer-dashborad/components/add-service/ServicesSlice.js'
+import OffersSliceReducer from "./features/freelancer-dashborad/components/offers/OffersSlice.js";
 export const store = configureStore({
     reducer: {
         auth: authReducer,
@@ -20,6 +22,7 @@ export const store = configureStore({
         jobOffer: jobOfferReducer,
         myCatalog: myCatalogReducer,
         providerProfile: providerProfileReducer,
-
+        freelancerOffer: freelancerOfferReducer,
+        OffersSlice :OffersSliceReducer,
     }
 });

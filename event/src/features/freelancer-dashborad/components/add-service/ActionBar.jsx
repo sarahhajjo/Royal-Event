@@ -19,7 +19,6 @@ const ActionBar = ({ onSaveDraft, onPublish, isSaving = false, isPublishing = fa
             gap: 2,
         }}
     >
-        {/* Left hint */}
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             <InfoOutlinedIcon sx={{ fontSize: "0.9rem", color: "text.secondary" }} />
             <Typography sx={{ fontSize: "0.78rem", color: "text.secondary", fontFamily: "'Raleway', sans-serif" }}>
@@ -27,7 +26,6 @@ const ActionBar = ({ onSaveDraft, onPublish, isSaving = false, isPublishing = fa
             </Typography>
         </Box>
 
-        {/* Action buttons */}
         <Box sx={{ display: "flex", gap: 1.5 }}>
             <Button
                 variant="outlined"

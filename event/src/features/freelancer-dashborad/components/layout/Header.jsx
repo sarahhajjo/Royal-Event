@@ -6,8 +6,9 @@ import DarkModeIcon from "@mui/icons-material/DarkModeOutlined";
 
 import { ColorModeContext } from "../../../../main";
 
-const Header = ({ title = "Elite Admin" }) => {
+const Header = ({ title = "Dashboard", user = {} }) => {
     const { mode, toggleColorMode } = useContext(ColorModeContext);
+    const { name = "Ghazal kawas", role = "Service Provider", avatar = "" } = user;
 
     return (
         <AppBar
@@ -17,35 +18,38 @@ const Header = ({ title = "Elite Admin" }) => {
                 bgcolor: "background.default",
                 borderBottom: "1px solid",
                 borderColor: "divider",
-                zIndex: (t) => t.zIndex.drawer - 1,
+                transition: "background-color 0.3s ease",
             }}
         >
             <Toolbar sx={{ minHeight: "70px !important", px: 4, justifyContent: "space-between" }}>
+                {/* العنوان */}
                 <Typography sx={{ fontSize: "1.1rem", fontFamily: "'Cinzel', serif", color: "text.primary", fontWeight: 700 }}>
                     {title}
                 </Typography>
 
-                <Box sx={{ display: "flex", alignItems: "center", gap: 2.5 }}>
+                {/* الأيقونات ومعلومات المستخدم */}
+                <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                    {/* زر التبديل */}
                     <IconButton size="small" onClick={toggleColorMode} sx={{ color: "text.secondary" }}>
                         {mode === "dark" ? <LightModeIcon /> : <DarkModeIcon />}
                     </IconButton>
 
+                    {/* زر الإشعارات */}
                     <IconButton size="small" sx={{ color: "text.secondary" }}>
                         <NotificationsIcon />
                     </IconButton>
 
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, pl: 2, borderLeft: "1px solid", borderColor: "divider" }}>
-                        <Box sx={{ textAlign: "right" }}>
-                            <Typography sx={{ color: "text.primary", fontWeight: 700, fontSize: "0.85rem", lineHeight: 1.2 }}>
-                                Admin
+                    {/* معلومات المستخدم (مدمجة بانسيابية) */}
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, ml: 1 }}>
+                        <Box sx={{ textAlign: "right", display: { xs: "none", sm: "block" } }}>
+                            <Typography sx={{ color: "text.primary", fontWeight: 700, fontSize: "0.85rem", fontFamily: "'Cinzel', serif" }} noWrap>
+                                {name}
                             </Typography>
-                            <Typography sx={{ color: "text.secondary", fontSize: "0.65rem", letterSpacing: "0.08em" }}>
-                                SUPERUSER
+                            <Typography sx={{ color: "primary.main", textTransform: "uppercase", fontSize: "0.65rem", letterSpacing: "0.08em" }}>
+                                {role}
                             </Typography>
                         </Box>
-                        <Avatar sx={{ width: 36, height: 36, bgcolor: "#8C6D32", color: "#fff", fontWeight: 700, fontSize: "0.9rem" }}>
-                            A
-                        </Avatar>
+                        <Avatar src={avatar} sx={{ width: 38, height: 38, border: "1px solid", borderColor: "primary.main" }} />
                     </Box>
                 </Box>
             </Toolbar>
