@@ -12,6 +12,11 @@ import providerProfileReducer from './features/company-dashboard/componyProfileS
 import freelancerOfferReducer from './features/freelancer-dashborad/components/add-service/ServicesSlice.js'
 import OffersSliceReducer from "./features/freelancer-dashborad/components/offers/OffersSlice.js";
 import notificationReducer from './notificationSlice';
+import ServiceDetailsSliceReducer from './features/freelancer-dashborad/components/service-details/ServiceDetailsSlice.js';
+import JobOffersReducer from './features/freelancer-dashborad/components/job-opportunities/JobOffersSlice.js'
+import approvalReducer from './features/admin-dashboard/approvalsSlice.js';
+import paymentsReducer from "./features/admin-dashboard/paymentsSlice";
+
 export const store = configureStore({
     reducer: {
         auth: authReducer,
@@ -26,5 +31,9 @@ export const store = configureStore({
         notifications: notificationReducer,
         freelancerOffer: freelancerOfferReducer,
         OffersSlice :OffersSliceReducer,
+        serviceDetails : ServiceDetailsSliceReducer,
+        jobs:JobOffersReducer,
+        approvals: approvalReducer,
+        payments: paymentsReducer,
     }
 });

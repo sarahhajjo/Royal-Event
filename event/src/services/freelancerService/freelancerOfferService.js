@@ -40,12 +40,21 @@ const getDistricts = async () => {
     const response = await axios.get(API_URL + "districts");
     return response.data.data || response.data;
 };
+const getListingById = async (listingId) => {
+    const token = localStorage.getItem("token");
+    const response = await axios.get(`${API_URL}listings/${listingId}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+    });
+    // إعادة البيانات الصافية
+    return response.data.data || response.data;
+};
 
 const freelancerOfferService = {
     createListing,
     uploadImage,
     getCategories,
-    getDistricts
+    getDistricts,
+    getListingById
 };
 
 export default freelancerOfferService;

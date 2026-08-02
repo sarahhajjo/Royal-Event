@@ -1,26 +1,29 @@
 import React from "react";
-import { useNavigate, useLocation } from "react-router-dom"; // 👈 1. استيراد هوكات التوجيه
+import { useNavigate, useLocation } from "react-router-dom";
 import {
     Box, Drawer, List, ListItemButton, ListItemIcon,
-    ListItemText, Typography, Avatar, Divider,
+    ListItemText, Typography, Divider,
 } from "@mui/material";
 import DashboardIcon from "@mui/icons-material/GridView";
 import AddBoxIcon    from "@mui/icons-material/AddBoxOutlined";
 import OrdersIcon    from "@mui/icons-material/ShoppingCart";
 import CatalogIcon   from "@mui/icons-material/TableChart";
-import OffersIcon    from "@mui/icons-material/LocalOffer";
 import SettingsIcon  from "@mui/icons-material/Settings";
 import InfoIcon      from "@mui/icons-material/InfoOutlined";
 
+// 👑 1. استيراد أيقونات احترافية جديدة للوظائف
+import AssignmentOutlinedIcon from "@mui/icons-material/AssignmentOutlined";import BusinessCenterOutlinedIcon from "@mui/icons-material/BusinessCenterOutlined"; // أيقونة كل الوظائف
+
 const DRAWER_WIDTH = 260;
 
-// 👈 2. إضافة المسار (path) لكل زر ليعرف المتصفح لوين يروح
+// 👑 2. تحديث قائمة الروابط وإضافة الحقول المطلوبة
 const topNavItems = [
     { label: "Dashboard",   icon: <DashboardIcon />, key: "dashboard",   path: "/freelancer-dashboard" },
-    { label: "Add Service", icon: <AddBoxIcon />,    key: "add-service", path: "/add-service" }, // تأكدي أن هذا الرابط يطابق الرابط في App.jsx
+    { label: "Add Service", icon: <AddBoxIcon />,    key: "add-service", path: "/add-service" },
     { label: "Orders",      icon: <OrdersIcon />,    key: "orders",      path: "/order-managment" },
     { label: "Catalog",     icon: <CatalogIcon />,   key: "catalog",     path: "/freelancer-offer" },
-    { label: "My Offers",   icon: <OffersIcon />,    key: "offers",      path: "/catalog" },
+    { label: "My Jobs",     icon: <AssignmentOutlinedIcon />, key: "my-jobs",   path: "/my-jobs" }, // 👈 تم التعديل
+    { label: "Job Offers",  icon: <BusinessCenterOutlinedIcon />, key: "job-offers", path: "/jobs" }, // 👈 الحقل الجديد
 ];
 
 const bottomNavItems = [
@@ -29,20 +32,19 @@ const bottomNavItems = [
 ];
 
 const NavList = ({ items }) => {
-    const navigate = useNavigate(); // 👈 هوك الانتقال
-    const location = useLocation(); // 👈 هوك معرفة الرابط الحالي
+    const navigate = useNavigate();
+    const location = useLocation();
 
     return (
         <List sx={{ px: 2 }}>
             {items.map(({ label, icon, key, path }) => {
-                // 👈 3. التظليل يصير تلقائي إذا كان مسار الصفحة يطابق مسار الزر
                 const isActive = location.pathname.includes(path);
 
                 return (
                     <ListItemButton
                         key={key}
                         selected={isActive}
-                        onClick={() => navigate(path)} // 👈 4. أمر الانتقال عند الكبس
+                        onClick={() => navigate(path)}
                         sx={{
                             py: 1.3, px: 2.5, mb: 0.6, borderRadius: 2, gap: 2,
                             transition: "all 0.2s",
@@ -70,9 +72,6 @@ const NavList = ({ items }) => {
 };
 
 const Sidebar = () => {
-    // لم تعودي بحاجة لتمرير activeNav أو onNavChange، السايدبار صار ذكي وبيعرف لحاله!
-
-
     return (
         <Drawer
             variant="permanent"
@@ -106,8 +105,6 @@ const Sidebar = () => {
             <Box sx={{ my: 1 }}>
                 <NavList items={bottomNavItems} />
             </Box>
-
-
 
         </Drawer>
     );

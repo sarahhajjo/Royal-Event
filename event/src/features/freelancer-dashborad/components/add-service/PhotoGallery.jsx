@@ -4,39 +4,89 @@ import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import DeleteIcon from '@mui/icons-material/Delete';
 
 export default function PhotoGallery({ photos, onPhotosChange }) {
-    const [preview, setPreview] = useState(null);
+    // استخدمنا مصفوفات (Arrays) لحفظ عدة صور
+    const [previews, setPreviews] = useState([]);
+    const [filesList, setFilesList] = useState([]);
 
     const handleFileChange = (event) => {
-        const file = event.target.files[0];
-        if (file) {
-            setPreview(URL.createObjectURL(file));
-            onPhotosChange([file]); // نرسل الملف للأب لتحديث الـ formData
+        // تحويل الملفات المحددة إلى مصفوفة
+        const selectedFiles = Array.from(event.target.files);
+
+        if (selectedFiles.length > 0) {
+            // دمج الملفات القديمة مع الجديدة
+            const newFiles = [...filesList, ...selectedFiles];
+            setFilesList(newFiles);
+            onPhotosChange(newFiles); // إرسال كل الملفات للأب
+
+            // إنشاء روابط معاينة للصور الجديدة ودمجها مع القديمة
+            const newPreviews = selectedFiles.map(file => URL.createObjectURL(file));
+            setPreviews([...previews, ...newPreviews]);
         }
     };
 
-    const removeImage = () => {
-        setPreview(null);
-        onPhotosChange([]); // مسح الصور
+    const removeImage = (indexToRemove) => {
+        // فلترة (حذف) الصورة المحددة بناءً على رقم الـ index
+        const updatedFiles = filesList.filter((_, index) => index !== indexToRemove);
+        const updatedPreviews = previews.filter((_, index) => index !== indexToRemove);
+
+        setFilesList(updatedFiles);
+        setPreviews(updatedPreviews);
+        onPhotosChange(updatedFiles);
     };
 
     return (
-        <Box sx={{ mt: 3, p: 3, border: '1px solid #ccc', borderRadius: 2, bgcolor: '#f9f9f9' }}>
-            <Typography variant="h6" sx={{ mb: 2 }}>General Photo Gallery</Typography>
+        <Box sx={{ mt: 3, p: 3, border: '1px solid rgba(255,255,255,0.1)', borderRadius: 2, bgcolor: 'transparent' }}>
+            <Typography variant="h6" sx={{ mb: 2, color: '#e0e0e0' }}>General Photo Gallery</Typography>
 
-            {!preview ? (
-                <label htmlFor="upload-photo">
-                    <Box sx={{ border: '2px dashed #bbb', p: 4, textAlign: 'center', cursor: 'pointer' }}>
-                        <AddPhotoAlternateIcon sx={{ fontSize: 40, color: '#888' }} />
-                        <Typography>اضغطي لرفع صورة الخدمة</Typography>
-                    </Box>
-                    <input id="upload-photo" type="file" hidden onChange={handleFileChange} accept="image/*" />
-                </label>
-            ) : (
-                <Box sx={{ position: 'relative', width: 200, height: 150 }}>
-                    <img src={preview} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 8 }} />
-                    <IconButton onClick={removeImage} sx={{ position: 'absolute', top: 0, right: 0, bgcolor: 'rgba(255,255,255,0.7)' }}>
-                        <DeleteIcon color="error" />
-                    </IconButton>
+            {/* منطقة الرفع (دائماً ظاهرة لتسمح بإضافة المزيد) */}
+            <label htmlFor="upload-photo">
+                <Box sx={{
+                    border: '2px dashed rgba(197, 160, 89, 0.5)', // لون ذهبي متناسق
+                    p: 4,
+                    textAlign: 'center',
+                    cursor: 'pointer',
+                    bgcolor: 'rgba(197, 160, 89, 0.05)',
+                    borderRadius: 2,
+                    transition: 'all 0.3s ease',
+                    '&:hover': {
+                        bgcolor: 'rgba(197, 160, 89, 0.1)',
+                        borderColor: '#c5a059' // ذهبي ساطع عند التمرير
+                    }
+                }}>
+                    <AddPhotoAlternateIcon sx={{ fontSize: 40, color: '#c5a059' }} />
+                    <Typography sx={{ color: '#aaa', mt: 1 }}>اضغطي هنا لرفع صور الخدمة (يمكنك تحديد عدة صور)</Typography>
+                </Box>
+                {/* 👑 أضفنا كلمة multiple للسماح برفع أكثر من ملف */}
+                <input id="upload-photo" type="file" multiple hidden onChange={handleFileChange} accept="image/*" />
+            </label>
+
+            {/* شبكة عرض الصور المرفوعة */}
+            {previews.length > 0 && (
+                <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', mt: 3 }}>
+                    {previews.map((preview, index) => (
+                        <Box key={index} sx={{ position: 'relative', width: 120, height: 120 }}>
+                            <img
+                                src={preview}
+                                alt={`Preview ${index}`}
+                                style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 8, border: '1px solid rgba(255,255,255,0.2)' }}
+                            />
+                            <IconButton
+                                onClick={() => removeImage(index)}
+                                sx={{
+                                    position: 'absolute',
+                                    top: 4,
+                                    right: 4,
+                                    bgcolor: 'rgba(0,0,0,0.6)',
+                                    color: '#ff4d4d',
+                                    width: 26,
+                                    height: 26,
+                                    '&:hover': { bgcolor: 'rgba(0,0,0,0.8)' }
+                                }}
+                            >
+                                <DeleteIcon sx={{ fontSize: 16 }} />
+                            </IconButton>
+                        </Box>
+                    ))}
                 </Box>
             )}
         </Box>

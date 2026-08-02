@@ -1,0 +1,12 @@
+{
+  "serviceDetails": {
+    "title": "Service Details",
+    "editService": "Edit Service",
+    "contactInformation": "Contact Information",
+    "pricing": "Pricing",
+    "serviceStatus": "Service Status",
+    "cancellationPolicy": "Cancellation Policy",
+    "availableDates": "Available Dates",
+    "viewAllSchedules": "View all schedules"
+  }
+}

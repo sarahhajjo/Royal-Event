@@ -8,15 +8,15 @@ import TuneOutlinedIcon from "@mui/icons-material/TuneOutlined";
 import SortOutlinedIcon from "@mui/icons-material/SortOutlined";
 
 // ── Shared layout components ──────────────────────────────────────────────────
-import Sidebar from "./components/Sidebar";
-import TopBar from "./components/TopBar";
-import TabSwitcher from "./components/TabSwitcher";
+import Sidebar from "../components/Sidebar.jsx";
+import TopBar from "../components/TopBar.jsx";
+import TabSwitcher from "../components/TabSwitcher.jsx";
 
 // ── Page-specific component ───────────────────────────────────────────────────
-import CompanyRow from "./components/CompanyRow";
+import CompanyRow from "../components/CompanyRow.jsx";
 import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchAllProviders, updateProviderStatus } from './directorySlice';
+import { fetchAllProviders, updateProviderStatus } from '../directorySlice.js';
 // ── Fixed light-mode tokens ───────────────────────────────────────────────────
 const T = {
     pageBg:      "#FAF7F0",

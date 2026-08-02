@@ -1,0 +1,12 @@
+{
+  "serviceDetails": {
+    "title": "تفاصيل الخدمة",
+    "editService": "تعديل الخدمة",
+    "contactInformation": "معلومات التواصل",
+    "pricing": "السعر",
+    "serviceStatus": "حالة الخدمة",
+    "cancellationPolicy": "شروط الإلغاء",
+    "availableDates": "التواريخ المتاحة",
+    "viewAllSchedules": "عرض كل المواعيد"
+  }
+}

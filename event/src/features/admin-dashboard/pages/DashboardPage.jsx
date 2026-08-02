@@ -1,12 +1,12 @@
 import React from "react";
 import { Box, Typography } from "@mui/material";
 
-import Sidebar from "./components/Sidebar.jsx";
-import TopBar from "./components/TopBar.jsx";
-import StatsCards from "./overview-components/StatsCards/StatsCards.jsx";
-import PendingApproval from "./overview-components/PendingApproval/PendingApproval.jsx";
-import RecentActivity from "./overview-components/RecentActivity/RecentActivity.jsx";
-import TopServices from "./overview-components/TopServices/TopServices.jsx";
+import Sidebar from "../components/Sidebar.jsx";
+import TopBar from "../components/TopBar.jsx";
+import StatsCards from "../overview-components/StatsCards/StatsCards.jsx";
+import PendingApproval from "../overview-components/PendingApproval/PendingApproval.jsx";
+import RecentActivity from "../overview-components/RecentActivity/RecentActivity.jsx";
+import TopServices from "../overview-components/TopServices/TopServices.jsx";
 
 const DashboardPage = () => {
     // تأثيرات النقر

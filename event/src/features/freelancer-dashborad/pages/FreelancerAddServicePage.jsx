@@ -34,7 +34,13 @@ const FreelancerAddServicePage = () => {
         includesTools: false,
         title: { ar: "", en: "" },
         description: { ar: "", en: "" },
+        price_type: "fixed",
+        // 👑 تحديث حالة التواريخ لدعم النطاقات والأيام المتعددة
+        dateSelectionMode: "Date Range",
         startDate: null,
+        endDate: null,
+        selectedDates: [],
+
         isAllDay: false,
         shifts: [],
         variants: [
@@ -61,56 +67,99 @@ const FreelancerAddServicePage = () => {
         loadInitialData();
     }, []);
 
-    // 👑 دالة الإرسال الموحدة والمحدثة
+    // دالة الإرسال المحدثة
     const submitService = async (statusValue, successMsg) => {
         try {
-            // 1. رفع الصورة أولاً
-            let uploadedPath = null;
-            if (formData.photos?.length > 0 && typeof formData.photos[0] === 'object') {
-                const uploadResponse = await freelancerOfferService.uploadImage(formData.photos[0]);
-                // نستخدم temp_path كما اتفقنا
-                uploadedPath = uploadResponse.temp_path || uploadResponse.path;
+            // 1. 👑 رفع الصور (يدعم الآن رفع أكثر من صورة دفعة واحدة)
+            let imagesArray = [];
+            if (formData.photos?.length > 0) {
+                for (const file of formData.photos) {
+                    if (typeof file === 'object') {
+                        const uploadResponse = await freelancerOfferService.uploadImage(file);
+                        const uploadedPath = uploadResponse.temp_path || uploadResponse.path;
+                        if (uploadedPath) {
+                            imagesArray.push({ path: uploadedPath });
+                        }
+                    }
+                }
             }
 
-            // 2. تحديث هيكل البيانات ليتضمن الصورة في مصفوفة images
-            const imagesArray = uploadedPath ? [{ path: uploadedPath }] : [];
-
-            const preparedData = {
-                ...formData,
-                moderation_status: statusValue,
-                secondary_contact_number: "0933333333",
-                is_provider_location_based: true,
-                images: imagesArray, // 👑 هنا يتم ربط الصورة التي تم رفعها
-            };
-
-            // تنظيف الحقول التي لا يريدها الباك إند
-            delete preparedData.photos;
-            delete preparedData.shifts;
-
-            // تحقق إضافي: هل الصورة موجودة؟
-            if (preparedData.images.length === 0) {
+            if (imagesArray.length === 0) {
                 alert("يرجى اختيار صورة للخدمة أولاً.");
                 return;
             }
 
-            // ... (باقي منطق التوقيتات) ...
+            // 2. تجهيز البيانات الأساسية
+            const preparedData = {
+                ...formData,
+                moderation_status: statusValue,
+                secondary_contact_number: formData.secondaryPhone ||null,
+                is_provider_location_based: true,
+                images: imagesArray,
+            };
+
+            // تنظيف الحقول المؤقتة الخاصة بالواجهة قبل الإرسال للباك إند
+            delete preparedData.photos;
+            delete preparedData.shifts;
+            delete preparedData.dateSelectionMode;
+            delete preparedData.endDate;
+            delete preparedData.selectedDates;
+            delete preparedData.secondaryPhone;
+
+            // 3. 👑 تجهيز الأوقات (Slots)
+            let formattedSlots = [];
             if (preparedData.isAllDay) {
-                preparedData.variants[0].availabilities = [{
-                    available_date: dayjs(preparedData.startDate).format('YYYY-MM-DD'),
-                    slots: [{ start_time: "00:00", end_time: "23:59" }]
-                }];
-            } else {
-                preparedData.variants[0].availabilities = formData.shifts.map(shift => {
+                formattedSlots = [{ start_time: "00:00", end_time: "23:59" }];
+            } else if (formData.shifts.length > 0) {
+                formattedSlots = formData.shifts.map(shift => {
                     const [startStr, endStr] = shift.split(' - ');
                     return {
-                        available_date: dayjs(preparedData.startDate).format('YYYY-MM-DD'),
-                        slots: [{
-                            start_time: dayjs(startStr, ["hh:mm A", "HH:mm"]).format("HH:mm"),
-                            end_time: dayjs(endStr, ["hh:mm A", "HH:mm"]).format("HH:mm")
-                        }]
+                        start_time: dayjs(startStr, ["hh:mm A", "HH:mm"]).format("HH:mm"),
+                        end_time: dayjs(endStr, ["hh:mm A", "HH:mm"]).format("HH:mm")
                     };
                 });
+            } else {
+                alert("يرجى تحديد أوقات العمل (Shifts) أو تفعيل خيار All Day.");
+                return;
             }
+
+            // 4. 👑 توليد مصفوفة availabilities (تغطية كافة التواريخ المحددة)
+            let availabilities = [];
+            const mode = formData.dateSelectionMode;
+
+            if (mode === "Date Range" && formData.startDate && formData.endDate) {
+                let currentDate = dayjs(formData.startDate);
+                const lastDate = dayjs(formData.endDate);
+
+                while (currentDate.isBefore(lastDate) || currentDate.isSame(lastDate, 'day')) {
+                    availabilities.push({
+                        available_date: currentDate.format("YYYY-MM-DD"),
+                        slots: formattedSlots
+                    });
+                    currentDate = currentDate.add(1, 'day');
+                }
+            }
+            else if (mode === "Multiple Days" && formData.selectedDates?.length > 0) {
+                formData.selectedDates.forEach(dateStr => {
+                    availabilities.push({
+                        available_date: dateStr,
+                        slots: formattedSlots
+                    });
+                });
+            }
+            else if (formData.startDate) {
+                // حالة احتياطية لو اختار يوماً واحداً فقط في الـ Date Range
+                availabilities.push({
+                    available_date: dayjs(formData.startDate).format("YYYY-MM-DD"),
+                    slots: formattedSlots
+                });
+            } else {
+                alert("يرجى تحديد تواريخ الخدمة من التقويم.");
+                return;
+            }
+
+            // إرفاق التواريخ بالباقة (Variant)
+            preparedData.variants[0].availabilities = availabilities;
 
             console.log("البيانات النهائية المرسلة للسيرفر:", preparedData);
             await dispatch(createService(preparedData)).unwrap();
@@ -121,6 +170,7 @@ const FreelancerAddServicePage = () => {
             alert("حدث خطأ: " + (err.response?.data?.message || err.message));
         }
     };
+
     const handleUpdate = (updatedFields) => {
         setFormData(prev => ({ ...prev, ...updatedFields }));
     };

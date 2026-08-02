@@ -8,17 +8,17 @@ import TuneOutlinedIcon    from "@mui/icons-material/TuneOutlined";
 import SortOutlinedIcon    from "@mui/icons-material/SortOutlined";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import Sidebar      from "./components/Sidebar";
-import TopBar       from "./components/TopBar";
-import TabSwitcher  from "./components/TabSwitcher";
-import FreelancerRow from "./components/FreelancerRow";
+import Sidebar      from "../components/Sidebar.jsx";
+import TopBar       from "../components/TopBar.jsx";
+import TabSwitcher  from "../components/TabSwitcher.jsx";
+import FreelancerRow from "../components/FreelancerRow.jsx";
 
 import {
     fetchAllFreelancers,
     updateFreelancerStatus,
-} from "./directorySlice";
+} from "../directorySlice.js";
 
-import { T } from "./Theme";
+import { T } from "../Theme.jsx";
 
 export default function FreelancerDirectoryPage({ onNavClick, activeNav = "Freelancers" }) {
     const dispatch = useDispatch();

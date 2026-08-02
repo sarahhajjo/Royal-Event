@@ -28,21 +28,17 @@ const labelSx = {
 };
 
 const CustomizationPricing = ({ data = {}, onChange }) => {
-    // دوال الحقول العادية (سياسات الإلغاء، العملة، إلخ)
     const handleNormal = (field) => (e) => onChange?.({ ...data, [field]: e.target.value });
     const handleCheckbox = (field) => (e) => onChange?.({ ...data, [field]: e.target.checked });
 
-    // استخراج الباقة الأولى من البيانات (لتسهيل القراءة)
     const primaryVariant = data.variants?.[0] || { variant_name: { ar: "", en: "" }, price: 0 };
 
-    // 👑 تعديل: دالة مخصصة لتحديث سعر الباقة الأولى
     const handleVariantPrice = (e) => {
         const newVariants = [...(data.variants || [])];
         newVariants[0] = { ...newVariants[0], price: Number(e.target.value) || 0 };
         onChange?.({ ...data, variants: newVariants });
     };
 
-    // 👑 تعديل: دالة مخصصة لتحديث اسم الباقة الأولى (عربي وإنجليزي)
     const handleVariantName = (lang) => (e) => {
         const newVariants = [...(data.variants || [])];
         newVariants[0] = {
@@ -55,7 +51,8 @@ const CustomizationPricing = ({ data = {}, onChange }) => {
         onChange?.({ ...data, variants: newVariants });
     };
 
-    const pricingMode = data.pricingStructure || "FIXED RATE";
+    // 👑 التعديل الأول: نقرأ القيمة بناءً على الـ price_type
+    const pricingMode = data.price_type === "hourly" ? "HOURLY RATE" : "FIXED RATE";
 
     return (
         <Paper elevation={0} sx={{ p: 3, mb: 3 }}>
@@ -67,15 +64,18 @@ const CustomizationPricing = ({ data = {}, onChange }) => {
             </Box>
 
             <Grid container spacing={4}>
-                {/* الجزء الأيسر: هيكل التسعير */}
                 <Grid item xs={12} md={7}>
-                    <Typography sx={labelSx}>Pricing Structure </Typography>
+                    <Typography sx={labelSx}>Pricing Structure</Typography>
 
                     <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1.5, mb: 3 }}>
                         {["FIXED RATE", "HOURLY RATE"].map((mode) => (
                             <Button
                                 key={mode}
-                                onClick={() => onChange?.({ ...data, pricingStructure: mode })}
+                                onClick={() => {
+                                    // 👑 التعديل الثاني: نحول الاختيار لـ fixed أو hourly ونرسله للـ State
+                                    const backendValue = mode === "FIXED RATE" ? "fixed" : "hourly";
+                                    onChange?.({ ...data, price_type: backendValue });
+                                }}
                                 sx={{
                                     py: 1.5, border: "1px solid",
                                     borderColor: pricingMode === mode ? "primary.main" : "rgba(201,168,76,0.2)",
@@ -85,54 +85,29 @@ const CustomizationPricing = ({ data = {}, onChange }) => {
                                     "&:hover": { borderColor: "primary.main" }
                                 }}
                             >
-                                {mode === "FIXED RATE" ? "FIXED RATE " : "HOURLY RATE "}
+                                {mode}
                             </Button>
                         ))}
                     </Box>
 
-                    {/* 💡 إضافة: حقول اسم الباقة (مطلوبة للباك إند) */}
                     <Grid container spacing={2} sx={{ mb: 2 }}>
                         <Grid item xs={12} sm={6}>
                             <Typography sx={labelSx}>Package Name (EN)</Typography>
-                            <TextField
-                                fullWidth
-                                placeholder="e.g. Basic Package"
-                                value={primaryVariant.variant_name?.en || ""}
-                                onChange={handleVariantName("en")}
-                                size="small"
-                                sx={fieldSx}
-                            />
+                            <TextField fullWidth placeholder="e.g. Basic Package" value={primaryVariant.variant_name?.en || ""} onChange={handleVariantName("en")} size="small" sx={fieldSx} />
                         </Grid>
                         <Grid item xs={12} sm={6}>
                             <Typography sx={labelSx}>اسم الباقة (AR)</Typography>
-                            <TextField
-                                fullWidth
-                                dir="rtl"
-                                placeholder="مثال: الباقة الأساسية"
-                                value={primaryVariant.variant_name?.ar || ""}
-                                onChange={handleVariantName("ar")}
-                                size="small"
-                                sx={fieldSx}
-                            />
+                            <TextField fullWidth dir="rtl" placeholder="مثال: الباقة الأساسية" value={primaryVariant.variant_name?.ar || ""} onChange={handleVariantName("ar")} size="small" sx={fieldSx} />
                         </Grid>
                     </Grid>
 
-                    {/* حقول السعر والعملة */}
                     <Grid container spacing={2}>
                         <Grid item xs={12} sm={6}>
-                            <Typography sx={labelSx}>Price </Typography>
-                            <TextField
-                                fullWidth
-                                type="number"
-                                placeholder={pricingMode === "HOURLY RATE" ? "e.g. 500" : "e.g. 5000"}
-                                value={primaryVariant.price || ""}
-                                onChange={handleVariantPrice}
-                                size="small"
-                                sx={fieldSx}
-                            />
+                            <Typography sx={labelSx}>Price</Typography>
+                            <TextField fullWidth type="number" placeholder={pricingMode === "HOURLY RATE" ? "e.g. 500" : "e.g. 5000"} value={primaryVariant.price || ""} onChange={handleVariantPrice} size="small" sx={fieldSx} />
                         </Grid>
                         <Grid item xs={6} sm={3}>
-                            <Typography sx={labelSx}>Currency </Typography>
+                            <Typography sx={labelSx}>Currency</Typography>
                             <FormControl fullWidth size="small" sx={fieldSx}>
                                 <Select value={data.currency || "SAR"} onChange={handleNormal("currency")}>
                                     <MenuItem value="SAR">SAR</MenuItem>
@@ -143,9 +118,8 @@ const CustomizationPricing = ({ data = {}, onChange }) => {
                     </Grid>
                 </Grid>
 
-                {/* الجزء الأيمن: سياسة الإلغاء */}
                 <Grid item xs={12} md={5} sx={{ borderLeft: { md: "1px solid rgba(201,168,76,0.15)" }, pl: { md: 4 } }}>
-                    <Typography sx={labelSx}>Cancellation Policy </Typography>
+                    <Typography sx={labelSx}>Cancellation Policy</Typography>
                     <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5, mt: 1 }}>
                         {[
                             { id: "cancel_before_acceptance", label: "Cancellation before acceptance" },
@@ -155,11 +129,7 @@ const CustomizationPricing = ({ data = {}, onChange }) => {
                             <FormControlLabel
                                 key={item.id}
                                 control={
-                                    <Checkbox
-                                        checked={!!data[item.id]} // هنا سيتم الربط بـ cancel_before_acceptance مباشرة
-                                        onChange={handleCheckbox(item.id)}
-                                        sx={{ color: "rgba(201,168,76,0.4)", "&.Mui-checked": { color: "primary.main" } }}
-                                    />
+                                    <Checkbox checked={!!data[item.id]} onChange={handleCheckbox(item.id)} sx={{ color: "rgba(201,168,76,0.4)", "&.Mui-checked": { color: "primary.main" } }} />
                                 }
                                 label={<Typography sx={{ fontSize: "0.82rem", fontFamily: "'Raleway', sans-serif", color: "text.secondary" }}>{item.label}</Typography>}
                             />

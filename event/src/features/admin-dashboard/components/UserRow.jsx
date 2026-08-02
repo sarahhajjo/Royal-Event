@@ -1,61 +1,71 @@
 import React from "react";
-import { useNavigate } from "react-router-dom"; // 1. أضف هذا السطر
-import { Box, Avatar, Typography, IconButton, Divider } from "@mui/material";
+import { Box, Typography, Avatar, IconButton, Divider } from "@mui/material";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
-import { T, typography, infoButtonSx, avatarBaseSx, rowWrapperSx } from "../Theme";
 
-export default function UserRow({ user, showDivider = true, onInfo }) {
-    const { id, name, avatarUrl, avatarLetter, title, email, phone } = user;
-    const navigate = useNavigate(); // 2. عرف الـ hook
+const T = {
+    border:      "#E8DFC8",
+    gold:        "#8a6f28",
+    textPrimary: "#1C1712",
+    textMuted:   "#7A6F5E",
+    avatarBg:    "#F2EFE8",
+};
+
+export default function UserRow({ user, showDivider, onInfo }) {
+    const contactInfo = user.email ? user.email : (user.phone ? user.phone : "No Contact Info");
+    const initial = user.name ? user.name.charAt(0).toUpperCase() : "U";
 
     return (
-        <>
-            {/* 3. أضف onClick هنا للـ Box الرئيسي */}
+        <Box>
+            {/* 🚀 جعلنا الحاوية كاملة قابلة للضغط وأضفنا تأثير Hover */}
             <Box
-                sx={{ ...rowWrapperSx, cursor: 'pointer', '&:hover': { bgcolor: '#f5f2eb' } }}
-                onClick={() => navigate(`/admin-dashboard/user/${id}`)}
+                onClick={() => onInfo(user.id)}
+                sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    px: 3,
+                    py: 2.5,
+                    gap: 2.5,
+                    cursor: "pointer", // شكل اليد
+                    transition: "background-color 0.2s ease",
+                    "&:hover": {
+                        backgroundColor: "rgba(138, 111, 40, 0.04)" // لون ذهبي خفيف جداً عند التمرير
+                    }
+                }}
             >
-                {/* Portrait */}
-                <Avatar
-                    src={avatarUrl}
-                    alt={name}
-                    variant="rounded"
-                    sx={{
-                        ...avatarBaseSx,
-                        width:  54,
-                        height: 54,
-                        filter: avatarUrl ? T.avatarFilter : "none",
-                    }}
-                >
-                    {!avatarUrl && (avatarLetter ?? name?.[0])}
-                </Avatar>
+                <Box sx={{ width: 54, flexShrink: 0 }}>
+                    <Avatar
+                        src={user.avatarUrl}
+                        sx={{ width: 42, height: 42, bgcolor: T.avatarBg, color: T.gold, fontSize: "1rem", fontWeight: 600 }}
+                    >
+                        {initial}
+                    </Avatar>
+                </Box>
 
-                {/* Identity */}
-                <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Typography sx={{ ...typography.rowName, color: T.textPrimary }}>
-                        {name}
+                <Box sx={{ flex: 1, display: "flex", flexDirection: "column", gap: 0.5 }}>
+                    <Typography sx={{ color: T.textPrimary, fontSize: "0.95rem", fontWeight: 600 }}>
+                        {user.name}
                     </Typography>
-                    <Typography sx={{ ...typography.rowSub }}>
-                        {title}
+                    <Typography sx={{ color: T.textMuted, fontSize: "0.75rem", fontWeight: 500 }}>
+                        {user.title || "Customer"}
                     </Typography>
                 </Box>
 
-                {/* Correspondence */}
-                <Box sx={{ textAlign: "right", flexShrink: 0 }}>
-                    <Typography sx={{ ...typography.rowContact }}>{email}</Typography>
-                    {phone && <Typography sx={{ ...typography.rowContact }}>{phone}</Typography>}
+                <Box sx={{ width: 250, display: "flex", alignItems: "center" }}>
+                    <Typography sx={{ color: T.textMuted, fontSize: "0.85rem", fontWeight: 500 }}>
+                        {contactInfo}
+                    </Typography>
                 </Box>
 
-                {/* Info */}
-                <IconButton size="small" onClick={(e) => {
-                    e.stopPropagation(); // يمنع تفعيل الـ onClick الخاص بالصف عند الضغط على أيقونة المعلومات
-                    onInfo?.(id);
-                }} sx={infoButtonSx}>
-                    <InfoOutlinedIcon sx={{ fontSize: 15 }} />
-                </IconButton>
+                <Box sx={{ width: 30, ml: 1, flexShrink: 0, display: "flex", justifyContent: "center" }}>
+                    {/* الزر هنا سيقوم بتفعيل نفس الدالة أيضاً */}
+                    <IconButton size="small" sx={{ color: T.gold }}>
+                        <InfoOutlinedIcon fontSize="small" />
+                    </IconButton>
+                </Box>
+
             </Box>
 
             {showDivider && <Divider sx={{ borderColor: T.border, mx: 3 }} />}
-        </>
+        </Box>
     );
 }

@@ -15,22 +15,27 @@ import PublishHallPage from "./features/company-dashboard/add-components/Publish
 
 // 🔗 استدعاء واجهات لوحة تحكم الأدمن
 
-import CompanyDirectory from "./features/admin-dashboard/CompanyDirectoryPage.jsx";
+import CompanyDirectory from "./features/admin-dashboard/pages/CompanyDirectoryPage.jsx";
 
-import FreelancerDirectoryPage from "./features/admin-dashboard/FreelancerDirectoryPage.jsx"; // أضف هذا
+import FreelancerDirectoryPage from "./features/admin-dashboard/pages/FreelancerDirectoryPage.jsx"; // أضف هذا
 
-import UserManagementPage from "./features/admin-dashboard/UserManagementPage.jsx";
+import UserManagementPage from "./features/admin-dashboard/pages/UserManagementPage.jsx";
 
-import UserProfilePage from "./features/admin-dashboard/UserProfilePage.jsx";
+import UserProfilePage from "./features/admin-dashboard/pages/UserProfilePage.jsx";
 
-import CompanyProfilePage from "./features/admin-dashboard/CompanyProfilePage.jsx"; // أضف هذا
-import ApprovalQueuePage from "./features/admin-dashboard/ApprovalQueuePage.jsx";
-import FreelancerProfilePage from "./features/admin-dashboard/FreelancerProfilePage.jsx";
-import DashboardPage from "./features/admin-dashboard/DashboardPage.jsx";
+import CompanyProfilePage from "./features/admin-dashboard/pages/CompanyProfilePage.jsx"; // أضف هذا
+import ApprovalQueuePage from "./features/admin-dashboard/pages/ApprovalQueuePage.jsx";
+import FreelancerProfilePage from "./features/admin-dashboard/pages/FreelancerProfilePage.jsx";
+import DashboardPage from "./features/admin-dashboard/pages/DashboardPage.jsx";
 import FreelancerDashboardPage from "./features/freelancer-dashborad/pages/FreelancerDashboardPage.jsx";
 import FreelancerAddServicePage from "./features/freelancer-dashborad/pages/FreelancerAddServicePage.jsx";
 import OrderManagementPage from "./features/freelancer-dashborad/pages/OrderManagementPage.jsx";
 import OfferManagementPage from "./features/freelancer-dashborad/pages/OfferManagementPage.jsx";
+import ServiceDetailsPage from "./features/freelancer-dashborad/pages/ServiceDetailsPage.jsx";
+import JobOpportunitiesPage from "./features/freelancer-dashborad/pages/JobOpportunitiesPage.jsx";
+import JobDetailsPage from "./features/freelancer-dashborad/pages/JobDetailsPage.jsx";
+import MyJobsPage from "./features/freelancer-dashborad/pages/MyJobsPage.jsx";
+import PaymentApprovalsPage from "./features/admin-dashboard/pages/PaymentApprovalsPage.jsx";
 
 function App() {
 
@@ -61,6 +66,7 @@ function App() {
                 <Route path="/admin-dashboard/users" element={<UserManagementPage/>}/>
                 <Route path="/admin-dashboard/user/:id" element={<UserProfilePage/>}/>
                 <Route path="/admin-dashboard/approvals" element={<ApprovalQueuePage/>}/>
+                <Route path={"/admin-dashboard/finances"} element={<PaymentApprovalsPage/>}/>
 
                 {/*<Route path="/admin-dashboard/company" element={<CompanyDirectory/>} />*/}
 
@@ -73,7 +79,10 @@ function App() {
                 <Route path="/add-service" element={<FreelancerAddServicePage/>}/>
                 <Route path="/order-managment" element={<OrderManagementPage/>}/>
                 <Route path="/freelancer-offer" element={<OfferManagementPage/>}/>
-
+                <Route path="/service_detail/:serviceId" element={<ServiceDetailsPage/>}/>
+                <Route path="/jobs" element={<JobOpportunitiesPage/>}/>
+                <Route path="/jobs/:id" element={<JobDetailsPage/>}/>
+                <Route path="/my-jobs" element={<MyJobsPage/>}/>
                 <Route path="*" element={<Navigate to="/"/>}/>
 
             </Routes>
