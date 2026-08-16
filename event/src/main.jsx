@@ -5,7 +5,7 @@ import { store } from './store';
 import App from './App';
 import './index.css';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
-
+import "./i18n";
 // 👑 إنشاء سياق (Context) مركزي للتحكم بقلب الألوان من أي مكان في النظام
 export const ColorModeContext = createContext({ toggleColorMode: () => {} });
 

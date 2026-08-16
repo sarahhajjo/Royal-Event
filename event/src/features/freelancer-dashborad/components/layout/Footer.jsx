@@ -24,7 +24,7 @@ const Footer = () => (
                 ))}
             </Stack>
             <Typography variant="caption" sx={{ color: "text.secondary", opacity: 0.4 }}>
-                © 2024 Royal Events. All Rights Reserved.
+                © 2026 Royal Events. All Rights Reserved.
             </Typography>
         </Stack>
     </Box>

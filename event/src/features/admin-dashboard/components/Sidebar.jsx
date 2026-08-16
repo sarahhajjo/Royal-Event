@@ -9,6 +9,7 @@ import PeopleAltOutlinedIcon      from "@mui/icons-material/PeopleAltOutlined";
 import BusinessOutlinedIcon       from "@mui/icons-material/BusinessOutlined";
 import SettingsOutlinedIcon       from "@mui/icons-material/SettingsOutlined";
 import WorkOutlineOutlinedIcon    from "@mui/icons-material/WorkOutlineOutlined";
+import AccountBalanceWalletOutlinedIcon from "@mui/icons-material/AccountBalanceWalletOutlined";
 import AddIcon                    from "@mui/icons-material/Add";
 import { useNavigate } from "react-router-dom";
 
@@ -30,6 +31,7 @@ const NAV_ITEMS = [
     { label: "User Management",   path: "/admin-dashboard/users",       icon: <PeopleAltOutlinedIcon fontSize="small" /> },
     { label: "Freelancers",       path: "/admin-dashboard/freelancers", icon: <WorkOutlineOutlinedIcon fontSize="small" /> },
     { label: "Company Directory", path: "/admin-dashboard/companies",   icon: <BusinessOutlinedIcon fontSize="small" /> },
+    { label: "Finances", path: "/admin-dashboard/finances", icon: <AccountBalanceWalletOutlinedIcon fontSize="small" /> },
     { label: "System Settings",   path: "/admin-dashboard/settings",    icon: <SettingsOutlinedIcon fontSize="small" /> },
 ];
 
