@@ -2,7 +2,7 @@ import React from 'react';
 import { Box, Typography, Button as MuiButton, CircularProgress, Paper } from '@mui/material';
 import HighlightOffIcon from '@mui/icons-material/HighlightOff';
 import VisibilityIcon from '@mui/icons-material/Visibility';
-import { T, typography } from '../Theme.jsx'; // 👑 استيراد الثيم المركزي الموحد
+import { T, typography } from '../Theme.jsx';
 
 export default function ApprovalList({ items, status, actionStatusMap, onViewDetails, onApprove, onReject }) {
 
@@ -117,7 +117,7 @@ export default function ApprovalList({ items, status, actionStatusMap, onViewDet
                                         Category: {item.category?.name || 'General'}
                                     </Typography>
                                     <Typography sx={{ color: T.textMuted, fontSize: '0.65rem', fontWeight: 600, letterSpacing: 1.2, textTransform: 'uppercase' }}>
-                                        Company: {item.company?.name || 'Partner'}
+                                        Company: {item.company?.name || item.submittedBy || 'Partner'}
                                     </Typography>
                                 </Box>
                             </Box>
@@ -126,7 +126,7 @@ export default function ApprovalList({ items, status, actionStatusMap, onViewDet
                         {/* الجانب الأيمن: أزرار التحكم والإجراءات */}
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, width: { xs: '100%', md: 'auto' }, justifyContent: { xs: 'flex-end', md: 'flex-start' } }}>
 
-                            {/* زر التفاصيل */}
+                            {/* زر التفاصيل (يظهر دائماً) */}
                             <MuiButton
                                 onClick={() => onViewDetails(item)}
                                 sx={{
@@ -145,46 +145,69 @@ export default function ApprovalList({ items, status, actionStatusMap, onViewDet
                                 Details
                             </MuiButton>
 
-                            {/* زر الرفض */}
-                            <MuiButton
-                                onClick={() => onReject(item.id)}
-                                disabled={isRejecting || isApproving}
-                                sx={{
-                                    color: '#b33939',
-                                    borderColor: '#e0b4b4',
-                                    fontSize: '0.78rem',
-                                    textTransform: 'none',
-                                    px: 2,
-                                    py: 0.8,
-                                    borderRadius: '6px',
-                                    '&:hover': { backgroundColor: 'rgba(179, 57, 57, 0.05)', borderColor: '#b33939' }
-                                }}
-                                variant="outlined"
-                                startIcon={isRejecting ? <CircularProgress size={14} color="error" /> : <HighlightOffIcon sx={{ fontSize: '16px !important' }} />}
-                            >
-                                {isRejecting ? 'Rejecting...' : 'Reject'}
-                            </MuiButton>
+                            {/* 👑 إخفاء أزرار الرفض والقبول إذا لم تكن الخدمة معلقة، وعرض حالة بديلة */}
+                            {item.status === 'pending_approval' ? (
+                                <>
+                                    {/* زر الرفض */}
+                                    <MuiButton
+                                        onClick={() => onReject(item.id)}
+                                        disabled={isRejecting || isApproving}
+                                        sx={{
+                                            color: '#b33939',
+                                            borderColor: '#e0b4b4',
+                                            fontSize: '0.78rem',
+                                            textTransform: 'none',
+                                            px: 2,
+                                            py: 0.8,
+                                            borderRadius: '6px',
+                                            '&:hover': { backgroundColor: 'rgba(179, 57, 57, 0.05)', borderColor: '#b33939' }
+                                        }}
+                                        variant="outlined"
+                                        startIcon={isRejecting ? <CircularProgress size={14} color="error" /> : <HighlightOffIcon sx={{ fontSize: '16px !important' }} />}
+                                    >
+                                        {isRejecting ? 'Rejecting...' : 'Reject'}
+                                    </MuiButton>
 
-                            {/* زر الموافقة */}
-                            <MuiButton
-                                onClick={() => onApprove(item.id)}
-                                disabled={isRejecting || isApproving}
-                                sx={{
-                                    backgroundColor: T.gold,
-                                    color: T.btnText,
-                                    fontWeight: 700,
-                                    fontSize: '0.78rem',
-                                    textTransform: 'none',
-                                    px: 2.5,
-                                    py: 0.8,
-                                    borderRadius: '6px',
-                                    boxShadow: 'none',
-                                    '&:hover': { backgroundColor: T.goldHover }
-                                }}
-                                variant="contained"
-                            >
-                                {isApproving ? <CircularProgress size={14} sx={{ color: T.btnText }} /> : 'Approve'}
-                            </MuiButton>
+                                    {/* زر الموافقة */}
+                                    <MuiButton
+                                        onClick={() => onApprove(item.id)}
+                                        disabled={isRejecting || isApproving}
+                                        sx={{
+                                            backgroundColor: T.gold,
+                                            color: T.btnText,
+                                            fontWeight: 700,
+                                            fontSize: '0.78rem',
+                                            textTransform: 'none',
+                                            px: 2.5,
+                                            py: 0.8,
+                                            borderRadius: '6px',
+                                            boxShadow: 'none',
+                                            '&:hover': { backgroundColor: T.goldHover }
+                                        }}
+                                        variant="contained"
+                                    >
+                                        {isApproving ? <CircularProgress size={14} sx={{ color: T.btnText }} /> : 'Approve'}
+                                    </MuiButton>
+                                </>
+                            ) : (
+                                /* Badge للحالة إذا كانت مقبولة أو مرفوضة */
+                                <Box
+                                    sx={{
+                                        px: 2,
+                                        py: 0.8,
+                                        borderRadius: '6px',
+                                        backgroundColor: item.status === 'approved' ? 'rgba(46, 204, 113, 0.1)' : 'rgba(231, 76, 60, 0.1)',
+                                        color: item.status === 'approved' ? '#2ecc71' : '#e74c3c',
+                                        fontWeight: 700,
+                                        fontSize: '0.75rem',
+                                        textTransform: 'uppercase',
+                                        letterSpacing: 0.5,
+                                        border: `1px solid ${item.status === 'approved' ? 'rgba(46, 204, 113, 0.3)' : 'rgba(231, 76, 60, 0.3)'}`
+                                    }}
+                                >
+                                    {item.status === 'approved' ? 'Approved ✅' : 'Rejected ❌'}
+                                </Box>
+                            )}
 
                         </Box>
                     </Paper>

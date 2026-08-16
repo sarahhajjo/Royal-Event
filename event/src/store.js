@@ -27,6 +27,10 @@ import approvalReducer from './features/admin-dashboard/approvalsSlice.js';
 import paymentsReducer from "./features/admin-dashboard/paymentsSlice";
 import orderReducer from "./features/freelancer-dashborad/components/orders/OrdersSlice.js";
 
+// 👑 إضافة استيراد سلايس بروفايل الفريلانسر (تأكدي من المسار الصحيح حسب مجلداتك)
+import freelancerProfileReducer from './features/freelancer-dashborad/freelancerProfileSlice.js';
+
+
 export const store = configureStore({
     reducer: {
         auth: authReducer,
@@ -52,6 +56,7 @@ export const store = configureStore({
 
         // تقويم الشركة
         myCalendar: myCalendarReducer,
+        freelancerProfile: freelancerProfileReducer,
 
         // 💡 تسجيل تقويم الفريلانسر هنا
         freelancerCalendar: freelancerCalendarReducer,
