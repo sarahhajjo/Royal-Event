@@ -8,7 +8,6 @@ import addhallReducer from './features/company-dashboard/add-components/addition
 import jobOfferReducer from './features/company-dashboard/JobOffers-components/CreateJobOfferSlice';
 import myCatalogReducer from './features/company-dashboard/MyCatalog-components/myCatalogSlice';
 import providerProfileReducer from './features/company-dashboard/componyProfileSettings/providerProfileSlice.js';
-import providerProfileReducer from './features/company-dashboard/componyProfileSettings/providerProfileSlice.js'; // تأكدي من المسار
 import freelancerOfferReducer from './features/freelancer-dashborad/components/add-service/ServicesSlice.js'
 import OffersSliceReducer from "./features/freelancer-dashborad/components/offers/OffersSlice.js";
 import notificationReducer from './notificationSlice';
@@ -16,14 +15,18 @@ import requestReducer from './features/company-dashboard/Request-components/Requ
 import jobManagementReducer from './features/company-dashboard/JobOfferAplicants/jobManagementSlice';
 import jobApplicantsReducer from './features/company-dashboard/JobApplicants/JobApplicantsSlice';
 
-// 💡 استيراد الـ Slice الجديد
+// تقويم الشركة
 import myCalendarReducer from './features/company-dashboard/MyCalender/MyCalendarSlice';
+
+// 💡 استيراد تقويم الفريلانسر الجديد (عدلي المسار حسب مكان حفظك للملف)
+import freelancerCalendarReducer from './features/freelancer-dashborad/components/MyCalenderSlice/FreelancerCalendarSlice.js';
 
 import ServiceDetailsSliceReducer from './features/freelancer-dashborad/components/service-details/ServiceDetailsSlice.js';
 import JobOffersReducer from './features/freelancer-dashborad/components/job-opportunities/JobOffersSlice.js'
 import approvalReducer from './features/admin-dashboard/approvalsSlice.js';
 import paymentsReducer from "./features/admin-dashboard/paymentsSlice";
 import orderReducer from "./features/freelancer-dashborad/components/orders/OrdersSlice.js";
+
 export const store = configureStore({
     reducer: {
         auth: authReducer,
@@ -47,7 +50,10 @@ export const store = configureStore({
         jobManagement: jobManagementReducer,
         jobApplicants: jobApplicantsReducer,
 
-        // 💡 تسجيل الـ Reducer هنا
+        // تقويم الشركة
         myCalendar: myCalendarReducer,
+
+        // 💡 تسجيل تقويم الفريلانسر هنا
+        freelancerCalendar: freelancerCalendarReducer,
     }
 });

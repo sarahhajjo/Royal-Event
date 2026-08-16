@@ -38,6 +38,7 @@ import MyJobsPage from "./features/freelancer-dashborad/pages/MyJobsPage.jsx";
 import PaymentApprovalsPage from "./features/admin-dashboard/pages/PaymentApprovalsPage.jsx";
 import BookingDetailsPage from "./features/freelancer-dashborad/pages/BookingDetailsPage.jsx";
 import EditServicePage from "./features/freelancer-dashborad/pages/EditServicePage.jsx";
+import MyCalendarDashboard from "./features/freelancer-dashborad/pages/Mycalendardashboard.jsx";
 
 function App() {
 
@@ -87,6 +88,7 @@ function App() {
                 <Route path="/jobs" element={<JobOpportunitiesPage/>}/>
                 <Route path="/jobs/:id" element={<JobDetailsPage/>}/>
                 <Route path="/my-jobs" element={<MyJobsPage/>}/>
+                <Route path="/freelancer-calendar" element={<MyCalendarDashboard />} />
                 <Route path="*" element={<Navigate to="/"/>}/>
 
             </Routes>
