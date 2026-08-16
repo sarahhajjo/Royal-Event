@@ -16,6 +16,17 @@ import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
 import AccessTimeOutlinedIcon from "@mui/icons-material/AccessTimeOutlined";
 import { useTheme } from "@mui/material/styles";
 
+// 💡 الدالة الذكية لفك التشفير بأمان
+const getSafeText = (field, fallback = '') => {
+    if (!field) return fallback;
+    if (typeof field === 'string') return field;
+    if (field.name) {
+        if (typeof field.name === 'string') return field.name;
+        return field.name.en || field.name.ar || fallback;
+    }
+    return field.en || field.ar || fallback;
+};
+
 /**
  * HallCard
  *
@@ -42,13 +53,18 @@ export default function HallCard({ hall, onEdit, onView, onDelete }) {
         rating = 4.9,
         reviewCount,
         price,
-        currency = "SAR",
+        currency = "SYP", // 💡 توحيد العملة
         location,
         date,
         timeFrom,
         timeTo,
         status = "confirmed",
     } = hall;
+
+    // 💡 تجهيز النصوص بأمان (بما في ذلك الموقع/المنطقة)
+    const displayCategory = getSafeText(category, 'Hall/Service');
+    const displayTitle = getSafeText(title, 'Untitled');
+    const displayLocation = getSafeText(location, 'Unknown Location');
 
     return (
         <Card
@@ -68,8 +84,8 @@ export default function HallCard({ hall, onEdit, onView, onDelete }) {
             <Box sx={{ position: "relative", flexShrink: 0, width: 180 }}>
                 <CardMedia
                     component="img"
-                    image={image}
-                    alt={title}
+                    image={image || "https://via.placeholder.com/180x180?text=No+Image"} // 💡 حماية الصورة
+                    alt={displayTitle}
                     sx={{ width: 180, height: 180, minHeight: 160, objectFit: "cover" }}
                 />
                 {status && (
@@ -107,13 +123,13 @@ export default function HallCard({ hall, onEdit, onView, onDelete }) {
                                 fontSize: "0.65rem",
                             }}
                         >
-                            {category}
+                            {displayCategory}
                         </Typography>
                         <Typography
                             variant="h6"
                             sx={{ color: theme.palette.text.primary, fontWeight: 700, fontSize: "1rem", lineHeight: 1.3, mt: 0.3 }}
                         >
-                            {title}
+                            {displayTitle}
                         </Typography>
                     </Box>
 
@@ -148,7 +164,9 @@ export default function HallCard({ hall, onEdit, onView, onDelete }) {
                 <Stack direction="row" spacing={3} sx={{ mt: 0.5 }}>
                     <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
                         <LocationOnOutlinedIcon sx={{ fontSize: 13, color: theme.palette.text.secondary }} />
-                        <Typography sx={{ color: theme.palette.text.secondary, fontSize: "0.72rem" }}>{location}</Typography>
+                        <Typography sx={{ color: theme.palette.text.secondary, fontSize: "0.72rem" }}>
+                            {displayLocation}
+                        </Typography>
                     </Box>
                     {date && (
                         <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>

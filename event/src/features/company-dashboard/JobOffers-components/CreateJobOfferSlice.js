@@ -1,16 +1,23 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { createJobOfferService } from '../../../services/companyService/jobService';
+import { createJobOfferService, getCompanyServicesForJob } from '../../../services/companyService/jobService';
 
-// ── Async Thunks ──────────────────────────────────────────────────────────────
+export const fetchJobServices = createAsyncThunk(
+    'jobOffer/fetchServices',
+    async (_, { rejectWithValue }) => {
+        try {
+            return await getCompanyServicesForJob();
+        } catch (err) {
+            return rejectWithValue(err.response?.data?.message || 'Failed to load services');
+        }
+    }
+);
 
 export const submitJobOffer = createAsyncThunk(
     'jobOffer/submit',
     async (_, { getState, rejectWithValue }) => {
         try {
-            // جلب البيانات من الستيت الحالي
             const state = getState().jobOffer;
 
-            // 💡 تحويل القيم لتطابق البوستمان (تعديل الـ camelCase لـ snake_case)
             const paymentMap = {
                 perEvent: "Per Event",
                 monthly: "Monthly",
@@ -18,6 +25,7 @@ export const submitJobOffer = createAsyncThunk(
             };
 
             const payload = {
+                service_id: state.serviceId || null,
                 job_title: state.jobTitle,
                 time_condition: state.timeCondition,
                 event_type: state.eventType,
@@ -28,51 +36,51 @@ export const submitJobOffer = createAsyncThunk(
                 specific_event_association: state.specificEventAssociation,
                 experience_level: state.experienceLevel,
                 company_equipment_provided: state.companyEquipmentProvided,
-                job_requirements_and_scope: state.jobRequirements, // 👈 الاسم المطلوب بالباك
+                job_requirements_and_scope: state.jobRequirements,
                 contact_info: state.contactInfo
             };
 
             const response = await createJobOfferService(payload);
             return response;
         } catch (err) {
+            if (err.response?.data?.errors) {
+                const errorMessages = Object.values(err.response.data.errors).flat().join('\n');
+                return rejectWithValue(errorMessages);
+            }
             return rejectWithValue(err.response?.data?.message || err.message || 'Failed to publish job offer');
         }
     }
 );
 
-// ── Initial State ─────────────────────────────────────────────────────────────
-
 const initialState = {
-    // Essential Details
+    serviceId: '',
+    servicesList: [],
+
     jobTitle: '',
     timeCondition: 'Permanent',
-    eventType: 'Wedding',
+    eventType: '', // 💡 تم تفريغ القيمة لتكون جاهزة للإدخال النصي الحر
     jobStartDate: '',
     applicationDeadline: '',
 
-    // Financials & Specifics
     salary: '',
     paymentSystem: 'perEvent',
     specificEventAssociation: '',
-    experienceLevel: 'Junior',
+    experienceLevel: 'Junior', // 💡 متوافق مع الباك إند
     companyEquipmentProvided: false,
 
-    // Requirements & Outreach
     jobRequirements: '',
     contactInfo: '',
 
-    // UI State
-    status: 'idle', // 'idle' | 'loading' | 'succeeded' | 'failed'
+    status: 'idle',
     error: null,
     successMessage: '',
 };
-
-// ── Slice ─────────────────────────────────────────────────────────────────────
 
 const createJobOfferSlice = createSlice({
     name: 'jobOffer',
     initialState,
     reducers: {
+        setServiceId:           (state, { payload }) => { state.serviceId = payload; },
         setJobTitle:            (state, { payload }) => { state.jobTitle = payload; },
         setTimeCondition:       (state, { payload }) => { state.timeCondition = payload; },
         setEventType:           (state, { payload }) => { state.eventType = payload; },
@@ -96,6 +104,9 @@ const createJobOfferSlice = createSlice({
 
     extraReducers: (builder) => {
         builder
+            .addCase(fetchJobServices.fulfilled, (state, { payload }) => {
+                state.servicesList = payload;
+            })
             .addCase(submitJobOffer.pending, (state) => {
                 state.status = 'loading';
                 state.error  = null;
@@ -103,8 +114,6 @@ const createJobOfferSlice = createSlice({
             .addCase(submitJobOffer.fulfilled, (state) => {
                 state.status         = 'succeeded';
                 state.successMessage = 'Job offer published successfully!';
-                // يمكنك تصفير الحقول هنا إذا أردتِ عبر إضافة الكود التالي:
-                // return { ...initialState, successMessage: 'Job offer published successfully!', status: 'succeeded' };
             })
             .addCase(submitJobOffer.rejected, (state, { payload }) => {
                 state.status = 'failed';
@@ -114,7 +123,7 @@ const createJobOfferSlice = createSlice({
 });
 
 export const {
-    setJobTitle, setTimeCondition, setEventType,
+    setServiceId, setJobTitle, setTimeCondition, setEventType,
     setJobStartDate, setApplicationDeadline,
     setSalary, setPaymentSystem, setSpecificEventAssociation,
     setExperienceLevel, toggleEquipmentProvided,
@@ -122,9 +131,9 @@ export const {
     resetJobOfferForm, clearJobOfferMessages,
 } = createJobOfferSlice.actions;
 
-// ── Selectors ─────────────────────────────────────────────────────────────────
-
 export const selectEssentialDetails = (state) => ({
+    serviceId: state.jobOffer.serviceId,
+    servicesList: state.jobOffer.servicesList,
     jobTitle: state.jobOffer.jobTitle,
     timeCondition: state.jobOffer.timeCondition,
     eventType: state.jobOffer.eventType,

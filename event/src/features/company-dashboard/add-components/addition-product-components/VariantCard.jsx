@@ -14,7 +14,7 @@ import RadioGroup from "@mui/material/RadioGroup";
 import Radio from "@mui/material/Radio";
 import currencyCodes from 'currency-codes';
 
-const VariantCard = ({ index, variantData, hasVariants, onUpdate, onUpdateFullObject, isSingle }) => {
+const VariantCard = ({ index, variantData, originalVariant, hasVariants, onUpdate, onUpdateFullObject, isSingle, editMode }) => {
     const theme = useTheme();
     const isDark = theme.palette.mode === 'dark';
     const fileInputRef = useRef(null);
@@ -23,18 +23,19 @@ const VariantCard = ({ index, variantData, hasVariants, onUpdate, onUpdateFullOb
     const [draftEnd, setDraftEnd] = useState(null);
     const [isUploading, setIsUploading] = useState(false);
 
+    // 💡 التحقق من التعديلات للتلوين
+    const isPriceModified = editMode && String(variantData?.price) !== String(originalVariant?.price);
+    const isStockModified = editMode && String(variantData?.stock) !== String(originalVariant?.stock);
+    const isColorModified = editMode && String(variantData?.color) !== String(originalVariant?.color);
+
     const excludedDates = variantData?.excludedDates || [];
-    const selectedDates = variantData?.selectedDates || [];
     const shiftRanges = variantData?.shiftRanges || [];
     const isAllDay = variantData?.isAllDay || false;
     const images = variantData?.images || [];
     const selectionMode = variantData?.selectionMode || 'range';
     const filter = createFilterOptions();
 
-    const allCurrencies = currencyCodes.data.map(c => ({
-        label: `${c.code} - ${c.currency}`,
-        code: c.code
-    }));
+    const allCurrencies = currencyCodes.data.map(c => ({ label: `${c.code} - ${c.currency}`, code: c.code }));
 
     const getSelectedDates = () => {
         if (!variantData?.startDate) return [];
@@ -197,22 +198,18 @@ const VariantCard = ({ index, variantData, hasVariants, onUpdate, onUpdateFullOb
             const localPreview = URL.createObjectURL(file);
             try {
                 const response = await additionService.uploadTempImage(file);
-                if (response && response.temp_path) {
-                    currentImages.push({ preview: localPreview, tempPath: response.temp_path });
+                if (response && (response.path || response.temp_path)) {
+                    currentImages.push({ preview: localPreview, tempPath: response.path || response.temp_path });
                 }
-            } catch (error) {
-                console.error("Error uploading image:", error);
-            }
+            } catch (error) { console.error("Error uploading image:", error); }
         }
 
         onUpdate(index, 'images', currentImages);
         setIsUploading(false);
-        if (fileInputRef.current) fileInputRef.current.value = "";
     };
 
     const handleDeleteImage = (imgIndex) => {
-        const filteredImages = images.filter((_, i) => i !== imgIndex);
-        onUpdate(index, 'images', filteredImages);
+        onUpdate(index, 'images', images.filter((_, i) => i !== imgIndex));
     };
 
     const smallInputStyle = {
@@ -250,14 +247,13 @@ const VariantCard = ({ index, variantData, hasVariants, onUpdate, onUpdateFullOb
                 </Typography>
             </Box>
 
-            {/* 💡 التعديل هنا: استخدام nowrap و space-between لضمان بقائهم على سطر واحد */}
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1, mt: 1, width: '100%' }}>
                 <Typography variant="caption" sx={{ color: isDark ? '#9a8f80' : '#7A6F5E', fontWeight: 'bold', textTransform: 'uppercase', fontSize: '10px', whiteSpace: 'nowrap' }}>
                     SELECTION MODE
                 </Typography>
                 <RadioGroup
                     row
-                    sx={{ flexWrap: 'nowrap' }} // 👈 هذه تمنعهم من النزول لسطر ثاني
+                    sx={{ flexWrap: 'nowrap' }}
                     value={selectionMode}
                     onChange={(e) => onUpdateFullObject(index, {
                         ...variantData,
@@ -378,11 +374,21 @@ const VariantCard = ({ index, variantData, hasVariants, onUpdate, onUpdateFullOb
             </Box>
 
             <Box sx={{ display: 'flex', gap: 1.5 }}>
-                <Box sx={{ flex: 1 }}><CustomInputField label="Price" type="number" value={variantData?.price || ''} onChange={(e) => onUpdate(index, 'price', e.target.value)} sx={smallInputStyle} /></Box>
-                <Box sx={{ flex: 1 }}><CustomInputField label="Stock" type="number" value={variantData?.stock || ''} onChange={(e) => onUpdate(index, 'stock', e.target.value)} sx={smallInputStyle} /></Box>
+                <Box sx={{ flex: 1 }}><CustomInputField label="Price" type="number" value={variantData?.price || ''} onChange={(e) => onUpdate(index, 'price', e.target.value)} sx={smallInputStyle} editMode={editMode}
+                                                        isModified={isPriceModified} /></Box>
+                <Box sx={{ flex: 1 }}><CustomInputField label="Stock" type="number" value={variantData?.stock || ''} onChange={(e) => onUpdate(index, 'stock', e.target.value)} sx={smallInputStyle} editMode={editMode}
+                                                        isModified={isStockModified} /></Box>
             </Box>
 
-            {hasVariants === 'yes' && (<CustomInputField label="Color Name" value={variantData?.color || ''} onChange={(e) => onUpdate(index, 'color', e.target.value)} sx={smallInputStyle} />)}
+            {/* 💡 التعديل: إزالة شرط الإخفاء ليظهر الحقل دائمًا */}
+            <CustomInputField
+                label="Color Name"
+                value={variantData?.color || ''}
+                onChange={(e) => onUpdate(index, 'color', e.target.value)}
+                sx={smallInputStyle}
+                editMode={editMode}
+                isModified={isColorModified}
+            />
 
             <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: 2, mt: 1 }}>
                 <Box sx={{ flex: 1 }}>

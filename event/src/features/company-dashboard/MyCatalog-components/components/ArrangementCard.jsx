@@ -7,6 +7,17 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import CalendarTodayOutlinedIcon from "@mui/icons-material/CalendarTodayOutlined";
 import EventOutlinedIcon from "@mui/icons-material/EventOutlined";
 
+// 💡 الدالة الذكية لفك التشفير بأمان
+const getSafeText = (field, fallback = '') => {
+    if (!field) return fallback;
+    if (typeof field === 'string') return field;
+    if (field.name) {
+        if (typeof field.name === 'string') return field.name;
+        return field.name.en || field.name.ar || fallback;
+    }
+    return field.en || field.ar || fallback;
+};
+
 /**
  * ArrangementCard
  *
@@ -30,12 +41,16 @@ export default function ArrangementCard({ arrangement, onEdit, onView, onDelete 
         rating = 4.9,
         reviewCount,
         price,
-        currency = "SAR",
+        currency = "SYP", // 💡 توحيد العملة
         availableFrom,
         availableTo,
         eventType,
         status = "confirmed",
     } = arrangement;
+
+    // 💡 تجهيز النصوص بأمان
+    const displayCategory = getSafeText(category, 'Arrangement');
+    const displayTitle = getSafeText(title, 'Untitled');
 
     return (
         <Card
@@ -54,8 +69,8 @@ export default function ArrangementCard({ arrangement, onEdit, onView, onDelete 
             <Box sx={{ position: "relative", flexShrink: 0, width: 200 }}>
                 <CardMedia
                     component="img"
-                    image={image}
-                    alt={title}
+                    image={image || "https://via.placeholder.com/200x170?text=No+Image"} // 💡 حماية الصورة
+                    alt={displayTitle}
                     sx={{ width: 200, height: "100%", minHeight: 170, objectFit: "cover" }}
                 />
                 {status && (
@@ -88,13 +103,13 @@ export default function ArrangementCard({ arrangement, onEdit, onView, onDelete 
                             variant="caption"
                             sx={{ color: gold, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", fontSize: "0.65rem" }}
                         >
-                            {category}
+                            {displayCategory}
                         </Typography>
                         <Typography
                             variant="h6"
                             sx={{ color: "text.primary", fontWeight: 700, fontSize: "1.05rem", lineHeight: 1.3, mt: 0.3 }}
                         >
-                            {title}
+                            {displayTitle}
                         </Typography>
                     </Box>
 

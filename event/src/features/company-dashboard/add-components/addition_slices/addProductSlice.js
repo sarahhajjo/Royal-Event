@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import additionService from '../../../../services/companyService/additionService.js';
 
-// جلب البيانات (كما هي)
+// جلب البيانات الأساسية
 export const fetchInitialData = createAsyncThunk('product/fetchData', async () => {
     const [categories, districts] = await Promise.all([
         additionService.getCategories(),
@@ -10,15 +10,18 @@ export const fetchInitialData = createAsyncThunk('product/fetchData', async () =
     return { categories, districts };
 });
 
-// إرسال المنتج مع التوكن
+// إضافة منتج جديد
 export const publishProduct = createAsyncThunk('product/publish', async (payload, { getState }) => {
     const state = getState();
-    console.log("Full Redux State:", state); // هذا السطر سيكشف لنا أين يختبئ التوكن
-
-    // تأكدي من المسار الصحيح بناءً على الـ console
     const token = state.auth?.token || localStorage.getItem('token');
-
     return await additionService.createListing(payload, token);
+});
+
+// 💡 تعديل منتج موجود
+export const updateProduct = createAsyncThunk('product/update', async ({ id, payload }, { getState }) => {
+    const state = getState();
+    const token = state.auth?.token || localStorage.getItem('token');
+    return await additionService.updateListing(id, payload, token);
 });
 
 const addProductSlice = createSlice({
@@ -30,16 +33,14 @@ const addProductSlice = createSlice({
                 state.categories = action.payload.categories;
                 state.districts = action.payload.districts;
             })
-            .addCase(publishProduct.pending, (state) => {
-                state.isLoading = true;
-            })
-            .addCase(publishProduct.fulfilled, (state) => {
-                state.isLoading = false;
-                state.success = true;
-            })
-            .addCase(publishProduct.rejected, (state) => {
-                state.isLoading = false;
-            });
+            // Publish Cases
+            .addCase(publishProduct.pending, (state) => { state.isLoading = true; })
+            .addCase(publishProduct.fulfilled, (state) => { state.isLoading = false; state.success = true; })
+            .addCase(publishProduct.rejected, (state) => { state.isLoading = false; })
+            // 💡 Update Cases
+            .addCase(updateProduct.pending, (state) => { state.isLoading = true; })
+            .addCase(updateProduct.fulfilled, (state) => { state.isLoading = false; state.success = true; })
+            .addCase(updateProduct.rejected, (state) => { state.isLoading = false; });
     }
 });
 

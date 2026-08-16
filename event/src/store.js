@@ -1,6 +1,5 @@
 import { configureStore } from "@reduxjs/toolkit";
 import authReducer from "./features/auth/authSlice";
-// 👑 تعديل المسار هنا بنقطة واحدة فقط لأن الملف يبدأ من مجلد src
 import companyDashboardReducer from "./features/company-dashboard/companyDashboardSlice";
 import directoryReducer from "./features/admin-dashboard/directorySlice";
 import arrangementReducer from "./features/company-dashboard/add-components/addition_slices/arrangementSlice";
@@ -8,8 +7,15 @@ import addProductReducer from './features/company-dashboard/add-components/addit
 import addhallReducer from './features/company-dashboard/add-components/addition_slices/addhallSlice.js';
 import jobOfferReducer from './features/company-dashboard/JobOffers-components/CreateJobOfferSlice';
 import myCatalogReducer from './features/company-dashboard/MyCatalog-components/myCatalogSlice';
-import providerProfileReducer from './features/company-dashboard/componyProfileSettings/providerProfileSlice.js'; // تأكدي من المسار
+import providerProfileReducer from './features/company-dashboard/componyProfileSettings/providerProfileSlice.js';
 import notificationReducer from './notificationSlice';
+import requestReducer from './features/company-dashboard/Request-components/RequestSlice';
+import jobManagementReducer from './features/company-dashboard/JobOfferAplicants/jobManagementSlice';
+import jobApplicantsReducer from './features/company-dashboard/JobApplicants/JobApplicantsSlice';
+
+// 💡 استيراد الـ Slice الجديد
+import myCalendarReducer from './features/company-dashboard/MyCalender/MyCalendarSlice';
+
 export const store = configureStore({
     reducer: {
         auth: authReducer,
@@ -22,5 +28,11 @@ export const store = configureStore({
         myCatalog: myCatalogReducer,
         providerProfile: providerProfileReducer,
         notifications: notificationReducer,
+        requests: requestReducer,
+        jobManagement: jobManagementReducer,
+        jobApplicants: jobApplicantsReducer,
+
+        // 💡 تسجيل الـ Reducer هنا
+        myCalendar: myCalendarReducer,
     }
 });
