@@ -1,39 +1,26 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Box, Button, CircularProgress } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 
-import HeroSection           from './detailshall-components/HeroSection';
-import GeneralInfo           from './detailshall-components/GeneralInfo';
-import ProductOptionsPricing from './details-product/ProductOptionsPricing';
-import AvailabilityCalendar  from './detailshall-components/Availabilitycalendar';
-import BookingPipeline       from './detailshall-components/BookingPipeline';
+import HeroSection            from './detailshall-components/HeroSection';
+import GeneralInfo            from './detailshall-components/GeneralInfo';
+import ProductOptionsPricing  from './details-product/ProductOptionsPricing';
+import AvailabilityCalendar   from './detailshall-components/Availabilitycalendar';
+import BookingPipeline        from './detailshall-components/Bookingpipeline';
+import { fetchProviderBookings } from "../myCatalogSlice";
 
 const fixImageUrl = (img) => {
-    // 1. استخراج الرابط سواء كان نصاً مباشراً أو بداخل كائن (Object)
-    const url = typeof img === 'object' && img !== null
-        ? (img.url || img.path || img.temp_path)
-        : img;
-
-    if (!url || typeof url !== 'string') {
-        return "https://via.placeholder.com/400x300?text=No+Image";
-    }
-
+    const url = typeof img === 'object' && img !== null ? (img.url || img.path || img.temp_path) : img;
+    if (!url || typeof url !== 'string') return "https://placehold.co/400x300?text=No+Image";
     if (url.startsWith('http')) return url;
-
     const BACKEND_URL = 'http://127.0.0.1:8000';
     let cleanPath = url.startsWith('/') ? url : `/${url}`;
-
-    // 2. معالجة مسارات Laravel Storage بشكل آمن
     if (cleanPath.includes('/uploads/') && !cleanPath.includes('/storage/')) {
         cleanPath = cleanPath.replace('/uploads/', '/storage/uploads/');
     }
-
-    if (!cleanPath.startsWith('/storage/')) {
-        cleanPath = `/storage${cleanPath}`;
-    }
-
+    if (!cleanPath.startsWith('/storage/')) cleanPath = `/storage${cleanPath}`;
     return `${BACKEND_URL}${cleanPath}`;
 };
 
@@ -50,14 +37,38 @@ const getHexFromColorName = (name) => {
     return '#c5a059';
 };
 
-export default function Productdetailpage({ productId, onBack }) {
+const resolveText = (field, fallback = 'Untitled') => {
+    if (!field) return fallback;
+    if (typeof field === 'string') return field;
+    return field.en || field.ar || fallback;
+};
+
+// 💡 استقبال highlightedBookingId في الـ Props
+export default function Productdetailpage({ productId, onBack, onEdit, highlightedBookingId }) {
     const theme = useTheme();
+    const dispatch = useDispatch();
     const [selectedVariantIndex, setSelectedVariantIndex] = useState(0);
 
-    const { products = [] } = useSelector((state) => state.myCatalog || {});
-    // 💡 جلب بيانات بروفايل الشركة للمنتجات
+    const { products = [], bookings = [] } = useSelector((state) => state.myCatalog || {});
     const { profile } = useSelector((state) => state.providerProfile || {});
     const providerData = profile?.data || {};
+
+    useEffect(() => {
+        dispatch(fetchProviderBookings());
+    }, [dispatch]);
+
+    // 💡 التمرير التلقائي لقسم الحجوزات
+    useEffect(() => {
+        if (highlightedBookingId) {
+            const timer = setTimeout(() => {
+                const section = document.getElementById('booking-pipeline-section');
+                if (section) {
+                    section.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }, 500);
+            return () => clearTimeout(timer);
+        }
+    }, [highlightedBookingId]);
 
     const rawProduct = products.find(p => p.id === productId);
 
@@ -68,52 +79,51 @@ export default function Productdetailpage({ productId, onBack }) {
             </Box>
         );
     }
-    const resolveText = (field) => {
-        if (!field) return 'Untitled';
-        if (typeof field === 'string') return field;
-        return field.en || field.ar || 'Untitled';
-    };
-    const mappedVariants = rawProduct.variants?.map(v => ({
-        id:             v.id,
-        colorName:      v.name?.en || v.name?.ar || 'Default',
-        colorHex:       getHexFromColorName(v.name?.en),
 
-        // 💡 الصور الآن موجودة بداخل الـ variant نفسه في JSON
-        images: v.images?.length > 0
-            ? v.images.map(img => fixImageUrl(img)) // الدالة ستتعرف تلقائياً إذا كان img نصاً أو كائناً
-            : [fixImageUrl(null)],
+    const mappedVariants = rawProduct.variants?.map(v => {
+        const cName = resolveText(v.variant_name, resolveText(v.name, 'Default'));
 
-        quantity:       v.stock || 0,
-        price:          v.price || 0,
-        currency:       v.currency || 'SAR',
-        paymentType:    v.price_type || 'fixed',
-        availabilities: v.availabilities || []
-    })) || [];
+        return {
+            id:             v.id,
+            colorName:      cName,
+            colorHex:       getHexFromColorName(cName),
+            images:         v.images?.length > 0 ? v.images.map(img => fixImageUrl(img)) : [fixImageUrl(null)],
+            quantity:       v.stock_quantity || v.stock || 0,
+            price:          v.price || 0,
+            currency:       v.currency || 'SYP',
+            paymentType:    v.price_type || 'fixed',
+            availabilities: v.availabilities || []
+        };
+    }) || [];
+
     const activeVariant = mappedVariants[selectedVariantIndex] || {};
 
-    // 💡 تصحيح مسار جلب الحقول المدمجة (category و district) لتعمل مع كافة هياكل الباك إند
-    const mappedProduct = {
-        // 💡 تصحيح مسار الوصول لبيانات التصنيف والمنطقة (name_en/ar)
-        badge:       rawProduct.category?.name_en || rawProduct.category?.name_ar || 'Product',
-        name:        resolveText(rawProduct.title),
-        description: rawProduct.description?.en || rawProduct.description?.ar || rawProduct.description || '',
+    const catName = resolveText(rawProduct.category?.name, 'Product');
+    const distName = resolveText(rawProduct.district?.name, 'Unknown District');
 
+    const mappedProduct = {
+        badge:          catName,
+        name:           resolveText(rawProduct.title),
+        description:    resolveText(rawProduct.description, ''),
         management:     providerData.brand_name || 'Company Management',
         managementLogo: providerData.avatar || null,
         primaryContact: providerData.user?.email || 'No email provided',
         primaryPhone:   providerData.user?.phone || 'No phone provided',
-        secondaryPhone: '',
-
-        district:    rawProduct.district?.name || 'Unknown District',
-        category:    rawProduct.category?.name || 'Unknown Category',
+        secondaryPhone: rawProduct.secondary_contact_number || '',
+        district:       distName,
+        category:       catName,
     };
+
     const cancellationPolicies = {
-        beforeAcceptance: rawProduct.cancel_before_acceptance,
-        afterAcceptance:  rawProduct.cancel_after_acceptance,
-        beforePayment:    rawProduct.cancel_before_payment,
+        beforeAcceptance: !!rawProduct.cancel_before_acceptance,
+        afterAcceptance:  !!rawProduct.cancel_after_acceptance,
+        beforePayment:    !!rawProduct.cancel_before_payment,
     };
 
-    const handleEdit    = () => console.log('Edit product clicked');
+    const handleEdit = () => {
+        if (onEdit) onEdit(rawProduct);
+    };
+
     const handlePublish = () => console.log('Publish product clicked');
     const handleBookSlot = ({ day, year, month, slot }) => console.log('Book slot:', { day, year, month, slot });
 
@@ -139,7 +149,6 @@ export default function Productdetailpage({ productId, onBack }) {
             <Box sx={{ mt: 3, width: "100%", maxWidth: "1050px", mx: "auto", px: { xs: 2, md: 4 } }}>
                 <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 3, mb: 3, alignItems: 'stretch' }}>
                     <Box sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-                        {/* 💡 التعديل الجذري: تحويل الخاصية من venue إلى data لتطابق الهيكل الجديد */}
                         <GeneralInfo data={mappedProduct} />
                     </Box>
 
@@ -149,12 +158,21 @@ export default function Productdetailpage({ productId, onBack }) {
                             variants={mappedVariants}
                             selectedIndex={selectedVariantIndex}
                             onColorSelect={(index) => setSelectedVariantIndex(index)}
+                            material={rawProduct.material_composition}
                         />
                     </Box>
                 </Box>
 
                 <AvailabilityCalendar availabilities={activeVariant.availabilities} onBookSlot={handleBookSlot} />
-                <BookingPipeline />
+
+                {/* 💡 غلاف مع ID لتوجيه السكرول بدقة */}
+                <Box id="booking-pipeline-section" sx={{ mt: 4 }}>
+                    <BookingPipeline
+                        entityId={productId}
+                        bookingsData={bookings}
+                        highlightedBookingId={highlightedBookingId}
+                    />
+                </Box>
             </Box>
         </Box>
     );

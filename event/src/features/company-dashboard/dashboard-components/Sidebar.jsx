@@ -27,6 +27,7 @@ import CorporateFareIcon from '@mui/icons-material/CorporateFare';
 // 💡 1. استيراد أيقونات قسم البروفايل
 import PersonIcon from '@mui/icons-material/Person';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 
 import {useNavigate} from "react-router-dom";
 
@@ -149,12 +150,14 @@ function Sidebar({ activeTab, setActiveTab }) {
                     </ListItem>
 
                     {/* باقي الروابط العادية */}
-                    {['request', 'request_status', 'my_offers', 'job_offers', 'job_applicants'].map((tab) => {
+                    {['request', 'request_status', 'my_offers', 'job_offers', 'job_applicants', 'my_calendar'].map((tab) => {
                         const icons = {
-                            request: <AutorenewIcon />, request_status: <AutorenewIcon />, my_offers: <LocalOfferIcon />, job_offers: <BusinessCenterIcon />, job_applicants: <GroupIcon />
+                            request: <AutorenewIcon />, request_status: <AutorenewIcon />, my_offers: <LocalOfferIcon />,
+                            job_offers: <BusinessCenterIcon />, job_applicants: <GroupIcon />, my_calendar: <CalendarMonthIcon />
                         };
                         const labels = {
-                            request: "Request", request_status: "Request Status", my_offers: "My Offers", job_offers: "Job Offers", job_applicants: "Job Applicants"
+                            request: "Request", request_status: "Request Status", my_offers: "My Offers",
+                            job_offers: "Job Offers", job_applicants: "Job Applicants", my_calendar: "My Calendar"
                         };
                         return (
                             <ListItem disablePadding key={tab}>

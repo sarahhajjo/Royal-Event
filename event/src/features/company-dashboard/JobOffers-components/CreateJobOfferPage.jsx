@@ -2,7 +2,7 @@ import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
     Box, Button, Typography, CircularProgress,
-    Alert, Snackbar
+    Alert, Snackbar, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions // 💡 استيراد مكونات النافذة
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 
@@ -10,7 +10,6 @@ import EssentialDetails        from './components/EssentialDetails';
 import FinancialsAndSpecifics  from './components/FinancialsAndSpecifics';
 import RequirementsAndOutreach from './components/RequirementsAndOutreach';
 
-// 💡 تم تحديث الاستيرادات لتتطابق مع الـ Slice الجديد
 import {
     submitJobOffer,
     selectJobOfferStatus,
@@ -22,15 +21,11 @@ export default function CreateJobOfferPage() {
     const theme     = useTheme();
     const isDark    = theme.palette.mode === 'dark';
 
-    // لم نعد بحاجة لجلب الفورم كاملاً هنا، الـ Slice سيتكفل بالبيانات
     const { status, error, successMessage } = useSelector(selectJobOfferStatus);
-
     const isLoading = status === 'loading';
 
-    // 💡 دالة الإرسال أصبحت بسيطة جداً وتستدعي الـ Thunk مباشرة
     const handlePublish    = () => dispatch(submitJobOffer());
 
-    // دالة وهمية للـ Draft حالياً بما أنه لا يوجد API لها
     const handleSaveDraft  = () => {
         alert("Save as Draft is currently not supported by the API.");
     };
@@ -97,20 +92,8 @@ export default function CreateJobOfferPage() {
                 <FinancialsAndSpecifics />
                 <RequirementsAndOutreach />
 
-                {/* ── Inline Error ── */}
-                {error && (
-                    <Alert
-                        severity="error"
-                        onClose={handleCloseSnack}
-                        sx={{ mb: 2, borderRadius: 2 }}
-                    >
-                        {error}
-                    </Alert>
-                )}
-
                 {/* ── Action Buttons ── */}
                 <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, mt: 3, pb: 6 }}>
-                    {/* Save as Draft */}
                     <Button
                         variant="outlined"
                         onClick={handleSaveDraft}
@@ -133,7 +116,6 @@ export default function CreateJobOfferPage() {
                         Save as Draft
                     </Button>
 
-                    {/* Publish */}
                     <Button
                         variant="contained"
                         onClick={handlePublish}
@@ -157,6 +139,47 @@ export default function CreateJobOfferPage() {
                     </Button>
                 </Box>
             </Box>
+
+            {/* 💡 نافذة الأخطاء الأنيقة بالمنتصف */}
+            <Dialog
+                open={Boolean(error)}
+                onClose={handleCloseSnack}
+                PaperProps={{
+                    sx: {
+                        bgcolor: isDark ? '#1c1512' : '#EFE4C9',
+                        border: `1px solid ${isDark ? 'rgba(197,160,89,0.18)' : 'rgba(179, 140, 69, 0.3)'}`,
+                        borderRadius: '12px',
+                        minWidth: '350px',
+                        textAlign: 'center',
+                        p: 1
+                    }
+                }}
+            >
+                <DialogTitle sx={{ color: '#c0392b', fontWeight: 'bold', fontFamily: "'Playfair Display', serif", fontSize: '1.5rem' }}>
+                    Notice
+                </DialogTitle>
+                <DialogContent>
+                    <DialogContentText sx={{ color: theme.palette.text.primary, fontSize: '1.05rem', mt: 1, fontWeight: 500, whiteSpace: 'pre-line' }}>
+                        {error}
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions sx={{ justifyContent: 'center', pb: 2 }}>
+                    <Button
+                        onClick={handleCloseSnack}
+                        variant="contained"
+                        sx={{
+                            bgcolor: theme.palette.primary.main,
+                            color: theme.palette.background.default,
+                            textTransform: 'none',
+                            fontWeight: 600,
+                            px: 4,
+                            '&:hover': { bgcolor: '#b38c45' }
+                        }}
+                    >
+                        OK
+                    </Button>
+                </DialogActions>
+            </Dialog>
 
             {/* ── Success Snackbar ── */}
             <Snackbar

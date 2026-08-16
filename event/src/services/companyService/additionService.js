@@ -45,10 +45,28 @@ const getListingById = async (id) => {
     return response.data.data;
 };
 
-// 💡 [جديد] الدالة المسؤولة عن إرسال التنسيق الجاهز
 const createArrangement = async (arrangementData) => {
     const response = await api.post(`/arrangements`, arrangementData);
     return response.data;
+};
+
+// 💡 [تمت الإضافة] دالة التعديل (PUT) الخاصة بالتنسيقات
+const updateArrangement = async (id, arrangementData) => {
+    const response = await api.put(`/arrangements/${id}`, arrangementData);
+    return response.data;
+};
+
+const updateListing = async (id, listingData) => {
+    const response = await api.put(`/listings/${id}`, listingData);
+    return response.data;
+};
+
+const getCompanyFreelancers = async () => {
+    // 💡 استخدام رابط العقود مع فلتر active وجلب عدد كبير لتجنب مشاكل الصفحات
+    const response = await api.get(`/company/contracts?status=active&per_page=100`);
+
+    // 💡 بما أن لارافيل يستخدم paginate، الداتا الفعلية تكون داخل data.data
+    return response.data?.data?.data || response.data?.data || [];
 };
 
 const additionService = {
@@ -60,6 +78,10 @@ const additionService = {
     uploadTempImage,
     getMyProducts,
     getListingById,
-    createArrangement // 👈 لا تنسي التصدير
+    createArrangement,
+    updateArrangement, // 👈 تم تصدير الدالة هنا
+    updateListing,
+    getCompanyFreelancers
 };
+
 export default additionService;

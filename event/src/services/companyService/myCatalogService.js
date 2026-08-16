@@ -19,13 +19,37 @@ const myCatalogService = {
         return response.data.data;
     },
 
-    // 💡 الدالة الجديدة لجلب التنسيقات (Packages)
     getMyArrangements: async () => {
         const token = localStorage.getItem('token');
         const response = await axios.get(`${API_URL}/arrangements/provider/my-arrangements`, {
             headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' }
         });
         return response.data.data;
+    },
+
+    getProviderBookings: async () => {
+        const token = localStorage.getItem('token');
+        const response = await axios.get(`${API_URL}/provider/bookings`, {
+            headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' }
+        });
+        return response.data.data;
+    },
+
+    // 💡 إضافة دالة جلب الفريلانسرز هنا
+    getCompanyFreelancers: async () => {
+        const token = localStorage.getItem('token');
+        const response = await axios.get(`${API_URL}/company/applicants`, {
+            headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' }
+        });
+        return response.data.data;
+    },
+    deleteCatalogItem: async (id) => {
+        const token = localStorage.getItem('token');
+        // 💡 استخدام الرابط الموحد لكل المعروضات (منتج، صالة، تنسيق)
+        const response = await axios.delete(`${API_URL}/listings/${id}`, {
+            headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' }
+        });
+        return response.data;
     }
 };
 

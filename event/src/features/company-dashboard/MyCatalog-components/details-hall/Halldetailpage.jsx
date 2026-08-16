@@ -1,15 +1,16 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Box, Button, CircularProgress } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 
-// ── Components ──────────────────────────────────────────
 import HeroSection          from './detailshall-components/Herosection';
 import GeneralInfo          from './detailshall-components/Generalinfo';
 import PoliciesPricing      from './detailshall-components/Policiespricing';
 import AvailabilityCalendar from './detailshall-components/Availabilitycalendar';
 import BookingPipeline      from './detailshall-components/Bookingpipeline';
+
+import { fetchProviderBookings } from '../myCatalogSlice';
 
 const fixImageUrl = (url) => {
     if (!url) return "https://via.placeholder.com/1200x600?text=No+Image";
@@ -24,13 +25,31 @@ const fixImageUrl = (url) => {
     return `${BACKEND_URL}/storage${cleanPath}`;
 };
 
-export default function Halldetailpage({ hallId, onBack }) {
+// 💡 استقبال highlightedBookingId في الـ Props
+export default function Halldetailpage({ hallId, onBack, onEdit, highlightedBookingId }) {
     const theme = useTheme();
+    const dispatch = useDispatch();
 
-    const { services: halls } = useSelector((state) => state.myCatalog || {});
-    // 💡 استدعاء البروفايل للصالات
+    const { services: halls, bookings = [] } = useSelector((state) => state.myCatalog || {});
     const { profile } = useSelector((state) => state.providerProfile || {});
     const providerData = profile?.data || {};
+
+    useEffect(() => {
+        dispatch(fetchProviderBookings());
+    }, [dispatch]);
+
+    // 💡 التمرير التلقائي لقسم الحجوزات
+    useEffect(() => {
+        if (highlightedBookingId) {
+            const timer = setTimeout(() => {
+                const section = document.getElementById('booking-pipeline-section');
+                if (section) {
+                    section.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }, 500);
+            return () => clearTimeout(timer);
+        }
+    }, [highlightedBookingId]);
 
     const rawData = halls?.find(h => h.id === hallId);
 
@@ -54,14 +73,13 @@ export default function Halldetailpage({ hallId, onBack }) {
             ? rawData.images.map(img => fixImageUrl(img.url || img.path))
             : [fixImageUrl(null)],
 
-        // 💡 ربط الحقول ببيانات المستخدم والشركة الحقيقية وتصحيح مسار الحقول الهيكلية
         generalInfo: {
             description: rawData.description?.en || rawData.description || '',
             management: providerData.brand_name || 'Company Management',
             managementLogo: providerData.avatar || null,
             primaryContact: providerData.user?.email || 'No contact provided',
             primaryPhone: providerData.user?.phone || rawData.secondary_contact_number || '',
-            secondaryPhone: '',
+            secondaryPhone: rawData.secondary_contact_number || '',
             district: rawData.district?.name?.en || rawData.district?.name?.ar || rawData.district?.name || 'Unknown',
             category: rawData.category?.name?.en || rawData.category?.name?.ar || rawData.category?.name || 'Category',
         },
@@ -69,7 +87,7 @@ export default function Halldetailpage({ hallId, onBack }) {
         policies: {
             priceAmount: firstVariant.price ? firstVariant.price.toLocaleString() : '0',
             currency: firstVariant.currency || 'USD',
-            capacity: firstVariant.stock || 'Not specified',
+            capacity: firstVariant.stock_quantity || firstVariant.stock || 'Not specified',
             priceType: firstVariant.price_type?.toUpperCase() || 'HOURLY',
             cancelPolicies: {
                 beforeAcceptance: !!rawData.cancel_before_acceptance,
@@ -82,7 +100,12 @@ export default function Halldetailpage({ hallId, onBack }) {
         availabilities: firstVariant.availabilities || []
     };
 
-    const handleEdit    = () => console.log('Edit details clicked');
+    const handleEdit = () => {
+        if (onEdit) {
+            onEdit(rawData);
+        }
+    };
+
     const handlePublish = () => console.log('Publish venue clicked');
     const handleBookSlot = ({ day, year, month, slot }) => console.log('Book slot:', { day, year, month, slot });
 
@@ -108,7 +131,15 @@ export default function Halldetailpage({ hallId, onBack }) {
                 </Box>
 
                 <AvailabilityCalendar availabilities={mappedHall.availabilities} onBookSlot={handleBookSlot} />
-                <BookingPipeline />
+
+                {/* 💡 غلاف مع ID لتوجيه السكرول بدقة */}
+                <Box id="booking-pipeline-section" sx={{ mt: 4 }}>
+                    <BookingPipeline
+                        entityId={hallId}
+                        bookingsData={bookings}
+                        highlightedBookingId={highlightedBookingId}
+                    />
+                </Box>
             </Box>
         </Box>
     );

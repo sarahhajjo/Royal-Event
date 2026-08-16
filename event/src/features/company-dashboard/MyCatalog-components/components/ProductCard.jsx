@@ -17,6 +17,21 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import CalendarTodayOutlinedIcon from "@mui/icons-material/CalendarTodayOutlined";
 import { useTheme } from "@mui/material/styles";
 
+// 💡 دالة ذكية لاستخراج النص بأمان ومنع خطأ (Objects are not valid as a React child)
+const getSafeText = (field, fallback = '') => {
+    if (!field) return fallback;
+    if (typeof field === 'string') return field;
+
+    // إذا كان الحقل يحتوي على خاصية name (مثل الـ Category)
+    if (field.name) {
+        if (typeof field.name === 'string') return field.name;
+        return field.name.en || field.name.ar || fallback;
+    }
+
+    // إذا كان الحقل نفسه عبارة عن كائن ترجمة (مثل الـ Title)
+    return field.en || field.ar || fallback;
+};
+
 /**
  * ProductCard
  *
@@ -43,7 +58,7 @@ export default function ProductCard({ product, onEdit, onView, onDelete }) {
         rating = 4.8,
         reviewCount,
         price,
-        currency = "SAR",
+        currency = "SYP", // 💡 تم تعديل العملة الافتراضية لتطابق مشروعك
         colorOptions = [],
         extraColors = 0,
         availableFrom,
@@ -52,6 +67,10 @@ export default function ProductCard({ product, onEdit, onView, onDelete }) {
     } = product;
 
     const isPublished = status === "published";
+
+    // 💡 استخدام الدالة الذكية لتجهيز النصوص قبل طباعتها
+    const displayCategory = getSafeText(category, 'Product');
+    const displayTitle = getSafeText(title, 'Untitled');
 
     // إعدادات الشارة (Chip) ديناميكياً لتناسب المود الداكن والفاتح
     const statusChipProps = isPublished
@@ -86,8 +105,8 @@ export default function ProductCard({ product, onEdit, onView, onDelete }) {
             <Box sx={{ position: "relative", flexShrink: 0, width: 180 }}>
                 <CardMedia
                     component="img"
-                    image={image}
-                    alt={title}
+                    image={image || "https://via.placeholder.com/180x160?text=No+Image"} // 💡 حماية إضافية للصور
+                    alt={displayTitle}
                     sx={{ width: 180, height: "100%", minHeight: 160, objectFit: "cover" }}
                 />
                 <Chip
@@ -123,13 +142,15 @@ export default function ProductCard({ product, onEdit, onView, onDelete }) {
                                 fontSize: "0.65rem",
                             }}
                         >
-                            {category}
+                            {/* 💡 طباعة القسم بأمان */}
+                            {displayCategory}
                         </Typography>
                         <Typography
                             variant="h6"
                             sx={{ color: theme.palette.text.primary, fontWeight: 700, fontSize: "1rem", lineHeight: 1.3, mt: 0.3 }}
                         >
-                            {title}
+                            {/* 💡 طباعة العنوان بأمان */}
+                            {displayTitle}
                         </Typography>
                     </Box>
 
@@ -160,7 +181,7 @@ export default function ProductCard({ product, onEdit, onView, onDelete }) {
                     </Box>
                 </Box>
 
-                {/* Options row (تم تعديل المحاذاة هنا لليسار) */}
+                {/* Options row */}
                 <Box sx={{ display: "flex", alignItems: "center", gap: 3, mt: 0.5, flexWrap: "wrap" }}>
                     {/* Color swatches */}
                     {colorOptions.length > 0 && (

@@ -3,9 +3,10 @@ import { Box, Typography, Divider, Paper } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import SellOutlinedIcon from '@mui/icons-material/SellOutlined';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-// 💡 استيراد أيقونات الدوائر
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import RadioButtonCheckedIcon from '@mui/icons-material/RadioButtonChecked';
+// 💡 استيراد أيقونة جديدة للخامة (Material)
+import TextureOutlinedIcon from '@mui/icons-material/TextureOutlined';
 
 function SectionHeader({ icon: Icon, title }) {
     const theme = useTheme();
@@ -47,11 +48,11 @@ function StatBlock({ label, value, valueColor, sub, textTransform }) {
 }
 
 export default function ProductOptionsPricing({
-                                                  // 💡 استقبال السياسات ككائن
                                                   policies = { beforeAcceptance: false, afterAcceptance: false, beforePayment: false },
                                                   cancellationNote = 'Full refund if cancelled 48h before the event date after acceptance.',
                                                   variants = [],
                                                   selectedIndex = 0,
+                                                  material = 'Not Specified', // 💡 استقبال الخامة هنا
                                                   onColorSelect
                                               }) {
     const theme  = useTheme();
@@ -93,7 +94,6 @@ export default function ProductOptionsPricing({
                     </Typography>
 
                     <Box sx={{ textAlign: 'left', width: 'fit-content' }}>
-                        {/* 💡 خريطة لطباعة السياسات بدون RadioGroup */}
                         {POLICY_OPTIONS.map(({ key, label }) => {
                             const isChecked = policies[key];
                             return (
@@ -116,45 +116,60 @@ export default function ProductOptionsPricing({
                     </Typography>
                 </Box>
 
-                {/* 2. الألوان المتاحة */}
-                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', mb: 1 }}>
-                    <Typography sx={{ fontSize: '0.7rem', letterSpacing: '0.1em', textTransform: 'uppercase', color: theme.palette.text.secondary, mb: 1 }}>
-                        Available Colors
-                    </Typography>
+                <Box sx={{ display: 'flex', justifyContent: 'space-around', alignItems: 'flex-start', mb: 1.5 }}>
+                    {/* 2. عرض الخامة (Material Composition) */}
+                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+                        <Typography sx={{ fontSize: '0.7rem', letterSpacing: '0.1em', textTransform: 'uppercase', color: theme.palette.text.secondary, mb: 1 }}>
+                            Material
+                        </Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, bgcolor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)', px: 1.5, py: 0.5, borderRadius: 2, border: `1px solid ${border}` }}>
+                            <TextureOutlinedIcon sx={{ fontSize: 14, color: theme.palette.primary.main }} />
+                            <Typography sx={{ fontSize: '0.85rem', color: theme.palette.text.primary, fontWeight: 600, textTransform: 'capitalize' }}>
+                                {material || 'Not Specified'}
+                            </Typography>
+                        </Box>
+                    </Box>
 
-                    <Box sx={{ display: 'flex', gap: 1.5, justifyContent: 'center' }}>
-                        {variants.map((variant, index) => {
-                            const isSelected = index === selectedIndex;
-                            return (
-                                <Box
-                                    key={index}
-                                    onClick={() => onColorSelect(index)}
-                                    sx={{
-                                        width: 28,
-                                        height: 28,
-                                        borderRadius: '50%',
-                                        backgroundColor: variant.colorHex,
-                                        cursor: 'pointer',
-                                        position: 'relative',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        boxShadow: isDark ? 'inset 0 2px 4px rgba(0,0,0,0.5)' : 'inset 0 2px 4px rgba(0,0,0,0.2)',
-                                        border: isSelected ? `2px solid ${theme.palette.primary.main}` : '2px solid transparent',
-                                        outline: isSelected ? `2px solid ${theme.palette.background.paper}` : 'none',
-                                        outlineOffset: '-3px',
-                                        transition: 'transform 0.2s',
-                                        '&:hover': { transform: 'scale(1.1)' }
-                                    }}
-                                >
-                                    {isSelected && <CheckCircleIcon sx={{ color: theme.palette.background.paper, fontSize: 16, opacity: 0.8 }} />}
-                                </Box>
-                            );
-                        })}
+                    {/* 3. الألوان المتاحة */}
+                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+                        <Typography sx={{ fontSize: '0.7rem', letterSpacing: '0.1em', textTransform: 'uppercase', color: theme.palette.text.secondary, mb: 1 }}>
+                            Available Colors
+                        </Typography>
+
+                        <Box sx={{ display: 'flex', gap: 1.5, justifyContent: 'center' }}>
+                            {variants.map((variant, index) => {
+                                const isSelected = index === selectedIndex;
+                                return (
+                                    <Box
+                                        key={index}
+                                        onClick={() => onColorSelect(index)}
+                                        sx={{
+                                            width: 28,
+                                            height: 28,
+                                            borderRadius: '50%',
+                                            backgroundColor: variant.colorHex,
+                                            cursor: 'pointer',
+                                            position: 'relative',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            boxShadow: isDark ? 'inset 0 2px 4px rgba(0,0,0,0.5)' : 'inset 0 2px 4px rgba(0,0,0,0.2)',
+                                            border: isSelected ? `2px solid ${theme.palette.primary.main}` : '2px solid transparent',
+                                            outline: isSelected ? `2px solid ${theme.palette.background.paper}` : 'none',
+                                            outlineOffset: '-3px',
+                                            transition: 'transform 0.2s',
+                                            '&:hover': { transform: 'scale(1.1)' }
+                                        }}
+                                    >
+                                        {isSelected && <CheckCircleIcon sx={{ color: theme.palette.background.paper, fontSize: 16, opacity: 0.8 }} />}
+                                    </Box>
+                                );
+                            })}
+                        </Box>
                     </Box>
                 </Box>
 
-                {/* 3. الإحصائيات */}
+                {/* 4. الإحصائيات */}
                 <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: { xs: 2, sm: 3 }, mt: 2 }}>
                     <StatBlock label="Price" value={activeVariant.price} />
                     <StatBlock label="Currency" value={activeVariant.currency || 'SAR'} valueColor={theme.palette.text.primary} textTransform="uppercase" />

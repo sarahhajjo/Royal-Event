@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Box, Typography, Tabs, Tab, Button, Stack, Paper, CircularProgress } from "@mui/material";
+import { Box, Typography, Tabs, Tab, Button, Stack, Paper, CircularProgress, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions } from "@mui/material";
 import InventoryOutlinedIcon from "@mui/icons-material/InventoryOutlined";
 import { useTheme } from "@mui/material/styles";
 import { useDispatch, useSelector } from 'react-redux';
@@ -11,43 +11,23 @@ import ProductCard from "./components/ProductCard";
 import OfferSection from "./components/OfferSection";
 import Halldetailpage from "./details-hall/Halldetailpage";
 import Productdetailpage from "./details-hall/Productdetailpage";
-// 💡 استدعاء صفحة تفاصيل التنسيق
 import Arrangmentdetailpage from "./details-hall/Arrangmentdetailpage";
+import { fetchMyProducts, fetchMyServices, fetchMyArrangements, deleteItemThunk } from "./myCatalogSlice";
 
-// 💡 استيراد الأكشنز من الـ Slice (بما فيها التنسيقات)
-import { fetchMyProducts, fetchMyServices, fetchMyArrangements } from "./myCatalogSlice";
+const PAGE_TABS = ["Pending", "Approved", "Rejected"];
 
-const PAGE_TABS = ["Pending", "Approved", "Rejected", "Cancelled"];
-
-// ─── Helper: معالجة مسار الصور ────────────────────────────────────────────────
+// 💡 تم تحديث رابط الصورة البديلة لكي لا تظهر الأيقونة المكسورة
 const fixImageUrl = (img) => {
-    // 1. استخراج الرابط سواء كان نصاً مباشراً أو بداخل كائن (Object)
-    const url = typeof img === 'object' && img !== null
-        ? (img.url || img.path || img.temp_path)
-        : img;
-
-    if (!url || typeof url !== 'string') {
-        return "https://via.placeholder.com/400x300?text=No+Image";
-    }
-
+    const url = typeof img === 'object' && img !== null ? (img.url || img.path || img.temp_path) : img;
+    if (!url || typeof url !== 'string') return "https://placehold.co/400x300/1c1512/c5a059?text=No+Image";
     if (url.startsWith('http')) return url;
-
     const BACKEND_URL = 'http://127.0.0.1:8000';
     let cleanPath = url.startsWith('/') ? url : `/${url}`;
-
-    // 2. معالجة مسارات Laravel Storage بشكل آمن
-    if (cleanPath.includes('/uploads/') && !cleanPath.includes('/storage/')) {
-        cleanPath = cleanPath.replace('/uploads/', '/storage/uploads/');
-    }
-
-    if (!cleanPath.startsWith('/storage/')) {
-        cleanPath = `/storage${cleanPath}`;
-    }
-
+    if (cleanPath.includes('/uploads/') && !cleanPath.includes('/storage/')) cleanPath = cleanPath.replace('/uploads/', '/storage/uploads/');
+    if (!cleanPath.startsWith('/storage/')) cleanPath = `/storage${cleanPath}`;
     return `${BACKEND_URL}${cleanPath}`;
 };
 
-// ─── Products sub-tab toggle ──────────────────────────────────────────────────
 function ProductsToggle({ value, onChange }) {
     const theme = useTheme();
     const isDark = theme.palette.mode === 'dark';
@@ -74,7 +54,6 @@ function ProductsToggle({ value, onChange }) {
     );
 }
 
-// ─── Empty state ──────────────────────────────────────────────────────────────
 function EmptyState({ message, hint }) {
     const theme = useTheme();
     const isDark = theme.palette.mode === 'dark';
@@ -89,7 +68,6 @@ function EmptyState({ message, hint }) {
     );
 }
 
-// ─── Sub-section label ────────────────────────────────────────────────────────
 function SubSectionLabel({ icon, label }) {
     const theme = useTheme();
     return (
@@ -100,21 +78,26 @@ function SubSectionLabel({ icon, label }) {
     );
 }
 
-// ─── Main Page ────────────────────────────────────────────────────────────────
 export default function MyCatalogPage({
                                           externalHallId = null,
                                           externalProductId = null,
-                                          externalArrangementId = null, // 💡 إضافة معرف التنسيق
+                                          externalArrangementId = null,
                                           onClearHall = null,
                                           onClearProduct = null,
-                                          onClearArrangement = null,    // 💡 تفريغ التنسيق
+                                          onClearArrangement = null,
                                           onSelectHall = null,
                                           onSelectProduct = null,
-                                          onSelectArrangement = null,   // 💡 تحديد التنسيق
+                                          onSelectArrangement = null,
+                                          onEditProduct = null,
+                                          onEditHall = null,
+                                          onEditArrangement = null,
+                                          externalHighlightedBookingId, // 💡 البروب الجديد استقبلناه هنا
                                       }) {
-    // 💡 1 تعني التاب "Approved"
     const [pageTab, setPageTab] = useState(1);
     const [productTab, setProductTab] = useState("published");
+
+    const [deleteDialog, setDeleteDialog] = useState({ open: false, id: null, type: null });
+    const [errorDialog, setErrorDialog] = useState({ open: false, message: '' });
 
     const theme = useTheme();
     const isDark = theme.palette.mode === 'dark';
@@ -122,106 +105,92 @@ export default function MyCatalogPage({
 
     const dispatch = useDispatch();
 
-    // 💡 سحب البيانات من الستيت وتضمين arrangements
     const { products = [], services: halls = [], arrangements = [], loading = false } = useSelector((state) => state.myCatalog || {});
 
     useEffect(() => {
         dispatch(fetchMyProducts());
         dispatch(fetchMyServices());
-        dispatch(fetchMyArrangements()); // 💡 جلب التنسيقات
+        dispatch(fetchMyArrangements());
     }, [dispatch]);
 
-    const handleEdit = (id) => console.log("Edit", id);
-    const handleDelete = (id) => console.log("Delete", id);
+    const handleEditProduct = (id) => {
+        const productToEdit = products.find(p => p.id === id);
+        if (productToEdit && onEditProduct) onEditProduct(productToEdit);
+    };
 
-    // ── Detail modes ──
-    if (externalHallId !== null) return <Halldetailpage hallId={externalHallId} onBack={onClearHall} />;
-    if (externalProductId !== null) return <Productdetailpage productId={externalProductId} onBack={onClearProduct} />;
-    // 💡 فتح صفحة تفاصيل التنسيق
-    if (externalArrangementId !== null) return <Arrangmentdetailpage arrangementId={externalArrangementId} onBack={onClearArrangement} />;
+    const handleEditHall = (id) => {
+        const hallToEdit = halls.find(h => h.id === id);
+        if (hallToEdit && onEditHall) onEditHall(hallToEdit);
+    };
 
+    const handleEditArrangement = (id) => {
+        const arrangementToEdit = arrangements.find(a => a.id === id);
+        if (arrangementToEdit && onEditArrangement) onEditArrangement(arrangementToEdit);
+    };
 
-    // ─── Mapping & Filtering Logic ───
+    const handleDelete = (id, type) => {
+        setDeleteDialog({ open: true, id, type });
+    };
 
-    // 1. تحديد الحالة الفعالة بناءً على التاب الذي يختاره المستخدم
-    // 0 = Pending, 1 = Approved, 2 = Rejected, 3 = Cancelled
-    const tabStatuses = ["pending_approval", "approved", "rejected", "cancelled"];
+    const confirmDelete = async () => {
+        if (deleteDialog.id && deleteDialog.type) {
+            try {
+                await dispatch(deleteItemThunk({ id: deleteDialog.id, type: deleteDialog.type })).unwrap();
+                setDeleteDialog({ open: false, id: null, type: null });
+            } catch (errorMsg) {
+                setDeleteDialog({ open: false, id: null, type: null });
+                setErrorDialog({ open: true, message: errorMsg });
+            }
+        } else {
+            setDeleteDialog({ open: false, id: null, type: null });
+        }
+    };
+
+    // 💡 2. تمرير `highlightedBookingId` للصفحات هنا
+    if (externalHallId !== null) return <Halldetailpage hallId={externalHallId} onBack={onClearHall} onEdit={onEditHall} highlightedBookingId={externalHighlightedBookingId} />;
+    if (externalProductId !== null) return <Productdetailpage productId={externalProductId} onBack={onClearProduct} onEdit={onEditProduct} highlightedBookingId={externalHighlightedBookingId} />;
+    if (externalArrangementId !== null) return <Arrangmentdetailpage arrangementId={externalArrangementId} onBack={onClearArrangement} onEdit={onEditArrangement} highlightedBookingId={externalHighlightedBookingId} />;
+
+    const tabStatuses = ["pending_approval", "approved", "rejected"];
     const activeStatusFilter = tabStatuses[pageTab];
 
-    // ── تحويل وتجهيز التنسيقات (Arrangements) ──
     const mappedArrangements = arrangements.map(arr => {
-        let availableFrom = null;
-        let availableTo = null;
+        let availableFrom = null; let availableTo = null;
         if (arr.availabilities?.length > 0) {
             availableFrom = dayjs(arr.availabilities[0].available_date).format('MMM DD');
             availableTo = dayjs(arr.availabilities[arr.availabilities.length - 1].available_date).format('MMM DD, YYYY');
         }
-
         const rawImage = arr.images?.[0]?.url || arr.images?.[0]?.path;
-
         return {
-            id: arr.id,
-            image: fixImageUrl(rawImage),
-            category: arr.category?.name?.en || arr.category?.name || "Arrangement",
-            title: arr.title?.en || arr.title || "Untitled Arrangement",
-            rating: 5.0,
-            price: arr.price || 0,
-            currency: arr.currency || "SAR",
-            availableFrom,
-            availableTo,
-            eventType: "Custom Event",
-            status: arr.moderation_status // حالة التنسيق (pending_approval, approved, ...)
+            id: arr.id, image: fixImageUrl(rawImage), category: arr.category?.name?.en || arr.category?.name || "Arrangement",
+            title: arr.title?.en || arr.title || "Untitled Arrangement", rating: 5.0, price: arr.price || 0, currency: arr.currency || "SAR",
+            availableFrom, availableTo, eventType: "Custom Event", status: arr.moderation_status || arr.status
         };
     });
-
     const displayedArrangements = mappedArrangements.filter(a => a.status === activeStatusFilter);
 
-
-    // ── تحويل وتجهيز المنتجات (Products) ──
     const mappedProducts = products.map(p => {
         const mainVariant = p.variants?.[0] || {};
         const availabilities = mainVariant.availabilities || [];
-
-        let availableFrom = null;
-        let availableTo = null;
+        let availableFrom = null; let availableTo = null;
         if (availabilities.length > 0) {
             availableFrom = dayjs(availabilities[0].available_date).format('MMM DD');
             availableTo = dayjs(availabilities[availabilities.length - 1].available_date).format('MMM DD, YYYY');
         }
-
         const rawImage = p.image?.url || p.image?.path || mainVariant.images?.[0]?.url || mainVariant.images?.[0]?.path;
-
         return {
-            id: p.id,
-            image: fixImageUrl(rawImage),
-            category: p.category?.name?.en || p.category?.name || "Product",
-            title: p.title?.en || p.title || "Untitled",
-            rating: 4.8,
-            reviewCount: null,
-            price: mainVariant.price || 0,
-            currency: mainVariant.currency || "SAR",
-            colorOptions: p.variants?.map(v => v.name?.en || v.name) || [],
-            extraColors: p.variants?.length > 3 ? p.variants.length - 3 : 0,
-            availableFrom,
-            availableTo,
-            status: p.moderation_status || p.status
+            id: p.id, image: fixImageUrl(rawImage), category: p.category?.name?.en || p.category?.name || "Product",
+            title: p.title?.en || p.title || "Untitled", rating: 4.8, reviewCount: null, price: mainVariant.price || 0, currency: mainVariant.currency || "SAR",
+            colorOptions: p.variants?.map(v => v.name?.en || v.name) || [], extraColors: p.variants?.length > 3 ? p.variants.length - 3 : 0,
+            availableFrom, availableTo, status: p.moderation_status || p.status
         };
     });
+    const displayedProducts = mappedProducts.filter(p => productTab === "saved" ? p.status === "draft" : p.status === activeStatusFilter);
 
-    const displayedProducts = mappedProducts.filter(p => {
-        if (productTab === "saved") return p.status === "draft";
-        return p.status === activeStatusFilter;
-    });
-
-    // ── تحويل وتجهيز الصالات (Halls / Services) ──
     const mappedHalls = halls.map(h => {
         const mainVariant = h.variants?.[0] || {};
         const availabilities = mainVariant.availabilities || [];
-
-        let date = null;
-        let timeFrom = null;
-        let timeTo = null;
-
+        let date = null; let timeFrom = null; let timeTo = null;
         if (availabilities.length > 0) {
             date = dayjs(availabilities[0].available_date).format('MMM DD, YYYY');
             const slots = availabilities[0].slots || [];
@@ -230,33 +199,18 @@ export default function MyCatalogPage({
                 timeTo = slots[0].end_time ? dayjs(`2024-01-01T${slots[0].end_time}`).format('hh:mm A') : '';
             }
         }
-
         const rawImage = h.images?.[0] || mainVariant.images?.[0] || h.image;
         return {
-            id: h.id,
-            image: fixImageUrl(rawImage),
-            category: h.category?.name?.en || h.category?.name || "Banquet Hall",
-            title: h.title?.en || h.title || "Untitled Hall",
-            rating: 4.9,
-            reviewCount: null,
-            price: mainVariant.price || 0,
-            currency: mainVariant.currency || "SAR",
-            location: h.district?.name?.en || h.district?.name || "Unknown Location",
-            date,
-            timeFrom,
-            timeTo,
-            status: h.status
+            id: h.id, image: fixImageUrl(rawImage), category: h.category?.name?.en || h.category?.name || "Banquet Hall",
+            title: h.title?.en || h.title || "Untitled Hall", rating: 4.9, reviewCount: null, price: mainVariant.price || 0, currency: mainVariant.currency || "SAR",
+            location: h.district?.name?.en || h.district?.name || "Unknown Location", date, timeFrom, timeTo, status: h.moderation_status || h.status
         };
     });
-
     const displayedHalls = mappedHalls.filter(h => h.status === activeStatusFilter);
-
 
     return (
         <Box sx={{ width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}>
             <Box sx={{ width: '100%', ml: '-3%', mt: '-4%' }}>
-
-                {/* Page heading */}
                 <Box sx={{ mb: 4, textAlign: 'left' }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mt: 1, mb: 1 }}>
                         <Box sx={{ width: 14, height: 14, border: `2px solid ${theme.palette.primary.main}`, transform: 'rotate(45deg)', boxShadow: `0 0 10px ${theme.palette.primary.main}40`, flexShrink: 0 }} />
@@ -269,7 +223,6 @@ export default function MyCatalogPage({
                     </Typography>
                 </Box>
 
-                {/* Page-level tab bar */}
                 <Box sx={{ borderBottom: `1px solid ${borderColor}`, mb: 4 }}>
                     <Tabs value={pageTab} onChange={(_, v) => setPageTab(v)} variant="fullWidth" sx={{ minHeight: 44, "& .MuiTabs-indicator": { bgcolor: theme.palette.primary.main, height: 2 } }}>
                         {PAGE_TABS.map((label) => (
@@ -284,7 +237,6 @@ export default function MyCatalogPage({
                     </Box>
                 ) : (
                     <>
-                        {/* 💡 Arrangements Section */}
                         <OfferSection title="Ready Arrangements">
                             {displayedArrangements.length === 0 ? (
                                 <EmptyState message={`No ${PAGE_TABS[pageTab].toLowerCase()} arrangements`} hint="Change the tab above to see other packages." />
@@ -294,16 +246,15 @@ export default function MyCatalogPage({
                                         <ArrangementCard
                                             key={arr.id}
                                             arrangement={{...arr, status: PAGE_TABS[pageTab].toLowerCase()}}
-                                            onEdit={handleEdit}
+                                            onEdit={() => handleEditArrangement(arr.id)}
                                             onView={() => onSelectArrangement?.(arr.id)}
-                                            onDelete={handleDelete}
+                                            onDelete={() => handleDelete(arr.id, 'arrangement')}
                                         />
                                     ))}
                                 </Stack>
                             )}
                         </OfferSection>
 
-                        {/* Products Section */}
                         <OfferSection title="Products" headerRight={<ProductsToggle value={productTab} onChange={setProductTab} />}>
                             {productTab === "saved" && (
                                 <Box>
@@ -316,9 +267,9 @@ export default function MyCatalogPage({
                                                 <ProductCard
                                                     key={p.id}
                                                     product={{...p, status: 'saved'}}
-                                                    onEdit={handleEdit}
+                                                    onEdit={() => handleEditProduct(p.id)}
                                                     onView={() => onSelectProduct?.(p.id)}
-                                                    onDelete={handleDelete}
+                                                    onDelete={() => handleDelete(p.id, 'product')}
                                                 />
                                             ))}
                                         </Stack>
@@ -337,9 +288,9 @@ export default function MyCatalogPage({
                                                 <ProductCard
                                                     key={p.id}
                                                     product={{...p, status: 'published'}}
-                                                    onEdit={handleEdit}
+                                                    onEdit={() => handleEditProduct(p.id)}
                                                     onView={() => onSelectProduct?.(p.id)}
-                                                    onDelete={handleDelete}
+                                                    onDelete={() => handleDelete(p.id, 'product')}
                                                 />
                                             ))}
                                         </Stack>
@@ -348,7 +299,6 @@ export default function MyCatalogPage({
                             )}
                         </OfferSection>
 
-                        {/* Halls for Rent Section */}
                         <OfferSection title="Halls for Rent">
                             {displayedHalls.length === 0 ? (
                                 <EmptyState message={`No ${PAGE_TABS[pageTab].toLowerCase()} halls available`} hint="Change the tab above to see other halls." />
@@ -358,9 +308,9 @@ export default function MyCatalogPage({
                                         <HallCard
                                             key={hall.id}
                                             hall={{...hall, status: PAGE_TABS[pageTab].toLowerCase()}}
-                                            onEdit={handleEdit}
+                                            onEdit={() => handleEditHall(hall.id)}
                                             onView={() => onSelectHall?.(hall.id)}
-                                            onDelete={handleDelete}
+                                            onDelete={() => handleDelete(hall.id, 'service')}
                                         />
                                     ))}
                                 </Stack>
@@ -369,6 +319,91 @@ export default function MyCatalogPage({
                     </>
                 )}
             </Box>
+
+            <Dialog
+                open={deleteDialog.open}
+                onClose={() => setDeleteDialog({ open: false, id: null, type: null })}
+                PaperProps={{
+                    sx: {
+                        bgcolor: isDark ? '#1c1512' : '#EFE4C9',
+                        border: `1px solid ${borderColor}`,
+                        borderRadius: '12px',
+                        minWidth: '350px'
+                    }
+                }}
+            >
+                <DialogTitle sx={{ color: theme.palette.primary.main, fontWeight: 'bold', fontFamily: "'Playfair Display', serif" }}>
+                    Confirm Deletion
+                </DialogTitle>
+                <DialogContent>
+                    <DialogContentText sx={{ color: theme.palette.text.primary, fontSize: '0.95rem' }}>
+                        Are you sure you want to permanently delete this item? This action cannot be undone and it will be removed from your catalog completely.
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions sx={{ p: 2, pt: 0 }}>
+                    <Button
+                        onClick={() => setDeleteDialog({ open: false, id: null, type: null })}
+                        sx={{ color: theme.palette.text.secondary, textTransform: 'none', fontWeight: 600 }}
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        onClick={confirmDelete}
+                        variant="contained"
+                        sx={{
+                            bgcolor: '#c0392b',
+                            color: '#fff',
+                            textTransform: 'none',
+                            fontWeight: 600,
+                            borderRadius: '6px',
+                            '&:hover': { bgcolor: '#a93226' }
+                        }}
+                    >
+                        Confirm Delete
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            <Dialog
+                open={errorDialog.open}
+                onClose={() => setErrorDialog({ open: false, message: '' })}
+                PaperProps={{
+                    sx: {
+                        bgcolor: isDark ? '#1c1512' : '#EFE4C9',
+                        border: `1px solid ${borderColor}`,
+                        borderRadius: '12px',
+                        minWidth: '350px',
+                        textAlign: 'center',
+                        p: 1
+                    }
+                }}
+            >
+                <DialogTitle sx={{ color: '#c0392b', fontWeight: 'bold', fontFamily: "'Playfair Display', serif", fontSize: '1.5rem' }}>
+                    Notice
+                </DialogTitle>
+                <DialogContent>
+                    <DialogContentText sx={{ color: theme.palette.text.primary, fontSize: '1.05rem', mt: 1, fontWeight: 500 }}>
+                        {errorDialog.message}
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions sx={{ justifyContent: 'center', pb: 2 }}>
+                    <Button
+                        onClick={() => setErrorDialog({ open: false, message: '' })}
+                        variant="contained"
+                        sx={{
+                            bgcolor: theme.palette.primary.main,
+                            color: theme.palette.background.default,
+                            textTransform: 'none',
+                            fontWeight: 600,
+                            borderRadius: '6px',
+                            px: 4,
+                            '&:hover': { bgcolor: isDark ? '#c5a059' : '#b38c45' }
+                        }}
+                    >
+                        OK
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Box>
     );
 }

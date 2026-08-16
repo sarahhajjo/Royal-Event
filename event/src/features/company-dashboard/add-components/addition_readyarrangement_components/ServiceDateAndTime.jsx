@@ -9,17 +9,26 @@ export default function ServiceDateAndTime({ data, setData }) {
     const theme = useTheme();
     const isDark = theme.palette.mode === 'dark';
 
-    const [isAllDay, setIsAllDay] = useState(data?.isAllDay || false);
-    const [selectionMode, setSelectionMode] = useState(data?.selectionMode || 'range');
+    // 💡 1. إزالة useState واستخدام القيم من data مباشرة لكي تتحدث بمجرد وصول بيانات التعديل
+    const isAllDay = data?.isAllDay || false;
+    const selectionMode = data?.selectionMode || 'range';
+    const excludedDates = data?.excludedDates || [];
+    const selectedDates = data?.selectedDates || [];
+
+    // 💡 2. تغليف التواريخ القادمة من الريدكس بـ dayjs لاسترجاع وظائف المقارنة مثل isSame و isAfter
+    const startDate = data?.startDate ? dayjs(data.startDate) : null;
+    const endDate = data?.endDate ? dayjs(data.endDate) : null;
+
     const [error, setError] = useState('');
+    const [draftStart, setDraftStart] = useState(null);
+    const [draftEnd, setDraftEnd] = useState(null);
+    const shiftRanges = data?.shiftRanges || [];
 
     const timeToMinutes = (timeStr) => {
         const [hours, minutes] = timeStr.split(':').map(Number);
         return hours * 60 + minutes;
     };
 
-    const excludedDates = data?.excludedDates || [];
-    const selectedDates = data?.selectedDates || [];
     const getExcludedDates = (start, end, selected) => {
         if (!start || !end) return [];
         let excluded = [];
@@ -32,6 +41,7 @@ export default function ServiceDateAndTime({ data, setData }) {
         }
         return excluded;
     };
+
     const handleDateClick = (clickedDate) => {
         if (!clickedDate) return;
         const dateStr = clickedDate.format('YYYY-MM-DD');
@@ -43,12 +53,9 @@ export default function ServiceDateAndTime({ data, setData }) {
                 : [...selectedDates, dateStr];
 
             if (newSelected.length > 0) {
-                // ترتيب التواريخ للحصول على البداية والنهاية
                 const sortedDates = [...newSelected].sort((a, b) => dayjs(a).valueOf() - dayjs(b).valueOf());
                 const start = dayjs(sortedDates[0]);
                 const end = dayjs(sortedDates[sortedDates.length - 1]);
-
-                // توليد الأيام المستثناة (الأيام التي لم يخترها المستخدم بين البداية والنهاية)
                 const newExcluded = getExcludedDates(start, end, newSelected);
 
                 setData({
@@ -60,13 +67,13 @@ export default function ServiceDateAndTime({ data, setData }) {
                     selectionMode: 'multiple'
                 });
             } else {
-                // في حال تم إلغاء اختيار كل الأيام
                 setData({ ...data, selectedDates: [], startDate: null, endDate: null, excludedDates: [] });
             }
             return;
         }
 
-        if (data?.startDate && data?.endDate && clickedDate.isAfter(data.startDate, 'day') && clickedDate.isBefore(data.endDate, 'day')) {
+        // 💡 3. استخدام المتغيرات المحمية (startDate و endDate)
+        if (startDate && endDate && clickedDate.isAfter(startDate, 'day') && clickedDate.isBefore(endDate, 'day')) {
             const newExcluded = excludedDates.includes(dateStr)
                 ? excludedDates.filter(d => d !== dateStr)
                 : [...excludedDates, dateStr];
@@ -74,10 +81,10 @@ export default function ServiceDateAndTime({ data, setData }) {
             return;
         }
 
-        if (!data?.startDate || (data?.startDate && data?.endDate)) {
+        if (!startDate || (startDate && endDate)) {
             setData({ ...data, startDate: clickedDate, endDate: null, excludedDates: [] });
-        } else if (data?.startDate && !data?.endDate) {
-            if (clickedDate.isBefore(data.startDate, 'day')) {
+        } else if (startDate && !endDate) {
+            if (clickedDate.isBefore(startDate, 'day')) {
                 setData({ ...data, startDate: clickedDate, endDate: null, excludedDates: [] });
             } else {
                 setData({ ...data, endDate: clickedDate });
@@ -105,16 +112,16 @@ export default function ServiceDateAndTime({ data, setData }) {
                 bgColor = theme.palette.primary.main;
                 textColor = '#131110';
             }else if (isExcluded) {
-                // الأيام التي تقع بين اختيارات المستخدم ستظهر بإطار متقطع
                 borderStyle = `1px dashed ${theme.palette.primary.main}`;
                 textColor = theme.palette.primary.main;
             }
             if (isToday && !isSelected) { borderStyle = `1px solid ${theme.palette.text.primary}`; }
         } else {
             const isExcluded = excludedDates.includes(dateStr);
-            const isStart = data?.startDate && day.isSame(data.startDate, 'day');
-            const isEnd = data?.endDate && day.isSame(data.endDate, 'day');
-            const isBetween = data?.startDate && data?.endDate && day.isAfter(data.startDate, 'day') && day.isBefore(data.endDate, 'day');
+            // 💡 4. استخدام المتغيرات المحمية بدلاً من قراءتها مباشرة من data
+            const isStart = startDate && day.isSame(startDate, 'day');
+            const isEnd = endDate && day.isSame(endDate, 'day');
+            const isBetween = startDate && endDate && day.isAfter(startDate, 'day') && day.isBefore(endDate, 'day');
 
             if (isStart || isEnd) {
                 bgColor = theme.palette.primary.main; textColor = '#131110';
@@ -142,10 +149,6 @@ export default function ServiceDateAndTime({ data, setData }) {
             >{day.date()}</Box>
         );
     };
-
-    const [draftStart, setDraftStart] = useState(null);
-    const [draftEnd, setDraftEnd] = useState(null);
-    const shiftRanges = data?.shiftRanges || [];
 
     const handleAddShift = () => {
         setError('');
@@ -191,11 +194,8 @@ export default function ServiceDateAndTime({ data, setData }) {
     return (
         <Box sx={{ width: '100%' }}>
             <LocalizationProvider dateAdapter={AdapterDayjs}>
-                {/* 💡 قللنا الـ gap شوي ليعطي مساحة تنفس، وضفنا width 100% */}
                 <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 3, width: '100%' }}>
 
-                    {/* 🟢 القسم الأيسر: الروزنامة */}
-                    {/* 💡 ضفنا minWidth: 0 هون لحتى نجبر الـ flexBox ما يطلع لبرا */}
                     <Box sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
 
                         <Box sx={{ height: '48px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
@@ -206,9 +206,7 @@ export default function ServiceDateAndTime({ data, setData }) {
                                 row
                                 value={selectionMode}
                                 onChange={(e) => {
-                                    const mode = e.target.value;
-                                    setSelectionMode(mode);
-                                    setData({ ...data, selectionMode: mode });
+                                    setData({ ...data, selectionMode: e.target.value });
                                 }}
                                 sx={{ flexWrap: 'nowrap', gap: 1 }}
                             >
@@ -218,17 +216,15 @@ export default function ServiceDateAndTime({ data, setData }) {
                         </Box>
 
                         <Box sx={{ flexGrow: 1, border: `1px solid ${theme.palette.divider}`, borderRadius: '8px', bgcolor: isDark ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', py: 2 }}>
-                            <StaticDatePicker displayStaticWrapperAs="desktop" disablePast value={selectionMode === 'range' ? (data?.startDate || null) : null} onChange={() => { }} slots={{ day: renderCustomDay }} slotProps={{ actionBar: { actions: [] } }} sx={{ backgroundColor: 'transparent', '& .MuiPickersToolbar-root': { display: 'none' } }} />
+                            <StaticDatePicker displayStaticWrapperAs="desktop" disablePast value={selectionMode === 'range' ? startDate : null} onChange={() => { }} slots={{ day: renderCustomDay }} slotProps={{ actionBar: { actions: [] } }} sx={{ backgroundColor: 'transparent', '& .MuiPickersToolbar-root': { display: 'none' } }} />
                         </Box>
                     </Box>
 
-                    {/* 🟢 القسم الأيمن: الشفتات */}
-                    {/* 💡 ضفنا minWidth: 0 هون كمان */}
                     <Box sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
 
                         <Box sx={{ height: '48px', display: 'flex', alignItems: 'center', mb: 2 }}>
                             <FormControlLabel
-                                control={<Switch checked={isAllDay} onChange={(e) => { setIsAllDay(e.target.checked); setData({...data, isAllDay: e.target.checked}); }} sx={{ '& .MuiSwitch-switchBase.Mui-checked': { color: theme.palette.primary.main }, '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { backgroundColor: theme.palette.primary.main } }} />}
+                                control={<Switch checked={isAllDay} onChange={(e) => setData({...data, isAllDay: e.target.checked})} sx={{ '& .MuiSwitch-switchBase.Mui-checked': { color: theme.palette.primary.main }, '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { backgroundColor: theme.palette.primary.main } }} />}
                                 label={<Typography sx={{ fontSize: '13px', fontWeight: 'bold', color: theme.palette.text.secondary }}>All Day (No specific shifts)</Typography>}
                                 sx={{ m: 0 }}
                             />
@@ -240,14 +236,12 @@ export default function ServiceDateAndTime({ data, setData }) {
                                     {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
                                     <Typography sx={{ color: theme.palette.primary.main, fontSize: '11px', mb: 1, fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Create a Shift</Typography>
                                     <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center', width: '100%' }}>
-                                        {/* 💡 غلفنا الـ TimePicker بـ Box بيقبل التصغير (minWidth: 0) */}
                                         <Box sx={{ flex: 1, minWidth: 0 }}>
                                             <TimePicker label="Start Time" value={draftStart} onChange={setDraftStart} slotProps={{ textField: { fullWidth: true, sx: inputStyle } }} />
                                         </Box>
                                         <Box sx={{ flex: 1, minWidth: 0 }}>
                                             <TimePicker label="End Time" value={draftEnd} onChange={setDraftEnd} slotProps={{ textField: { fullWidth: true, sx: inputStyle } }} />
                                         </Box>
-                                        {/* 💡 منعنا الزر من إنه يصغر عشان يضل شكله مرتب */}
                                         <Button variant="contained" onClick={handleAddShift} disabled={!draftStart || !draftEnd} sx={{ height: '48px', width: '90px', flexShrink: 0, backgroundColor: theme.palette.primary.main, color: theme.palette.primary.contrastText, '&.Mui-disabled': { backgroundColor: alpha(theme.palette.primary.main, 0.3), color: alpha(theme.palette.primary.contrastText, 0.5) }, fontWeight: 'bold' }}>ADD</Button>
                                     </Box>
                                 </Box>
@@ -282,7 +276,6 @@ export default function ServiceDateAndTime({ data, setData }) {
                             </Box>
                         </Box>
                     </Box>
-
                 </Box>
             </LocalizationProvider>
         </Box>

@@ -1,14 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Typography } from '@mui/material';
 import { useTheme } from "@mui/material/styles";
-import { useDispatch } from 'react-redux';
-import { setScheduleDates } from '../addition_slices/arrangementSlice'; // 💡 استيراد الأكشن
+import { useDispatch, useSelector } from 'react-redux';
+import { setScheduleDates } from '../addition_slices/arrangementSlice';
 import ServiceDateAndTime from './ServiceDateAndTime';
+import dayjs from 'dayjs';
 
 const ScheduleSection = () => {
     const theme = useTheme();
     const isDark = theme.palette.mode === 'dark';
-    const dispatch = useDispatch(); // 💡 تعريف الـ dispatch
+    const dispatch = useDispatch();
+
+    // 💡 1. قراءة البيانات القادمة من الـ Redux (والتي أرسلتها صفحة التعديل)
+    const storedSchedule = useSelector(state => state.arrangement.scheduleDates);
 
     const [dateTimeData, setDateTimeData] = useState({
         selectionMode: 'range',
@@ -20,17 +24,39 @@ const ScheduleSection = () => {
         shiftRanges: []
     });
 
-    // 💡 إرسال التواريخ للريدكس كل ما المستخدم يختار أو يغير تاريخ
+    // 💡 2. تحديث الشاشة فوراً عند وصول البيانات القديمة
     useEffect(() => {
-        dispatch(setScheduleDates({
-            selectionMode: dateTimeData.selectionMode, // 💡 لتحديد نوع التواريخ
-            startDate: dateTimeData.startDate ? dateTimeData.startDate.format('YYYY-MM-DD') : null,
-            endDate: dateTimeData.endDate ? dateTimeData.endDate.format('YYYY-MM-DD') : null,
-            selectedDates: dateTimeData.selectedDates,
-            isAllDay: dateTimeData.isAllDay,
-            shiftRanges: dateTimeData.shiftRanges // 💡 لإرسال الشفتات
-        }));
-    }, [dateTimeData, dispatch]);
+        if (storedSchedule) {
+            setDateTimeData({
+                selectionMode: storedSchedule.selectionMode || 'range',
+                startDate: storedSchedule.startDate ? dayjs(storedSchedule.startDate) : null,
+                endDate: storedSchedule.endDate ? dayjs(storedSchedule.endDate) : null,
+                excludedDates: storedSchedule.excludedDates || [],
+                selectedDates: storedSchedule.selectedDates || [],
+                isAllDay: storedSchedule.isAllDay || false,
+                shiftRanges: storedSchedule.shiftRanges || []
+            });
+        }
+    }, [storedSchedule]);
+
+    // 💡 3. دالة آمنة للتحديث (لا تمسح البيانات تلقائياً، بل عند تعديل المستخدم فقط)
+    const handleSetData = (newDataOrUpdater) => {
+        setDateTimeData((prev) => {
+            const newData = typeof newDataOrUpdater === 'function' ? newDataOrUpdater(prev) : newDataOrUpdater;
+
+            dispatch(setScheduleDates({
+                selectionMode: newData.selectionMode,
+                startDate: newData.startDate ? dayjs(newData.startDate).format('YYYY-MM-DD') : null,
+                endDate: newData.endDate ? dayjs(newData.endDate).format('YYYY-MM-DD') : null,
+                selectedDates: newData.selectedDates,
+                isAllDay: newData.isAllDay,
+                shiftRanges: newData.shiftRanges
+            }));
+
+            return newData;
+        });
+    };
+
     return (
         <Box sx={{
             p: 4,
@@ -44,7 +70,7 @@ const ScheduleSection = () => {
             </Typography>
 
             <Box sx={{ bgcolor: isDark ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.4)', p: 3, borderRadius: 2, border: `1px solid ${theme.palette.divider}` }}>
-                <ServiceDateAndTime data={dateTimeData} setData={setDateTimeData} />
+                <ServiceDateAndTime data={dateTimeData} setData={handleSetData} />
             </Box>
         </Box>
     );
