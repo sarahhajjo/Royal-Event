@@ -30,6 +30,7 @@ import JobDetailsPage from "./features/freelancer-dashborad/pages/JobDetailsPage
 import MyJobsPage from "./features/freelancer-dashborad/pages/MyJobsPage.jsx";
 import BookingDetailsPage from "./features/freelancer-dashborad/pages/BookingDetailsPage.jsx";
 import EditServicePage from "./features/freelancer-dashborad/pages/EditServicePage.jsx";
+import MyCalendarDashboard from "./features/freelancer-dashborad/pages/Mycalendardashboard.jsx";
 
 // 👑 استيراد واجهة البروفايل الشخصي الجديدة للفريلانسر
 import MyProfilePage from "./features/freelancer-dashborad/pages/MyProfilePage.jsx";
@@ -69,6 +70,7 @@ function App() {
                 <Route path="/jobs" element={<JobOpportunitiesPage/>}/>
                 <Route path="/jobs/:id" element={<JobDetailsPage/>}/>
                 <Route path="/my-jobs" element={<MyJobsPage/>}/>
+                <Route path="/freelancer-calendar" element={<MyCalendarDashboard />} />
 
                 {/* 👑 مسار صفحة البروفايل الجديدة */}
                 <Route path="/my-profile" element={<MyProfilePage/>}/>

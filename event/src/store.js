@@ -14,7 +14,13 @@ import notificationReducer from './notificationSlice';
 import requestReducer from './features/company-dashboard/Request-components/RequestSlice';
 import jobManagementReducer from './features/company-dashboard/JobOfferAplicants/jobManagementSlice';
 import jobApplicantsReducer from './features/company-dashboard/JobApplicants/JobApplicantsSlice';
+
+// تقويم الشركة
 import myCalendarReducer from './features/company-dashboard/MyCalender/MyCalendarSlice';
+
+// 💡 استيراد تقويم الفريلانسر الجديد (عدلي المسار حسب مكان حفظك للملف)
+import freelancerCalendarReducer from './features/freelancer-dashborad/components/MyCalenderSlice/FreelancerCalendarSlice.js';
+
 import ServiceDetailsSliceReducer from './features/freelancer-dashborad/components/service-details/ServiceDetailsSlice.js';
 import JobOffersReducer from './features/freelancer-dashborad/components/job-opportunities/JobOffersSlice.js'
 import approvalReducer from './features/admin-dashboard/approvalsSlice.js';
@@ -23,6 +29,7 @@ import orderReducer from "./features/freelancer-dashborad/components/orders/Orde
 
 // 👑 إضافة استيراد سلايس بروفايل الفريلانسر (تأكدي من المسار الصحيح حسب مجلداتك)
 import freelancerProfileReducer from './features/freelancer-dashborad/freelancerProfileSlice.js';
+
 
 export const store = configureStore({
     reducer: {
@@ -46,7 +53,12 @@ export const store = configureStore({
         requests: requestReducer,
         jobManagement: jobManagementReducer,
         jobApplicants: jobApplicantsReducer,
+
+        // تقويم الشركة
         myCalendar: myCalendarReducer,
         freelancerProfile: freelancerProfileReducer,
+
+        // 💡 تسجيل تقويم الفريلانسر هنا
+        freelancerCalendar: freelancerCalendarReducer,
     }
 });

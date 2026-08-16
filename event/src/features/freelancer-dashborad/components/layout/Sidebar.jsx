@@ -24,6 +24,7 @@ const topNavItems = [
     { label: "Catalog",     icon: <CatalogIcon />,   key: "catalog",     path: "/freelancer-offer" },
     { label: "My Jobs",     icon: <AssignmentOutlinedIcon />, key: "my-jobs",   path: "/my-jobs" }, // 👈 تم التعديل
     { label: "Job Offers",  icon: <BusinessCenterOutlinedIcon />, key: "job-offers", path: "/jobs" }, // 👈 الحقل الجديد
+    { label: "My Calendar", icon: <AssignmentOutlinedIcon />, key: "calendar", path: "/freelancer-calendar" },
 ];
 
 const bottomNavItems = [
