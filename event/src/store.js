@@ -8,22 +8,22 @@ import addhallReducer from './features/company-dashboard/add-components/addition
 import jobOfferReducer from './features/company-dashboard/JobOffers-components/CreateJobOfferSlice';
 import myCatalogReducer from './features/company-dashboard/MyCatalog-components/myCatalogSlice';
 import providerProfileReducer from './features/company-dashboard/componyProfileSettings/providerProfileSlice.js';
-import providerProfileReducer from './features/company-dashboard/componyProfileSettings/providerProfileSlice.js'; // تأكدي من المسار
 import freelancerOfferReducer from './features/freelancer-dashborad/components/add-service/ServicesSlice.js'
 import OffersSliceReducer from "./features/freelancer-dashborad/components/offers/OffersSlice.js";
 import notificationReducer from './notificationSlice';
 import requestReducer from './features/company-dashboard/Request-components/RequestSlice';
 import jobManagementReducer from './features/company-dashboard/JobOfferAplicants/jobManagementSlice';
 import jobApplicantsReducer from './features/company-dashboard/JobApplicants/JobApplicantsSlice';
-
-// 💡 استيراد الـ Slice الجديد
 import myCalendarReducer from './features/company-dashboard/MyCalender/MyCalendarSlice';
-
 import ServiceDetailsSliceReducer from './features/freelancer-dashborad/components/service-details/ServiceDetailsSlice.js';
 import JobOffersReducer from './features/freelancer-dashborad/components/job-opportunities/JobOffersSlice.js'
 import approvalReducer from './features/admin-dashboard/approvalsSlice.js';
 import paymentsReducer from "./features/admin-dashboard/paymentsSlice";
 import orderReducer from "./features/freelancer-dashborad/components/orders/OrdersSlice.js";
+
+// 👑 إضافة استيراد سلايس بروفايل الفريلانسر (تأكدي من المسار الصحيح حسب مجلداتك)
+import freelancerProfileReducer from './features/freelancer-dashborad/freelancerProfileSlice.js';
+
 export const store = configureStore({
     reducer: {
         auth: authReducer,
@@ -46,8 +46,7 @@ export const store = configureStore({
         requests: requestReducer,
         jobManagement: jobManagementReducer,
         jobApplicants: jobApplicantsReducer,
-
-        // 💡 تسجيل الـ Reducer هنا
         myCalendar: myCalendarReducer,
+        freelancerProfile: freelancerProfileReducer,
     }
 });

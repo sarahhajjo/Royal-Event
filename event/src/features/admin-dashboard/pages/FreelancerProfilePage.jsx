@@ -1,34 +1,27 @@
-import React, { useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
-import { Box, Grid, CircularProgress, Typography } from "@mui/material";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import React, { useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { Box, Typography, Paper, Avatar, TextField, Stack, CircularProgress, Button } from '@mui/material';
+import BusinessCenterOutlinedIcon  from '@mui/icons-material/BusinessCenterOutlined';
+import EmailOutlinedIcon           from '@mui/icons-material/EmailOutlined';
+import PhoneIphoneOutlinedIcon     from '@mui/icons-material/PhoneIphoneOutlined';
+import VerifiedUserOutlinedIcon    from '@mui/icons-material/VerifiedUserOutlined';
+import StarIcon                    from '@mui/icons-material/Star';
+import ArrowBackIcon               from '@mui/icons-material/ArrowBack';
+import dayjs from 'dayjs';
 
-// ── Redux & Theme ─────────────────────────────────────────────────────────────
-import { fetchFreelancerById } from "../directorySlice.js";
-import { T, typography } from "../Theme.jsx";
+import { T, typography } from '../Theme.jsx';
+import Sidebar from '../components/Sidebar.jsx';
+import TopBar from '../components/TopBar.jsx';
 
-// ── Layout Components ─────────────────────────────────────────────────────────
-import Sidebar from "../components/Sidebar.jsx";
-import TopBar from "../components/TopBar.jsx";
+import { fetchFreelancerById } from '../directorySlice.js';
 
-// ── Profile Sub-components ────────────────────────────────────────────────────
-import IdentityCorrespondence from "../companyPro-components/IdentityCorrespondence.jsx";
-import ProfessionalNarrative from "../freelancerPro-components/ProfessionalNarrative.jsx";
-import SecurityAccess from "../companyPro-components/SecurityAccess.jsx";
-import ServiceArea from "../freelancerPro-components/ServiceArea.jsx";
-import FreelancerSidebar from "../freelancerPro-components/FreelancerSidebar.jsx";
-
-const FreelancerProfilePage = () => {
+export default function FreelancerProfilePage() {
     const { id } = useParams();
     const navigate = useNavigate();
     const dispatch = useDispatch();
 
-    const {
-        selectedFreelancer: rawData,
-        freelancerLoading: loading,
-        error
-    } = useSelector((state) => state.directory);
+    const { selectedFreelancer, freelancerLoading, error } = useSelector((state) => state.directory);
 
     useEffect(() => {
         if (id) {
@@ -36,136 +29,258 @@ const FreelancerProfilePage = () => {
         }
     }, [dispatch, id]);
 
-    if (loading) {
+    if (freelancerLoading) {
         return (
-            <Box sx={{ display: "flex", minHeight: "100vh", bgcolor: T.pageBg || "#FAF7F0" }}>
+            <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: T.pageBg }}>
                 <Sidebar activeItem="Freelancers" />
-                <Box sx={{ flex: 1, ml: "240px", display: "flex", flexDirection: "column" }}>
-                    <TopBar title="Freelancer Profile" user={{ name: "Admin", role: "Superuser" }} />
-                    <Box sx={{ flex: 1, display: "flex", justifyContent: "center", alignItems: "center" }}>
-                        <CircularProgress sx={{ color: T.gold || "#8a6f28" }} />
+                <Box sx={{ flexGrow: 1, ml: { xs: 0, md: "240px" }, display: 'flex', flexDirection: 'column' }}>
+                    <TopBar title="Elite Admin" />
+                    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flexGrow: 1 }}>
+                        <CircularProgress sx={{ color: T.gold }} />
                     </Box>
                 </Box>
             </Box>
         );
     }
 
-    if (error || !rawData) {
+    if (error || !selectedFreelancer) {
         return (
-            <Box sx={{ display: "flex", minHeight: "100vh", bgcolor: T.pageBg || "#FAF7F0" }}>
+            <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: T.pageBg }}>
                 <Sidebar activeItem="Freelancers" />
-                <Box sx={{ flex: 1, ml: "240px", display: "flex", flexDirection: "column" }}>
-                    <TopBar title="Freelancer Profile" user={{ name: "Admin", role: "Superuser" }} />
-                    <Box sx={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", p: 4, mt: 8 }}>
-                        <Typography color="error" variant="h6">{error || "Freelancer not found."}</Typography>
-                        <Typography onClick={() => navigate(-1)} sx={{ mt: 2, cursor: "pointer", color: T.gold || "#8a6f28", fontWeight: "bold" }}>Go Back</Typography>
+                <Box sx={{ flexGrow: 1, ml: { xs: 0, md: "240px" }, display: 'flex', flexDirection: 'column' }}>
+                    <TopBar title="Elite Admin" />
+                    <Box sx={{ textAlign: 'center', py: 10, color: '#b05050' }}>
+                        {error?.message || error || "No profile data found."}
                     </Box>
                 </Box>
             </Box>
         );
     }
 
-    // 🚀 تجهيز البيانات وتسطيحها مع تضمين التقييم، الاختصاصات، والبيانات المهمة
-    const profile = rawData.profile || {};
-    const identity = rawData.identity || {};
-    const business = rawData.business || {};
-    const security = rawData.security || {};
+    // التفكيك الدقيق للبيانات
+    const actualData = selectedFreelancer || {};
 
-    const flatData = {
-        ...rawData,
-        ...profile,
-        ...identity,
-        ...business,
-        ...security,
+    const business = actualData.business || {};
+    const identity = actualData.identity || {};
+    const profileData = actualData.profile || {};
+    const security = actualData.security || {};
 
-        // الصورة والسايدبار الأساسية
-        avatarUrl: `https://ui-avatars.com/api/?name=${identity.first_name || 'U'}+${identity.last_name || 'U'}&background=F2EFE8&color=8a6f28&size=200&bold=true`,
-        avatar_url: `https://ui-avatars.com/api/?name=${identity.first_name || 'U'}+${identity.last_name || 'U'}&background=F2EFE8&color=8a6f28&size=200&bold=true`,
-        brandName: profile.brand_name || business.brand_name || "Unknown Brand",
-        joinDate: profile.join_date || "Unknown",
+    const displayName = business.brand_name || profileData.brand_name || identity.full_name || 'N/A';
+    const initial = displayName !== 'N/A' ? displayName.charAt(0).toUpperCase() : '?';
 
-        // 🌟 إضافة التقييم والاختصاصات والحالة المهمة
-        rating: profile.rating ?? 0,
-        primaryCategory: profile.primary_category || "Not Specified",
-        categories: profile.categories || [],
-        verificationBadge: profile.verification_badge || "UNVERIFIED",
-        approvalBadge: profile.approval_badge || "PENDING",
+    const email = identity.email || 'N/A';
+    const phone = identity.phone || 'Not Provided';
+    const createdAt = profileData.join_date ? dayjs(profileData.join_date).format('MMM DD, YYYY') : 'N/A';
 
-        // الهوية والاتصال
-        idNumber: business.national_id || "Not Provided",
-        national_id: business.national_id || "Not Provided",
-        accountStatus: security.account_status || "Unknown",
-        phone: identity.phone || "Not Provided",
-        phoneNumber: identity.phone || "Not Provided",
-        emailVerified: security.is_email_verified,
-        phoneVerified: security.is_phone_verified,
-        providerVerified: security.provider_verified,
-        moderationStatus: security.moderation_status,
-        experienceYears: business.experience_years || 0,
-        representativeRole: profile.provider_type || "FREELANCER",
+    const providerType = profileData.provider_type || 'Freelancer';
+    const rating = profileData.rating ?? 'N/A';
 
-        isVerified: profile.verification_badge === "VERIFIED",
-        isActive: profile.is_active,
+    const nationalId = business.national_id || 'N/A';
+    const experienceYears = business.experience_years ? `${business.experience_years} Years` : 'N/A';
+
+    const isPhoneVerified = !!security.is_phone_verified;
+    const isEmailVerified = !!security.is_email_verified;
+
+    // حالة الموافقة
+    const approvalBadge = profileData.approval_badge || 'PENDING';
+    const isApproved = approvalBadge.toUpperCase() === 'APPROVED';
+
+    const industryCategories = Array.isArray(profileData.categories) && profileData.categories.length > 0
+        ? profileData.categories.join(' • ')
+        : 'N/A';
+
+    const card = {
+        backgroundColor: T.cardBg,
+        border: `1px solid ${T.border}`,
+        borderRadius: 2,
+        p: 3,
+        boxShadow: "0 2px 10px rgba(0,0,0,0.02)"
     };
 
+    const inp = {
+        '& .MuiOutlinedInput-root': {
+            backgroundColor: T.pageBg,
+            borderRadius: 1.5,
+            '& fieldset': { borderColor: T.border },
+            '&.Mui-focused fieldset': { borderColor: T.gold }
+        },
+        '& .MuiInputBase-input': {
+            fontSize: '0.88rem',
+            padding: '10px 14px',
+            color: T.textPrimary,
+            fontFamily: typography.fontFamily
+        },
+        '& .Mui-disabled': {
+            WebkitTextFillColor: T.textPrimary,
+            opacity: 0.9
+        }
+    };
+
+    const FieldLabel = ({ children }) => (
+        <Typography sx={{ ...typography.sectionLabel, mb: 0.75, display: 'block' }}>
+            {children}
+        </Typography>
+    );
+
+    const CardHeader = ({ icon: Icon, title }) => (
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 3 }}>
+            <Icon sx={{ color: T.gold, fontSize: 20 }} />
+            <Typography sx={{ fontSize: '0.95rem', fontWeight: 600, color: T.textPrimary, fontFamily: typography.fontFamily }}>{title}</Typography>
+        </Box>
+    );
+
     return (
-        <Box sx={{ display: "flex", minHeight: "100vh", bgcolor: T.pageBg || "#FAF7F0", fontFamily: "'Inter','Segoe UI',sans-serif" }}>
+        <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: T.pageBg }}>
 
             <Sidebar activeItem="Freelancers" />
 
-            <Box sx={{ flex: 1, ml: "240px", display: "flex", flexDirection: "column" }}>
+            <Box component="main" sx={{ flexGrow: 1, ml: { xs: 0, md: "240px" }, display: 'flex', flexDirection: 'column' }}>
 
-                <TopBar title="Freelancer Profile" user={{ name: "Admin", role: "Superuser" }} />
+                <TopBar title="Elite Admin" />
 
-                <Box sx={{ p: { xs: 2, md: 4 }, mt: "64px" }}>
+                <Box sx={{ width: '100%', maxWidth: 1100, mx: 'auto', p: { xs: 2, md: 4 } }}>
 
-                    {/* زر العودة */}
-                    <Box onClick={() => navigate("/admin-dashboard/freelancers")} sx={{ display: "flex", alignItems: "center", gap: 0.6, mb: 2.5, cursor: "pointer", width: "fit-content", "&:hover": { opacity: 0.7 } }}>
-                        <ArrowBackIcon sx={{ fontSize: 13, color: T.textMuted || "#7A6F5E" }} />
-                        <Typography component="span" sx={{ color: T.textMuted || "#7A6F5E", fontSize: "0.8rem", fontWeight: 600 }}>BACK TO DIRECTORY</Typography>
-                    </Box>
-
-                    {/* هيدر الصفحة */}
-                    <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 4 }}>
-                        <Typography variant="h4" sx={{ ...(typography?.pageTitle || {}), color: T.textPrimary || "#1C1712", fontWeight: 800 }}>
+                    <Box sx={{ mb: 4 }}>
+                        <Button
+                            startIcon={<ArrowBackIcon />}
+                            onClick={() => navigate(-1)}
+                            sx={{ color: T.textMuted, mb: 1, textTransform: 'none', '&:hover': { color: T.gold } }}
+                        >
+                            Back to Freelancers
+                        </Button>
+                        <Typography sx={{ fontFamily: "'Cinzel', serif", fontSize: '2.2rem', fontWeight: 700, color: T.textPrimary, mb: 0.5 }}>
                             Freelancer Profile
+                        </Typography>
+                        <Typography sx={{ fontSize: '0.85rem', color: T.textMuted, fontWeight: 400, fontFamily: typography.fontFamily }}>
+                            Admin view of freelancer credentials, personal details, and account status.
                         </Typography>
                     </Box>
 
-                    {/* الشبكة الرئيسية */}
-                    <Grid container spacing={4} alignItems="flex-start">
+                    <Box sx={{ display: 'flex', gap: 3, alignItems: 'flex-start', flexDirection: { xs: 'column', md: 'row' }, width: '100%' }}>
 
-                        {/* العمود الأيمن: السايدبار ومنطقة الخدمة */}
-                        <Grid item xs={12} md={4} lg={3}>
-                            <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-                                <FreelancerSidebar data={flatData} />
-                                <ServiceArea area={profile.city || profile.address_details || "Area Not Specified"} />
-                            </Box>
-                        </Grid>
+                        {/* ── العمود الأيسر ── */}
+                        <Box sx={{ width: { xs: '100%', md: '33%' }, flexShrink: 0 }}>
+                            <Stack spacing={3}>
+                                <Paper elevation={0} sx={card}>
+                                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 3 }}>
+                                        <Avatar sx={{ width: 96, height: 96, border: `2px solid ${T.gold}`, bgcolor: T.avatarBg, color: T.gold, fontSize: '2.5rem', mb: 1.5, fontWeight: 700 }}>
+                                            {initial}
+                                        </Avatar>
+                                        <Typography sx={{ fontSize: '1.1rem', fontWeight: 600, color: T.textPrimary, mb: 0.3, textTransform: 'capitalize', fontFamily: typography.fontFamily }}>
+                                            {displayName}
+                                        </Typography>
+                                        <Typography sx={{ fontSize: '0.6rem', letterSpacing: '0.14em', color: T.goldLabel, textTransform: 'uppercase', fontWeight: 700 }}>
+                                            {providerType}
+                                        </Typography>
 
-                        {/* العمود الأيسر: التفاصيل، الاختصاصات، والتحقق */}
-                        <Grid item xs={12} md={8} lg={9}>
-                            <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 1 }}>
+                                            <StarIcon sx={{ color: T.gold, fontSize: 16 }} />
+                                            <Typography sx={{ fontSize: '0.9rem', fontWeight: 'bold', color: T.textPrimary }}>
+                                                {rating}
+                                            </Typography>
+                                        </Box>
+                                    </Box>
 
-                                <IdentityCorrespondence data={flatData} />
+                                    <Stack spacing={0} divider={<Box sx={{ height: '1px', backgroundColor: T.border }} />}>
+                                        <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'flex-start', py: 2 }}>
+                                            <EmailOutlinedIcon sx={{ color: T.textMuted, fontSize: 18, mt: '2px' }} />
+                                            <Box><Typography sx={{ fontSize: '0.6rem', color: T.textMuted, textTransform: 'uppercase', fontWeight: 600 }}>Email Address</Typography><Typography sx={{ fontSize: '0.85rem', color: T.textPrimary, fontWeight: 600 }}>{email}</Typography></Box>
+                                        </Box>
+                                        <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'flex-start', py: 2 }}>
+                                            <PhoneIphoneOutlinedIcon sx={{ color: T.textMuted, fontSize: 18, mt: '2px' }} />
+                                            <Box><Typography sx={{ fontSize: '0.6rem', color: T.textMuted, textTransform: 'uppercase', fontWeight: 600 }}>Contact Number</Typography><Typography sx={{ fontSize: '0.85rem', color: T.textPrimary, fontWeight: 600 }}>{phone}</Typography></Box>
+                                        </Box>
+                                    </Stack>
+                                </Paper>
 
-                                {/* عرض الاختصاصات والخبرة في قسم السرد المهني أو كبيانات إضافية */}
-                                <ProfessionalNarrative
-                                    bio={`Primary Category: ${flatData.primaryCategory} | Experience: ${flatData.experienceYears} years${
-                                        flatData.categories.length > 1 ? ` | Other Categories: ${flatData.categories.slice(1).join(", ")}` : ""
-                                    }`}
-                                />
+                                <Paper elevation={0} sx={card}>
+                                    <Typography sx={{ ...typography.sectionLabel, mb: 2.5 }}>Verification & Status</Typography>
 
-                                <SecurityAccess data={flatData} />
-                            </Box>
-                        </Grid>
+                                    {/* عرض حالة الحساب (Approved/Pending) */}
+                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                                        <Typography sx={{ fontSize: '0.85rem', color: T.textPrimary, fontWeight: 600 }}>Approval Status</Typography>
+                                        <Box sx={{ border: `1px solid ${isApproved ? '#2ecc71' : '#e74c3c'}`, color: isApproved ? '#2ecc71' : '#e74c3c', px: 1.2, py: 0.25, borderRadius: 1, fontSize: '0.6rem', fontWeight: 700 }}>
+                                            {approvalBadge}
+                                        </Box>
+                                    </Box>
 
-                    </Grid>
+                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <Typography sx={{ fontSize: '0.85rem', color: T.textPrimary, fontWeight: 600 }}>Joined Platform</Typography>
+                                        <Typography sx={{ fontSize: '0.8rem', color: T.textMuted }}>{createdAt}</Typography>
+                                    </Box>
+                                </Paper>
+                            </Stack>
+                        </Box>
 
+                        {/* ── العمود الأيمن ── */}
+                        <Box sx={{ flex: 1, minWidth: 0 }}>
+                            <Stack spacing={3}>
+                                <Paper elevation={0} sx={card}>
+                                    <CardHeader icon={BusinessCenterOutlinedIcon} title="Professional Credentials" />
+
+                                    <Box sx={{ display: 'flex', gap: 2.5, mb: 2.5, flexDirection: { xs: 'column', sm: 'row' } }}>
+                                        <Box sx={{ flex: 1 }}>
+                                            <FieldLabel>Legal Full Name</FieldLabel>
+                                            <TextField fullWidth size="small" value={identity.full_name || 'N/A'} disabled sx={inp} />
+                                        </Box>
+                                        <Box sx={{ flex: 1 }}>
+                                            <FieldLabel>Brand / Stage Name</FieldLabel>
+                                            <TextField fullWidth size="small" value={business.brand_name || profileData.brand_name || 'N/A'} disabled sx={inp} />
+                                        </Box>
+                                    </Box>
+
+                                    <Box sx={{ display: 'flex', gap: 2.5, mb: 2.5, flexDirection: { xs: 'column', sm: 'row' } }}>
+                                        <Box sx={{ flex: 1 }}>
+                                            <FieldLabel>National ID</FieldLabel>
+                                            <TextField fullWidth size="small" value={nationalId} disabled sx={inp} />
+                                        </Box>
+                                        <Box sx={{ flex: 1 }}>
+                                            <FieldLabel>Experience Years</FieldLabel>
+                                            <TextField fullWidth size="small" value={experienceYears} disabled sx={inp} />
+                                        </Box>
+                                    </Box>
+
+                                    <Box>
+                                        <FieldLabel>Expertise Categories</FieldLabel>
+                                        <TextField fullWidth size="small" value={industryCategories} disabled sx={inp} />
+                                    </Box>
+                                </Paper>
+
+                                <Paper elevation={0} sx={card}>
+                                    <CardHeader icon={VerifiedUserOutlinedIcon} title="Account Status" />
+
+                                    <Box sx={{ display: 'flex', gap: 2.5, mb: 3, flexDirection: { xs: 'column', sm: 'row' } }}>
+                                        <Box sx={{ flex: 1 }}>
+                                            <FieldLabel>Moderation Status</FieldLabel>
+                                            <TextField fullWidth size="small" value={security.moderation_status || 'N/A'} disabled sx={{ ...inp, textTransform: 'capitalize' }} />
+                                        </Box>
+                                        <Box sx={{ flex: 1 }}>
+                                            <FieldLabel>Provider Type</FieldLabel>
+                                            <TextField fullWidth size="small" value={providerType} disabled sx={{ ...inp, textTransform: 'capitalize' }} />
+                                        </Box>
+                                    </Box>
+
+                                    <Box sx={{ display: 'flex', gap: 2.5, flexDirection: { xs: 'column', sm: 'row' }, p: 2, bgcolor: T.pageBg, borderRadius: 2, border: `1px solid ${T.border}` }}>
+                                        <Box sx={{ flex: 1 }}>
+                                            <FieldLabel>Phone Verified</FieldLabel>
+                                            <Typography sx={{ fontSize: '0.9rem', color: isPhoneVerified ? '#2ecc71' : '#e74c3c', fontWeight: 600 }}>
+                                                {isPhoneVerified ? 'Yes' : 'No'}
+                                            </Typography>
+                                        </Box>
+                                        <Box sx={{ flex: 1 }}>
+                                            <FieldLabel>Email Verified</FieldLabel>
+                                            <Typography sx={{ fontSize: '0.9rem', color: isEmailVerified ? '#2ecc71' : '#e74c3c', fontWeight: 600 }}>
+                                                {isEmailVerified ? 'Yes' : 'No'}
+                                            </Typography>
+                                        </Box>
+                                    </Box>
+                                </Paper>
+
+                            </Stack>
+                        </Box>
+                    </Box>
                 </Box>
             </Box>
         </Box>
     );
-};
-
-export default FreelancerProfilePage;
+}

@@ -1,177 +1,329 @@
-import React, { useState, useEffect } from "react";
-import { Box, Typography, Button, Grid, CircularProgress } from "@mui/material";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import { useParams, useNavigate } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
+import React, { useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { Box, Typography, Paper, Avatar, TextField, Stack, CircularProgress, Button } from '@mui/material';
 
-import { fetchCompanyById } from "../directorySlice.js";
+// الأيقونات
+import BusinessCenterOutlinedIcon  from '@mui/icons-material/BusinessCenterOutlined';
+import EmailOutlinedIcon           from '@mui/icons-material/EmailOutlined';
+import PhoneIphoneOutlinedIcon     from '@mui/icons-material/PhoneIphoneOutlined';
+import VerifiedUserOutlinedIcon    from '@mui/icons-material/VerifiedUserOutlined';
+import ReportProblemOutlinedIcon   from '@mui/icons-material/ReportProblemOutlined';
+import QrCodeScannerOutlinedIcon   from '@mui/icons-material/QrCodeScannerOutlined';
+import ArrowBackIcon               from '@mui/icons-material/ArrowBack';
+import StarIcon                    from '@mui/icons-material/Star';
+import dayjs from 'dayjs';
 
+// استيرادات الأدمن
+import { T, typography } from '../Theme.jsx';
+import Sidebar from '../components/Sidebar.jsx';
+import TopBar from '../components/TopBar.jsx';
+import { fetchCompanyById } from '../directorySlice.js';
 
-import { T, typography } from "../Theme.jsx";
-import IdentityCorrespondence from "../companyPro-components/IdentityCorrespondence.jsx";
-import BusinessInformation from "../companyPro-components/BusinessInformation.jsx";
-import SecurityAccess from "../companyPro-components/SecurityAccess.jsx";
-import AcceptedListings from "../companyPro-components/AcceptedListings.jsx";
-import RejectedListings from "../companyPro-components/RejectedListings.jsx";
-import CompanySidebar from "../companyPro-components/CompanySidebar.jsx";
-import Sidebar from "../components/Sidebar.jsx";
-import TopBar from "../components/TopBar.jsx";
-import adminService from "../../../services/adminService/adminService.js";
-
-const CompanyProfilePage = () => {
+export default function CompanyProfilePage() {
     const { id } = useParams();
     const navigate = useNavigate();
     const dispatch = useDispatch();
 
-    const [activeNav, setActiveNav] = useState("Companies");
-    const onNavClick = (item) => setActiveNav(item);
-
-    // حالات تخزين السايدرات
-    const [districts, setDistricts] = useState([]);
-    const [categories, setCategories] = useState([]);
-    const [seedersLoading, setSeedersLoading] = useState(true); // 🚀 حالة تحميل لضمان جلب المناطق والأصناف
-
-    const { selectedCompany: rawData, companyLoading: loading, error } = useSelector((state) => state.directory);
+    const { selectedCompany, companyLoading, error } = useSelector((state) => state.directory);
 
     useEffect(() => {
         if (id) {
             dispatch(fetchCompanyById(id));
         }
+    }, [dispatch, id]);
 
-        const fetchSeeders = async () => {
-            try {
-                setSeedersLoading(true);
-                // 🚀 استخدام adminService بدلاً من axios المباشر
-                const distData = await adminService.getDistricts();
-                const catData = await adminService.getCategories();
-
-                setDistricts(Array.isArray(distData) ? distData : []);
-                setCategories(Array.isArray(catData) ? catData : []);
-            } catch (err) {
-                console.error("Error fetching seeders:", err);
-            } finally {
-                setSeedersLoading(false);
-            }
-        };
-
-        fetchSeeders();
-    }, [id, dispatch]);
-
-    // 🚀 لن يتم عرض الصفحة حتى يكتمل جلب بيانات الشركة + السايدرات معاً
-    if (loading || seedersLoading) {
+    if (companyLoading) {
         return (
-            <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "100vh", backgroundColor: T.pageBg }}>
-                <CircularProgress sx={{ color: T.gold }} />
+            <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: T.pageBg }}>
+                <Sidebar activeItem="Company Directory" />
+                <Box sx={{ flexGrow: 1, ml: { xs: 0, md: "240px" }, display: 'flex', flexDirection: 'column' }}>
+                    <TopBar title="Elite Admin" />
+                    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flexGrow: 1 }}>
+                        <CircularProgress sx={{ color: T.gold }} />
+                    </Box>
+                </Box>
             </Box>
         );
     }
 
-    if (error || !rawData) {
+    if (error || !selectedCompany) {
         return (
-            <Box sx={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", minHeight: "100vh", backgroundColor: T.pageBg, gap: 2 }}>
-                <Typography color="error">{error || "لم يتم العثور على بيانات المزود"}</Typography>
-                <Button variant="outlined" onClick={() => navigate(-1)} sx={{ borderColor: T.gold, color: T.gold }}>
-                    العودة للقائمة
-                </Button>
+            <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: T.pageBg }}>
+                <Sidebar activeItem="Company Directory" />
+                <Box sx={{ flexGrow: 1, ml: { xs: 0, md: "240px" }, display: 'flex', flexDirection: 'column' }}>
+                    <TopBar title="Elite Admin" />
+                    <Box sx={{ textAlign: 'center', py: 10, color: '#b05050' }}>
+                        {error?.message || error || "No company profile data found."}
+                    </Box>
+                </Box>
             </Box>
         );
     }
 
-    const profile = rawData.profile || {};
-    const identity = rawData.identity || {};
-    const business = rawData.business || {};
-    const security = rawData.security || {};
+    const rawData = selectedCompany || {};
+    const actualData = rawData.data?.user ? rawData.data : (Array.isArray(rawData) ? rawData[0] : rawData) || {};
 
-    // 🚀 مطابقة المنطقة
-    const matchedDistrict = districts.find((d) => String(d.id) === String(profile.district_id));
-    const finalCity = matchedDistrict ? (matchedDistrict.name || matchedDistrict.name_ar || matchedDistrict.title) : (profile.city || "Not Specified");
+    const business = actualData.business || actualData.provider_details || {};
+    const identity = actualData.identity || actualData.user || {};
+    const profileData = actualData.profile || actualData.provider || actualData || {};
+    const security = actualData.security || actualData.provider || {};
 
-    // 🚀 مطابقة الصنف (إذا كان موجوداً كرقم)
-    const matchedCategory = categories.find((c) => String(c.id) === String(profile.primary_category));
-    const finalCategory = matchedCategory ? (matchedCategory.name || matchedCategory.name_ar) : (profile.primary_category || "Not Specified");
+    const displayName = business.brand_name || profileData.brand_name || identity.full_name || 'N/A';
+    const fullName = identity.full_name || `${identity.first_name || ''} ${identity.last_name || ''}`.trim() || 'N/A';
+    const initial = displayName !== 'N/A' ? displayName.charAt(0).toUpperCase() : '?';
 
-    // دمج البيانات
-    const flatData = {
-        ...rawData,
-        ...profile,
-        ...identity,
-        ...business,
-        ...security,
+    const email = identity.email || 'N/A';
+    const phone = identity.phone || 'Not Provided';
+    const createdAt = profileData.join_date || profileData.created_at ? dayjs(profileData.join_date || profileData.created_at).format('MMM DD, YYYY') : 'N/A';
 
-        avatarUrl: `https://ui-avatars.com/api/?name=${identity.first_name || 'C'}+${identity.last_name || 'C'}&background=F2EFE8&color=8a6f28&size=200&bold=true`,
-        avatar_url: `https://ui-avatars.com/api/?name=${identity.first_name || 'C'}+${identity.last_name || 'C'}&background=F2EFE8&color=8a6f28&size=200&bold=true`,
-        brandName: profile.brand_name || business.brand_name || "Company Profile",
-        joinDate: profile.join_date || "Unknown",
+    const moderationStatus = security.moderation_status || profileData.moderation_status || 'N/A';
+    const providerType = profileData.provider_type || 'Company';
+    const rating = profileData.rating ?? 'N/A';
 
-        city: finalCity,
-        location: finalCity,
-        primaryCategory: finalCategory,
-        primary_category: finalCategory,
+    const taxNumber = business.tax_number || 'N/A';
+    const registrationNo = business.registration_no || 'N/A';
+    const districtId = business.district_id || profileData.district_id || 'N/A';
 
-        firstName: identity.first_name || "",
-        lastName: identity.last_name || "",
-        email: identity.email || "No Email Provided",
-        phone: identity.phone || "Not Provided",
-        representativeRole: profile.provider_type ? profile.provider_type.toUpperCase() : "COMPANY",
-        language: identity.language || "ar",
+    const isPhoneVerified = !!security.is_phone_verified;
+    const isEmailVerified = !!security.is_email_verified;
 
-        accountStatus: security.account_status || "Unknown",
-        emailVerified: security.is_email_verified,
-        phoneVerified: security.is_phone_verified,
-        providerVerified: security.provider_verified,
-        moderationStatus: security.moderation_status,
-        verificationBadge: profile.verification_badge || "UNVERIFIED",
-        approvalBadge: profile.approval_badge || "PENDING",
-        isVerified: profile.verification_badge === "VERIFIED",
+    const rejectionReason = security.rejection_reason || profileData.rejection_reason || 'No current rejections or notices. Account is in good standing.';
+    const currentQrUrl = profileData.qr_code_url || business.qr_code_url || null;
+
+    const industryCategories = Array.isArray(profileData.categories) && typeof profileData.categories[0] === 'string'
+        ? profileData.categories.join(' • ')
+        : (Array.isArray(profileData.categories) ? profileData.categories.map(c => c.name_en || c.name || '').join(' • ') : 'N/A');
+
+    const card = {
+        backgroundColor: T.cardBg,
+        border: `1px solid ${T.border}`,
+        borderRadius: 2,
+        p: 3,
+        boxShadow: "0 2px 10px rgba(0,0,0,0.02)"
     };
 
+    const inp = {
+        '& .MuiOutlinedInput-root': {
+            backgroundColor: T.pageBg,
+            borderRadius: 1.5,
+            '& fieldset': { borderColor: T.border },
+            '&.Mui-focused fieldset': { borderColor: T.gold }
+        },
+        '& .MuiInputBase-input': {
+            fontSize: '0.88rem',
+            padding: '10px 14px',
+            color: T.textPrimary,
+            fontFamily: typography.fontFamily
+        },
+        '& .Mui-disabled': {
+            WebkitTextFillColor: T.textPrimary,
+            opacity: 0.9
+        }
+    };
+
+    const FieldLabel = ({ children }) => (
+        <Typography sx={{ ...typography.sectionLabel, mb: 0.75, display: 'block' }}>
+            {children}
+        </Typography>
+    );
+
+    const CardHeader = ({ icon: Icon, title, iconColor }) => (
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 3 }}>
+            <Icon sx={{ color: iconColor || T.gold, fontSize: 20 }} />
+            <Typography sx={{ fontSize: '0.95rem', fontWeight: 600, color: T.textPrimary, fontFamily: typography.fontFamily }}>{title}</Typography>
+        </Box>
+    );
+
     return (
-        <Box sx={{ display: "flex", backgroundColor: T.pageBg, minHeight: "100vh", fontFamily: "'Inter', sans-serif" }}>
-            <Sidebar activeItem={activeNav} onNavClick={onNavClick} />
+        <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: T.pageBg }}>
 
-            <Box sx={{ flex: 1, ml: "240px", display: "flex", flexDirection: "column", px: { xs: 3, md: 6 }, py: { xs: 3, md: 5 }, width: "calc(100% - 240px)" }}>
-                <TopBar title="Company Directory" user={{ name: "Admin", role: "Superuser" }} />
+            <Sidebar activeItem="Company Directory" />
 
-                <Box sx={{ display: "flex", alignItems: "center", gap: 0.6, mt: 3, mb: 3, cursor: "pointer", width: "fit-content", "&:hover span": { color: T.gold } }} onClick={() => navigate(-1)}>
-                    <ArrowBackIcon sx={{ fontSize: 13, color: T.textMuted }} />
-                    <Typography component="span" sx={{ ...typography.sectionLabel, color: T.textMuted, transition: "color 0.15s" }}>
-                        BACK TO DIRECTORY
-                    </Typography>
-                </Box>
+            <Box component="main" sx={{ flexGrow: 1, ml: { xs: 0, md: "240px" }, display: 'flex', flexDirection: 'column' }}>
 
-                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 5 }}>
-                    <Typography variant="h4" sx={{ ...typography.pageTitle, color: T.textPrimary }}>
-                        {flatData.brandName}
-                    </Typography>
-                </Box>
+                <TopBar title="Elite Admin" />
 
-                <Grid container spacing={4} alignItems="flex-start">
-                    <Grid item xs={12} sm={4} md={3}>
-                        <CompanySidebar data={flatData} />
-                    </Grid>
+                <Box sx={{ width: '100%', maxWidth: 1100, mx: 'auto', p: { xs: 2, md: 4 } }}>
 
-                    <Grid item xs={12} sm={8} md={9}>
-                        <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-                            <Grid container spacing={3}>
-                                <Grid item xs={12} lg={6}>
-                                    <IdentityCorrespondence data={flatData} />
-                                </Grid>
-                                <Grid item xs={12} lg={6}>
-                                    <BusinessInformation data={flatData} />
-                                </Grid>
-                                <Grid item xs={12}>
-                                    <SecurityAccess data={flatData} />
-                                </Grid>
-                            </Grid>
+                    <Box sx={{ mb: 4 }}>
+                        <Button
+                            startIcon={<ArrowBackIcon />}
+                            onClick={() => navigate(-1)}
+                            sx={{ color: T.textMuted, mb: 1, textTransform: 'none', '&:hover': { color: T.gold } }}
+                        >
+                            Back to Companies
+                        </Button>
+                        <Typography sx={{ fontFamily: "'Cinzel', serif", fontSize: '2.2rem', fontWeight: 700, color: T.textPrimary, mb: 0.5 }}>
+                            Company Profile
+                        </Typography>
+                        <Typography sx={{ fontSize: '0.85rem', color: T.textMuted, fontWeight: 400, fontFamily: typography.fontFamily }}>
+                            Admin view of organizational credentials, platform status, and operational details.
+                        </Typography>
+                    </Box>
 
-                            <AcceptedListings listings={[]} />
-                            <RejectedListings listings={[]} />
+                    <Box sx={{ display: 'flex', gap: 3, alignItems: 'flex-start', flexDirection: { xs: 'column', md: 'row' }, width: '100%' }}>
+
+                        {/* ── العمود الأيسر ── */}
+                        <Box sx={{ width: { xs: '100%', md: '33%' }, flexShrink: 0 }}>
+                            <Stack spacing={3}>
+                                <Paper elevation={0} sx={card}>
+                                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 3 }}>
+                                        <Avatar sx={{ width: 96, height: 96, border: `2px solid ${T.gold}`, bgcolor: T.avatarBg, color: T.gold, fontSize: '2.5rem', mb: 1.5, fontWeight: 700 }}>
+                                            {initial}
+                                        </Avatar>
+                                        <Typography sx={{ fontSize: '1.1rem', fontWeight: 600, color: T.textPrimary, mb: 0.3, textTransform: 'capitalize', fontFamily: typography.fontFamily }}>
+                                            {displayName}
+                                        </Typography>
+                                        <Typography sx={{ fontSize: '0.6rem', letterSpacing: '0.14em', color: T.goldLabel, textTransform: 'uppercase', fontWeight: 700 }}>
+                                            {providerType}
+                                        </Typography>
+
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 1 }}>
+                                            <StarIcon sx={{ color: T.gold, fontSize: 16 }} />
+                                            <Typography sx={{ fontSize: '0.9rem', fontWeight: 'bold', color: T.textPrimary }}>
+                                                {rating}
+                                            </Typography>
+                                        </Box>
+                                    </Box>
+
+                                    <Stack spacing={0} divider={<Box sx={{ height: '1px', backgroundColor: T.border }} />}>
+                                        <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'flex-start', py: 2 }}>
+                                            <EmailOutlinedIcon sx={{ color: T.textMuted, fontSize: 18, mt: '2px' }} />
+                                            <Box><Typography sx={{ fontSize: '0.6rem', color: T.textMuted, textTransform: 'uppercase', fontWeight: 600 }}>Email Address</Typography><Typography sx={{ fontSize: '0.85rem', color: T.textPrimary, fontWeight: 600 }}>{email}</Typography></Box>
+                                        </Box>
+                                        <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'flex-start', py: 2 }}>
+                                            <PhoneIphoneOutlinedIcon sx={{ color: T.textMuted, fontSize: 18, mt: '2px' }} />
+                                            <Box><Typography sx={{ fontSize: '0.6rem', color: T.textMuted, textTransform: 'uppercase', fontWeight: 600 }}>Contact Number</Typography><Typography sx={{ fontSize: '0.85rem', color: T.textPrimary, fontWeight: 600 }}>{phone}</Typography></Box>
+                                        </Box>
+                                    </Stack>
+                                </Paper>
+
+                                <Paper elevation={0} sx={card}>
+                                    <Typography sx={{ ...typography.sectionLabel, mb: 2.5 }}>Verification Status</Typography>
+                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <Typography sx={{ fontSize: '0.85rem', color: T.textPrimary, fontWeight: 600 }}>Profile Created</Typography>
+                                        <Typography sx={{ fontSize: '0.8rem', color: T.textMuted }}>{createdAt}</Typography>
+                                    </Box>
+                                </Paper>
+
+                                {/* قسم الـ QR Code */}
+                                <Paper elevation={0} sx={card}>
+                                    <CardHeader icon={QrCodeScannerOutlinedIcon} title="Payment QR Code" />
+                                    <Typography sx={{ fontSize: '0.75rem', color: T.textMuted, mb: 2 }}>
+                                        Company's official payment QR Code.
+                                    </Typography>
+                                    <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                                        <Box sx={{
+                                            width: 140, height: 140, border: `2px dashed ${T.border}`, borderRadius: 2,
+                                            display: 'flex', justifyContent: 'center', alignItems: 'center',
+                                            backgroundColor: T.pageBg, overflow: 'hidden'
+                                        }}>
+                                            {currentQrUrl ? (
+                                                <img src={currentQrUrl} alt="Company QR Code" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                                            ) : (
+                                                <QrCodeScannerOutlinedIcon sx={{ fontSize: 40, color: T.textMuted, opacity: 0.5 }} />
+                                            )}
+                                        </Box>
+                                    </Box>
+                                </Paper>
+
+                            </Stack>
                         </Box>
-                    </Grid>
-                </Grid>
+
+                        {/* ── العمود الأيمن ── */}
+                        <Box sx={{ flex: 1, minWidth: 0 }}>
+                            <Stack spacing={3}>
+                                <Paper elevation={0} sx={card}>
+                                    <CardHeader icon={BusinessCenterOutlinedIcon} title="Company Credentials" />
+
+                                    <Box sx={{ display: 'flex', gap: 2.5, mb: 2.5, flexDirection: { xs: 'column', sm: 'row' } }}>
+                                        <Box sx={{ flex: 1 }}>
+                                            <FieldLabel>Legal Representative Name</FieldLabel>
+                                            <TextField fullWidth size="small" value={fullName} disabled sx={inp} />
+                                        </Box>
+                                        <Box sx={{ flex: 1 }}>
+                                            <FieldLabel>Brand / Company Name</FieldLabel>
+                                            <TextField fullWidth size="small" value={displayName} disabled sx={inp} />
+                                        </Box>
+                                    </Box>
+
+                                    <Box sx={{ display: 'flex', gap: 2.5, mb: 2.5, flexDirection: { xs: 'column', sm: 'row' } }}>
+                                        <Box sx={{ flex: 1 }}>
+                                            <FieldLabel>Tax Identification Number</FieldLabel>
+                                            <TextField fullWidth size="small" value={taxNumber} disabled sx={inp} />
+                                        </Box>
+                                        <Box sx={{ flex: 1 }}>
+                                            <FieldLabel>Commercial Registration</FieldLabel>
+                                            <TextField fullWidth size="small" value={registrationNo} disabled sx={inp} />
+                                        </Box>
+                                    </Box>
+
+                                    <Box sx={{ display: 'flex', gap: 2.5, mb: 2.5, flexDirection: { xs: 'column', sm: 'row' } }}>
+                                        <Box sx={{ flex: 1 }}>
+                                            <FieldLabel>District ID</FieldLabel>
+                                            <TextField fullWidth size="small" value={districtId} disabled sx={inp} />
+                                        </Box>
+                                        <Box sx={{ flex: 1 }}>
+                                            <FieldLabel>Industry Category</FieldLabel>
+                                            <TextField fullWidth size="small" value={industryCategories} disabled sx={inp} />
+                                        </Box>
+                                    </Box>
+                                </Paper>
+
+                                <Paper elevation={0} sx={card}>
+                                    <CardHeader icon={VerifiedUserOutlinedIcon} title="Account Status" />
+                                    <Box sx={{ display: 'flex', gap: 2.5, mb: 3, flexDirection: { xs: 'column', sm: 'row' } }}>
+                                        <Box sx={{ flex: 1 }}>
+                                            <FieldLabel>Moderation Status</FieldLabel>
+                                            <TextField fullWidth size="small" value={moderationStatus} disabled sx={{ ...inp, textTransform: 'capitalize' }} />
+                                        </Box>
+                                        <Box sx={{ flex: 1 }}>
+                                            <FieldLabel>Provider Type</FieldLabel>
+                                            <TextField fullWidth size="small" value={providerType} disabled sx={{ ...inp, textTransform: 'capitalize' }} />
+                                        </Box>
+                                    </Box>
+
+                                    <Box sx={{ display: 'flex', gap: 2.5, flexDirection: { xs: 'column', sm: 'row' }, p: 2, bgcolor: T.pageBg, borderRadius: 2, border: `1px solid ${T.border}` }}>
+                                        <Box sx={{ flex: 1 }}>
+                                            <FieldLabel>Phone Verified</FieldLabel>
+                                            <Typography sx={{ fontSize: '0.9rem', color: isPhoneVerified ? '#2ecc71' : '#e74c3c', fontWeight: 600 }}>{isPhoneVerified ? 'Yes' : 'No'}</Typography>
+                                        </Box>
+                                        <Box sx={{ flex: 1 }}>
+                                            <FieldLabel>Email Verified</FieldLabel>
+                                            <Typography sx={{ fontSize: '0.9rem', color: isEmailVerified ? '#2ecc71' : '#e74c3c', fontWeight: 600 }}>{isEmailVerified ? 'Yes' : 'No'}</Typography>
+                                        </Box>
+                                    </Box>
+                                </Paper>
+
+                                <Paper elevation={0} sx={{ ...card, ...(security.rejection_reason || profileData.rejection_reason ? { borderColor: '#b05050' } : {}) }}>
+                                    <CardHeader
+                                        icon={ReportProblemOutlinedIcon}
+                                        title="Moderation Notice"
+                                        iconColor={(security.rejection_reason || profileData.rejection_reason) ? '#b05050' : T.textMuted}
+                                    />
+                                    <FieldLabel>Rejection Reason</FieldLabel>
+                                    <TextField
+                                        fullWidth
+                                        multiline
+                                        rows={(security.rejection_reason || profileData.rejection_reason) ? 3 : 1}
+                                        value={rejectionReason}
+                                        disabled
+                                        sx={{
+                                            ...inp,
+                                            '& .MuiInputBase-input': {
+                                                padding: '12px 14px',
+                                                color: (security.rejection_reason || profileData.rejection_reason) ? '#b05050' : T.textMuted
+                                            }
+                                        }}
+                                    />
+                                </Paper>
+
+                            </Stack>
+                        </Box>
+                    </Box>
+                </Box>
             </Box>
         </Box>
     );
-};
-
-export default CompanyProfilePage;
+}

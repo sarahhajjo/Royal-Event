@@ -3,12 +3,14 @@ import { AppBar, Toolbar, Typography, IconButton, Box, Avatar } from "@mui/mater
 import NotificationsIcon from "@mui/icons-material/NotificationsNone";
 import LightModeIcon from "@mui/icons-material/LightModeOutlined";
 import DarkModeIcon from "@mui/icons-material/DarkModeOutlined";
+import { useNavigate } from "react-router-dom"; // 👑 استيراد useNavigate
 
 import { ColorModeContext } from "../../../../main";
 
 const Header = ({ title = "Dashboard", user = {} }) => {
     const { mode, toggleColorMode } = useContext(ColorModeContext);
     const { name = "Ghazal kawas", role = "Service Provider", avatar = "" } = user;
+    const navigate = useNavigate(); // 👑 تهيئة دالة الانتقال
 
     return (
         <AppBar
@@ -39,8 +41,19 @@ const Header = ({ title = "Dashboard", user = {} }) => {
                         <NotificationsIcon />
                     </IconButton>
 
-                    {/* معلومات المستخدم (مدمجة بانسيابية) */}
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, ml: 1 }}>
+                    {/* معلومات المستخدم */}
+                    <Box
+                        onClick={() => navigate('/my-profile')} // 👑 توجيه النقر إلى صفحة البروفايل
+                        sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 1.5,
+                            ml: 1,
+                            cursor: "pointer", // 👑 تحويل مؤشر الماوس ليظهر أنه قابل للنقر
+                            transition: "opacity 0.2s ease",
+                            "&:hover": { opacity: 0.8 } // 👑 تأثير بصري خفيف عند تمرير الماوس
+                        }}
+                    >
                         <Box sx={{ textAlign: "right", display: { xs: "none", sm: "block" } }}>
                             <Typography sx={{ color: "text.primary", fontWeight: 700, fontSize: "0.85rem", fontFamily: "'Cinzel', serif" }} noWrap>
                                 {name}
