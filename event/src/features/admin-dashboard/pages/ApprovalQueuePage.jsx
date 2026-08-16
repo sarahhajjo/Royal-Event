@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Box } from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
-
 
 import {
     fetchApprovals,
@@ -14,7 +12,7 @@ import {
     selectApprovalStatus,
     selectActiveFilter,
     selectActionStatus,
-    selectApprovalPagination,
+    selectApprovalPagination, selectApprovalLastPage, selectApprovalTotal, selectApprovalPerPage,
 } from "./../approvalsSlice";
 
 import { T } from "./../Theme";
@@ -26,6 +24,10 @@ import ApprovalList from "../pendingApproval-component/ApprovalList.jsx";
 import * as PropTypes from "prop-types";
 import RejectReasonDialog from "../pendingApproval-component/RejectReasonDialog.jsx";
 import Sidebar from "../components/Sidebar.jsx";
+import ListingDetailsDrawer from "./ListingDetailsDrawer.jsx";
+import {useNavigate} from "react-router-dom";
+
+// 👑 استيراد مكون السلايدر الجانبي لتفاصيل الخدمة
 
 function ApprovalPagination(props) {
     return null;
@@ -40,6 +42,7 @@ ApprovalPagination.propTypes = {
     }),
     onPageChange: PropTypes.func
 };
+
 export default function ApprovalQueuePage() {
     const dispatch = useDispatch();
     const navigate = useNavigate();
@@ -48,16 +51,26 @@ export default function ApprovalQueuePage() {
     const status          = useSelector(selectApprovalStatus);
     const activeFilter    = useSelector(selectActiveFilter);
     const actionStatusMap = useSelector(selectActionStatus);
-    const pagination      = useSelector(selectApprovalPagination);
 
-    // ⚠️ بدّلي هيدا بمصدر بيانات المستخدم الحقيقي عندك (auth slice مثلاً)
+// 👑 التعديل هنا: جلب بيانات الـ pagination منفصلة لتطابق الـ Selectors الجديدة
+    const page            = useSelector(selectApprovalPagination);
+    const lastPage        = useSelector(selectApprovalLastPage);
+    const total           = useSelector(selectApprovalTotal);
+    const perPage         = useSelector(selectApprovalPerPage);
+
+// تجميعها في كائن واحد لتمريره للمكونات بسلاسة
+    const pagination      = { page, lastPage, total, perPage };
+
     const currentUser = useSelector((state) => state.auth?.user) || {
         name: "Admin",
         role: "ADMINISTRATOR",
     };
-
     // dialog state لسبب الرفض
-    const [rejectTarget, setRejectTarget] = useState(null); // { id, title } | null
+    const [rejectTarget, setRejectTarget] = useState(null);
+
+    // 👑 حالات التحكم بالسلايدر الجانبي للتفاصيل
+    const [drawerOpen, setDrawerOpen] = useState(false);
+    const [selectedListing, setSelectedListing] = useState(null);
 
     useEffect(() => {
         dispatch(fetchApprovals());
@@ -65,13 +78,20 @@ export default function ApprovalQueuePage() {
 
     const handleFilterChange = (value) => dispatch(setActiveFilter(value));
     const handlePageChange   = (page) => dispatch(setPage(page));
-    const handleViewDetails  = (item) => navigate(`/admin-dashboard/approvals/${item.id}`);
+
+    // 👑 فتح السلايدر الجانبي وتمرير تفاصيل الخدمة المختارة عند الضغط على Details
+    const handleViewDetails  = (item) => {
+        const fullItemData = item.raw || item;
+        setSelectedListing(fullItemData);
+        setDrawerOpen(true);
+    };
     const handleApprove      = (id) => dispatch(approveRequest(id));
 
     const handleRejectClick   = (id) => {
         const item = items.find((i) => i.id === id);
         setRejectTarget({ id, title: item?.title });
     };
+
     const handleRejectConfirm = (reason) => {
         dispatch(rejectRequest({ id: rejectTarget.id, reason }));
         setRejectTarget(null);
@@ -98,11 +118,19 @@ export default function ApprovalQueuePage() {
                 </Box>
             </Box>
 
+            {/* نافذة سبب الرفض */}
             <RejectReasonDialog
                 open={!!rejectTarget}
                 itemTitle={rejectTarget?.title}
                 onClose={() => setRejectTarget(null)}
                 onConfirm={handleRejectConfirm}
+            />
+
+            {/* 👑 السلايدر الجانبي لعرض تفاصيل الخدمة */}
+            <ListingDetailsDrawer
+                open={drawerOpen}
+                onClose={() => setDrawerOpen(false)}
+                item={selectedListing}
             />
         </Box>
     );

@@ -208,15 +208,15 @@ export const selectApprovalStatus  = (state) => state.approvals.status;
 export const selectActiveFilter    = (state) => state.approvals.activeFilter;
 export const selectActionStatus    = (state) => state.approvals.actionStatus;
 export const selectApprovalError   = (state) => state.approvals.error;
-export const selectApprovalPagination = (state) => ({
-    page: state.approvals.page,
-    lastPage: state.approvals.lastPage,
-    total: state.approvals.total,
-    perPage: state.approvals.perPage,
-});
+
+// 👑 تم جعل الـ selector يعيد حقول التصفح كقيم مفردة لتجنب إنشاء كائنات جديدة تسبب أخطاء الـ Re-render
+export const selectApprovalPagination = (state) => state.approvals.page;
+export const selectApprovalLastPage   = (state) => state.approvals.lastPage;
+export const selectApprovalTotal      = (state) => state.approvals.total;
+export const selectApprovalPerPage    = (state) => state.approvals.perPage;
+
 export const selectDateRange = (state) => ({
     dateFrom: state.approvals.dateFrom,
     dateTo: state.approvals.dateTo,
 });
-
 export default approvalsSlice.reducer;

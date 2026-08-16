@@ -126,7 +126,7 @@ export default function ApprovalList({ items, status, actionStatusMap, onViewDet
                         {/* الجانب الأيمن: أزرار التحكم والإجراءات */}
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, width: { xs: '100%', md: 'auto' }, justifyContent: { xs: 'flex-end', md: 'flex-start' } }}>
 
-                            {/* زر التفاصيل (يظهر دائماً) */}
+                            {/* زر التفاصيل (يقوم بتمرير الـ item بالكامل عند النقر) */}
                             <MuiButton
                                 onClick={() => onViewDetails(item)}
                                 sx={{
@@ -145,10 +145,9 @@ export default function ApprovalList({ items, status, actionStatusMap, onViewDet
                                 Details
                             </MuiButton>
 
-                            {/* 👑 إخفاء أزرار الرفض والقبول إذا لم تكن الخدمة معلقة، وعرض حالة بديلة */}
+                            {/* أزرار الرفض والقبول */}
                             {item.status === 'pending_approval' ? (
                                 <>
-                                    {/* زر الرفض */}
                                     <MuiButton
                                         onClick={() => onReject(item.id)}
                                         disabled={isRejecting || isApproving}
@@ -168,7 +167,6 @@ export default function ApprovalList({ items, status, actionStatusMap, onViewDet
                                         {isRejecting ? 'Rejecting...' : 'Reject'}
                                     </MuiButton>
 
-                                    {/* زر الموافقة */}
                                     <MuiButton
                                         onClick={() => onApprove(item.id)}
                                         disabled={isRejecting || isApproving}
@@ -190,7 +188,6 @@ export default function ApprovalList({ items, status, actionStatusMap, onViewDet
                                     </MuiButton>
                                 </>
                             ) : (
-                                /* Badge للحالة إذا كانت مقبولة أو مرفوضة */
                                 <Box
                                     sx={{
                                         px: 2,
