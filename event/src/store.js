@@ -16,7 +16,7 @@ import ServiceDetailsSliceReducer from './features/freelancer-dashborad/componen
 import JobOffersReducer from './features/freelancer-dashborad/components/job-opportunities/JobOffersSlice.js'
 import approvalReducer from './features/admin-dashboard/approvalsSlice.js';
 import paymentsReducer from "./features/admin-dashboard/paymentsSlice";
-
+import orderReducer from "./features/freelancer-dashborad/components/orders/OrdersSlice.js";
 export const store = configureStore({
     reducer: {
         auth: authReducer,
@@ -35,5 +35,6 @@ export const store = configureStore({
         jobs:JobOffersReducer,
         approvals: approvalReducer,
         payments: paymentsReducer,
+        freelancerOrders: orderReducer,
     }
 });

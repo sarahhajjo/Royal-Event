@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { useTranslation } from "react-i18next";
+import axios from "axios";
 import { fetchServiceDetails, clearServiceDetails } from "../components/service-details/ServiceDetailsSlice";
 import { pickLocalized } from "../../../i18n/localize.js";
 
@@ -11,10 +12,8 @@ import Footer from "../components/layout/Footer";
 import { ServiceDetailsTopBar, ServiceOverviewCard, ServiceInfoGrid, ServiceBottomSection } from "../components/service-details";
 
 // ── Helpers ──────────────────────────────────────────────
-// "00:00:00" -> "00:00"
 const formatTime = (time) => (time ? time.slice(0, 5) : "");
 
-// "2026-07-29T00:00:00.000000Z" -> "Wednesday, 29 July 2026" أو "الأربعاء، ٢٩ يوليو ٢٠٢٦" حسب اللغة
 const formatDate = (isoString, locale = "en-GB") => {
     if (!isoString) return "";
     const date = new Date(isoString);
@@ -26,7 +25,6 @@ const formatDate = (isoString, locale = "en-GB") => {
     }).format(date);
 };
 
-// تفكيك availabilities[].slots[] من كل variant إلى قائمة تواريخ مسطّحة جاهزة للعرض
 const buildAvailableDates = (variants = [], locale = "en-GB") =>
     variants.flatMap((variant) =>
         (variant.availabilities || []).flatMap((availability) =>
@@ -47,7 +45,21 @@ export default function ServiceDetailsPage() {
     const { t, i18n } = useTranslation();
     const locale = i18n.language?.startsWith("ar") ? "ar" : "en-GB";
 
-    // جلب الحالة من الـ Redux Store
+    const handleDeleteService = async () => {
+        if (window.confirm("Are you sure you want to delete this service?")) {
+            try {
+                const token = localStorage.getItem("token");
+                await axios.delete(`http://127.0.0.1:8000/api/listings/${serviceId}`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                navigate("/catalog");
+            } catch (error) {
+                console.error("Failed to delete service:", error);
+                alert("حدث خطأ أثناء محاولة حذف الخدمة");
+            }
+        }
+    };
+
     const { serviceData, isLoading, error } = useSelector((state) => state.serviceDetails);
 
     useEffect(() => {
@@ -55,7 +67,6 @@ export default function ServiceDetailsPage() {
             dispatch(fetchServiceDetails(serviceId));
         }
 
-        // تنظيف البيانات عند مغادرة الصفحة حتى لا تظهر بيانات قديمة في المرة القادمة
         return () => {
             dispatch(clearServiceDetails());
         };
@@ -71,7 +82,6 @@ export default function ServiceDetailsPage() {
         );
     }
 
-    // 2. شاشة الخطأ المحمية بـ key و span
     if (error || !serviceData) {
         return (
             <div key="error-screen-container" className="flex min-h-screen bg-bg-default items-center justify-center flex-col gap-4">
@@ -88,7 +98,6 @@ export default function ServiceDetailsPage() {
         );
     }
 
-    // 👑 ترتيب البيانات قبل إرسالها للواجهة
     const primaryVariant = serviceData.variants?.[0];
 
     const mappedService = {
@@ -112,14 +121,12 @@ export default function ServiceDetailsPage() {
         pricing: {
             priceType: primaryVariant?.price_type === "fixed" ? "Fixed Price" : "Variable",
             amount: serviceData.price ?? primaryVariant?.price ?? 0,
-            // العملة تُقرأ من الـ variant لأن الباك ما بيرجعها على مستوى الخدمة نفسها
             currency: primaryVariant?.currency || "SAR",
         },
         serviceStatus: {
             currentStatus: serviceData.status === "approved" ? "Active" : "Pending Review",
             message: serviceData.status === "approved" ? "Live and visible." : "Being reviewed by our quality team.",
         },
-        // شروط الإلغاء
         cancellationPolicy: {
             beforeAcceptance: Boolean(serviceData.cancel_before_acceptance),
             afterAcceptance: Boolean(serviceData.cancel_after_acceptance),
@@ -134,17 +141,14 @@ export default function ServiceDetailsPage() {
             currency: v.currency || "SAR",
             badge: i === 0 ? "BASE PRICE" : null,
         })) || [],
-        // التواريخ والأوقات: مأخوذة من variants[].availabilities[].slots[]
         dates: buildAvailableDates(serviceData.variants, locale),
     };
 
-    // 3. الشاشة الرئيسية للبيانات
     return (
         <div key={`details-page-${serviceId}`} className="flex min-h-screen bg-bg-default text-text-primary">
             <Sidebar />
 
-            {/* أضفنا pl-[260px] لكي لا تتداخل الصفحة مع القائمة الجانبية */}
-            <div className="flex flex-1 flex-col ">
+            <div className="flex flex-1 flex-col">
                 <Header />
 
                 <main className="flex-1 space-y-6 p-6">
@@ -153,15 +157,31 @@ export default function ServiceDetailsPage() {
                         status={mappedService.status}
                         statusLabel={mappedService.statusLabel}
                         onBack={() => navigate(-1)}
-                        onEditService={() => navigate(`/catalog/services/${serviceId}/edit`)}
                     />
 
+                    {/* أزرار الإدارة (تعديل وحذف) بشكل مرتب وواضح تحت الـ TopBar */}
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={() => navigate(`/edit-service/${serviceId}`)}
+                            className="px-6 py-2 rounded-xl bg-primary text-bg-default text-sm font-semibold hover:opacity-90 transition shadow-sm"
+                        >
+                            Edit Service
+                        </button>
+
+                        <button
+                            onClick={handleDeleteService}
+                            className="px-6 py-2 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm font-semibold hover:bg-red-500/20 transition shadow-sm"
+                        >
+                            Delete Service
+                        </button>
+                    </div>
+
                     <ServiceOverviewCard
-                        title={mappedService.title}
-                        description={mappedService.description}
-                        images={mappedService.images}
-                        category={mappedService.category}
-                        location={mappedService.location}
+                        title={serviceData.title}
+                        description={serviceData.description}
+                        category={serviceData.category?.name}
+                        location={serviceData.district?.name}
+                        images={serviceData.images || []}
                     />
 
                     <ServiceInfoGrid

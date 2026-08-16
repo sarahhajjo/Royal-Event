@@ -17,7 +17,7 @@ export default function ContactInfoCard({ phone, location }) {
         <p className="mb-1 text-[11px] uppercase tracking-wide text-text-secondary">
           Location
         </p>
-        <p className="text-sm font-medium text-text-primary">{location}</p>
+        <p className="text-sm font-medium text-text-primary">{location?.en || location?.ar}</p>
       </div>
     </InfoCard>
   );

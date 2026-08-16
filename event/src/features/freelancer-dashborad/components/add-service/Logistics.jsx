@@ -8,6 +8,7 @@ import AccessTimeIcon from "@mui/icons-material/AccessTime";
 
 import { StaticDatePicker, LocalizationProvider, TimePicker } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import dayjs from "dayjs"; // 👑 تأكدي من إضافة هذا الاستيراد
 
 const fieldSx = {
     "& .MuiOutlinedInput-root": {
@@ -85,7 +86,6 @@ const Logistics = ({ data = {}, onChange }) => {
     };
 
     const renderCustomDay = (dayProps) => {
-        // 👑 التعديل هنا: استخراج الخصائص الخاصة بـ MUI لمنع وصولها لـ DOM
         const {
             day,
             outsideCurrentMonth,
@@ -132,6 +132,11 @@ const Logistics = ({ data = {}, onChange }) => {
         );
     };
 
+    // 👑 التعديل هنا: تحديد التاريخ الافتراضي للتقويم لكي يعرض الشهر الصحيح عند الفتح
+    const initialCalendarDate = selectionMode === "Date Range"
+        ? (data.startDate || null)
+        : (data.selectedDates && data.selectedDates.length > 0 ? dayjs(data.selectedDates[0]) : null);
+
     return (
         <Paper elevation={0} sx={{ p: 3, mb: 3, bgcolor: "background.paper", border: "1px solid divider" }}>
             <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 3 }}>
@@ -154,7 +159,10 @@ const Logistics = ({ data = {}, onChange }) => {
                 <Box sx={{ p: 1, border: "1px solid", borderColor: "divider", borderRadius: 2, mb: 3, maxWidth: 360, mx: "auto", bgcolor: "background.default" }}>
                     <StaticDatePicker
                         displayStaticWrapperAs="desktop"
-                        value={selectionMode === "Date Range" ? (data.startDate || null) : null}
+                        // تمرير القيمة المحسوبة هنا
+                        value={initialCalendarDate}
+                        // يمكننا أيضاً إخبار التقويم صراحة بأي شهر يجب أن يفتح إذا لم تكن هناك قيمة مبدئية
+                        defaultCalendarMonth={initialCalendarDate || dayjs()}
                         disablePast
                         slots={{ day: renderCustomDay }}
                         slotProps={{ actionBar: { actions: [] } }}

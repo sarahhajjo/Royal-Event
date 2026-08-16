@@ -1,72 +1,90 @@
-import StatusBadge from "./StatusBadge";
-import BookmarkIcon from "../icons/BookmarkIcon";
-import MoreOptionsIcon from "../icons/MoreOptionsIcon";
-import RestoreIcon from "../icons/RestoreIcon";
-import InfoIcon from "../icons/InfoIcon";
+import React from 'react';
+import { acceptBookingAction, rejectBookingAction } from "./OrdersSlice.js";
+import { useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom"; // 🔥 استيراد الـ navigate
 
 export default function OrderCard({ order }) {
-    const isCancelled = order.status === "cancelled";
-    const isRejected = order.status === "rejected";
+    const dispatch = useDispatch();
+    const navigate = useNavigate(); // 🔥 تفعيل الـ navigate
+
+    const handleAccept = (e) => {
+        e.stopPropagation(); // منع انتقال الصفحة عند الضغط على الأزرار
+        dispatch(acceptBookingAction(order.raw.id));
+    };
+
+    const handleReject = (e) => {
+        e.stopPropagation(); // منع انتقال الصفحة عند الضغط على الأزرار
+        dispatch(rejectBookingAction(order.raw.id));
+    };
+
+    const handleCardClick = () => {
+        // الانتقال لصفحة التفاصيل باستخدام الـ id الحقيقي (order.raw.id)
+        navigate(`/order-managment/${order.raw.id}`);
+    };
 
     return (
-        <div className="overflow-hidden rounded-xl border border-border bg-bg-paper transition-all">
-            <div className="relative h-32 w-full">
-                <img src={order.image} alt={order.title} className="h-full w-full object-cover" />
-                <div className="absolute right-3 top-3">
-                    <StatusBadge status={order.status} />
+        <div
+            onClick={handleCardClick} // 🔥 الضغط على الكرت ينقلك للتفاصيل
+            className="flex flex-col sm:flex-row bg-bg-paper rounded-xl border border-border overflow-hidden shadow-sm transition-transform hover:-translate-y-1 cursor-pointer">
+
+            {/* 🖼️ قسم الصورة */}
+            <div className="relative w-full sm:w-1/3 h-48 sm:h-auto shrink-0">
+                <img
+                    src={order.image}
+                    alt={order.title}
+                    className="h-full w-full object-cover"
+                />
+                <div className="absolute right-3 top-3 rounded-full bg-black/60 px-3 py-1 text-xs font-medium text-white backdrop-blur-sm">
+                    {order.status}
                 </div>
             </div>
 
-            <div className="space-y-3 p-4">
+            {/* 📝 قسم التفاصيل */}
+            <div className="flex flex-1 flex-col justify-between p-5">
                 <div>
-                    <h3 className="text-sm font-semibold text-text-primary">{order.title}</h3>
-                    <p className="mt-0.5 text-xs text-text-secondary">Order {order.id}</p>
-                </div>
+                    <h3 className="text-xl font-bold text-text-primary">{order.title}</h3>
 
-                <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
-                    <div>
-                        <p className="text-text-secondary">Client</p>
-                        <p className="mt-0.5 text-text-primary/90">{order.client}</p>
-                    </div>
-                    <div>
-                        <p className="text-text-secondary">Event date</p>
-                        <p className="mt-0.5 text-text-primary/90">{order.eventDate}</p>
-                    </div>
-                    {order.location && (
+                    {/* شبكة التفاصيل */}
+                    <div className="mt-4 grid grid-cols-2 gap-4 text-sm sm:grid-cols-4">
                         <div>
-                            <p className="text-text-secondary">Location</p>
-                            <p className="mt-0.5 text-text-primary/90">{order.location}</p>
+                            <p className="text-text-secondary">Client</p>
+                            <p className="font-medium text-text-primary mt-0.5">{order.client}</p>
                         </div>
-                    )}
-                    <div>
-                        <p className="text-text-secondary">Price</p>
-                        <p className={`mt-0.5 font-semibold ${isCancelled ? "text-text-secondary line-through" : "text-primary"}`}>
-                            {order.price}
-                        </p>
+                        <div>
+                            <p className="text-text-secondary">Event date</p>
+                            <p className="font-medium text-text-primary mt-0.5">{order.eventDate}</p>
+                        </div>
+                        <div>
+                            <p className="text-text-secondary">Time</p>
+                            <p className="font-medium text-text-primary mt-0.5" dir="ltr">
+                                {order.time}
+                            </p>
+                        </div>
+                        <div>
+                            <p className="text-text-secondary">Price</p>
+                            <p className="font-medium text-primary mt-0.5">{order.price}</p>
+                        </div>
                     </div>
                 </div>
 
-                <div className="flex items-center gap-2 pt-1">
-                    {isCancelled ? (
+                {/* 🔘 قسم الأزرار في الأسفل */}
+                <div className="mt-6 flex items-center gap-3 border-t border-border pt-4">
+                    {order.status === 'pending' ? (
                         <>
-                            <button disabled className="h-9 flex-1 rounded-md border border-border bg-gray-50 text-xs text-text-secondary">Archived</button>
-                            <InfoIcon />
-                        </>
-                    ) : isRejected ? (
-                        <>
-                            <button className="h-9 flex-1 rounded-md border border-primary/30 bg-primary/10 text-xs font-medium text-primary hover:bg-primary/20">Reconsider</button>
-                            <button className="h-9 w-9 shrink-0 rounded-md border border-border bg-bg-default text-primary hover:bg-gray-100">
-                                <RestoreIcon className="mx-auto" />
+                            <button
+                                onClick={handleAccept}
+                                className="flex-1 rounded-lg bg-primary py-2.5 text-sm font-semibold text-black transition hover:opacity-90">
+                                Accept request
+                            </button>
+                            <button
+                                onClick={handleReject}
+                                className="px-6 py-2 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm font-semibold hover:bg-red-500/20 transition shadow-sm">                                Reject request
                             </button>
                         </>
                     ) : (
-                        <>
-                            <button className="h-9 flex-1 rounded-md bg-primary text-xs font-semibold text-bg-default hover:opacity-90">
-                                {order.status === "confirmed" ? "Manage details" : "Accept request"}
-                            </button>
-                            <BookmarkIcon />
-                            <MoreOptionsIcon />
-                        </>
+                        <div className="flex-1 text-center py-2.5 text-sm font-medium text-text-secondary bg-bg-default rounded-lg">
+                            This order is {order.status}
+                        </div>
                     )}
                 </div>
             </div>

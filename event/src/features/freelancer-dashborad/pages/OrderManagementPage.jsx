@@ -1,72 +1,51 @@
-import React, { useState, useContext } from "react";
-import { ColorModeContext } from "../../../main.jsx"; // تأكدي من مسار الاستيراد الصحيح
+import React, { useState, useContext, useEffect } from "react";
+import { ColorModeContext } from "../../../main.jsx";
+import { useDispatch, useSelector } from "react-redux";
+
+// استيراد الدوال من الـ Slice الجديد
+
+
 import Sidebar from "../components/layout/Sidebar";
 import Header from "../components/layout/Header";
 import StatCard from "../components/orders/StatCard";
 import OrderTabs from "../components/orders/OrderTabs";
 import OrderCard from "../components/orders/OrderCard";
 import PageBreadcrumb from "../components/PageBreadcrumb.jsx";
-
-const ORDERS = [
-    {
-        id: "#REQ-8812",
-        title: "Royal Banquet Setup",
-        client: "Abdullah Al Saud",
-        eventDate: "Oct 24, 2024",
-        location: "Riyadh, Al Nakheel",
-        price: "SAR 12,500",
-        status: "pending",
-        image: "https://images.unsplash.com/photo-1519225421980-715cb0215aed?q=80&w=600&auto=format&fit=crop",
-    },
-    {
-        id: "#REQ-9014",
-        title: "Elite Portrait Session",
-        client: "Sara Al Otaibi",
-        eventDate: "Nov 02, 2024",
-        location: "Jeddah, Waterfront",
-        price: "SAR 7,500",
-        status: "confirmed",
-        image: "https://images.unsplash.com/photo-1495707902641-75cac588d2e9?q=80&w=600&auto=format&fit=crop",
-    },
-    {
-        id: "#REQ-7721",
-        title: "Floral Gala Decor",
-        client: "Riyadh Events Group",
-        eventDate: "Oct 12, 2024",
-        price: "SAR 22,000",
-        status: "cancelled",
-        reason: "Client request",
-        image: "https://images.unsplash.com/photo-1487070183336-b863922373d4?q=80&w=600&auto=format&fit=crop",
-    },
-    {
-        id: "#REQ-8550",
-        title: "Calligraphy Invitations",
-        client: "Princess Noura",
-        eventDate: "Oct 30, 2024",
-        price: "SAR 4,200",
-        status: "rejected",
-        image: "https://images.unsplash.com/photo-1455390582262-044cdead277a?q=80&w=600&auto=format&fit=crop",
-    },
-];
+import {fetchProviderBookings, selectAllOrders, selectOrdersStatus} from "../components/orders/OrdersSlice.js";
 
 const TAB_FILTERS = {
-    active: (order) => order.status === "pending" || order.status === "confirmed",
-    confirmed: (order) => order.status === "confirmed",
-    pending_payment: (order) => order.status === "pending_payment",
+    active: (order) => order.status === "pending" || order.status === "confirmed" || order.status === "accepted",
+    confirmed: (order) => order.status === "confirmed" || order.status === "accepted",
+    pending_payment: (order) => order.status === "pending_payment" || order.status === "unpaid",
     completed: (order) => order.status === "completed",
     rejected: (order) => order.status === "rejected" || order.status === "cancelled",
 };
 
 export default function OrderManagementPage() {
     const { toggleColorMode, mode } = useContext(ColorModeContext);
+    const dispatch = useDispatch();
+
     const [activeTab, setActiveTab] = useState("active");
 
-    const filteredOrders = ORDERS.filter(TAB_FILTERS[activeTab] ?? (() => true));
+    // قراءة البيانات من Redux بدلاً من المصفوفة الوهمية
+    const orders = useSelector(selectAllOrders);
+    const loadingStatus = useSelector(selectOrdersStatus);
 
+    // جلب البيانات عند فتح الصفحة لأول مرة
+    useEffect(() => {
+        if (loadingStatus === "idle") {
+            dispatch(fetchProviderBookings());
+        }
+    }, [dispatch, loadingStatus]);
+
+    // تطبيق الفلترة على الطلبات القادمة من الباك إند
+    const filteredOrders = orders.filter(TAB_FILTERS[activeTab] ?? (() => true));
+
+    // حساب أعداد الطلبات لكل تبويب
     const tabCounts = Object.fromEntries(
         Object.entries(TAB_FILTERS).map(([key, filterFn]) => [
             key,
-            ORDERS.filter(filterFn).length,
+            orders.filter(filterFn).length,
         ])
     );
 
@@ -84,10 +63,10 @@ export default function OrderManagementPage() {
                     />
 
                     <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-                        <StatCard label="Total earnings" value="SAR 124,500" />
-                        <StatCard label="Pending tasks" value="12" />
-                        <StatCard label="Client rating" value="4.9 ★" />
-                        <StatCard label="Success rate" value="98%" />
+                        <StatCard label="Total earnings" value="SAR 0" />
+                        <StatCard label="Pending tasks" value={tabCounts.active || 0} />
+                        <StatCard label="Client rating" value="0.0 ★" />
+                        <StatCard label="Success rate" value="0%" />
                     </div>
 
                     <OrderTabs
@@ -96,9 +75,13 @@ export default function OrderManagementPage() {
                         counts={tabCounts}
                     />
 
-                    {/* قائمة الطلبات */}
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                        {filteredOrders.length === 0 ? (
+                    {/* قائمة الطلبات مع حالة التحميل */}
+                    <div className="grid grid-cols-1 gap-4">
+                        {loadingStatus === "loading" ? (
+                            <div className="col-span-full rounded-xl border border-border bg-bg-paper p-10 text-center text-sm text-text-secondary">
+                                Loading your bookings...
+                            </div>
+                        ) : filteredOrders.length === 0 ? (
                             <div className="col-span-full rounded-xl border border-border bg-bg-paper p-10 text-center text-sm text-text-secondary">
                                 No requests in this category yet.
                             </div>

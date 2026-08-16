@@ -1,7 +1,6 @@
 const TABS = [
     { key: "active", label: "Active requests" },
     { key: "confirmed", label: "Confirmed" },
-    { key: "pending_payment", label: "Pending payment" },
     { key: "completed", label: "Completed" },
     { key: "rejected", label: "Rejected" },
 ];

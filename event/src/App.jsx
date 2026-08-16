@@ -36,6 +36,8 @@ import JobOpportunitiesPage from "./features/freelancer-dashborad/pages/JobOppor
 import JobDetailsPage from "./features/freelancer-dashborad/pages/JobDetailsPage.jsx";
 import MyJobsPage from "./features/freelancer-dashborad/pages/MyJobsPage.jsx";
 import PaymentApprovalsPage from "./features/admin-dashboard/pages/PaymentApprovalsPage.jsx";
+import BookingDetailsPage from "./features/freelancer-dashborad/pages/BookingDetailsPage.jsx";
+import EditServicePage from "./features/freelancer-dashborad/pages/EditServicePage.jsx";
 
 function App() {
 
@@ -77,7 +79,9 @@ function App() {
 
                 <Route path="/freelancer-dashboard" element={<FreelancerDashboardPage/>}/>
                 <Route path="/add-service" element={<FreelancerAddServicePage/>}/>
+                <Route path="/edit-service/:id" element={<EditServicePage />} />
                 <Route path="/order-managment" element={<OrderManagementPage/>}/>
+                <Route path="/order-managment/:id" element={<BookingDetailsPage />} />
                 <Route path="/freelancer-offer" element={<OfferManagementPage/>}/>
                 <Route path="/service_detail/:serviceId" element={<ServiceDetailsPage/>}/>
                 <Route path="/jobs" element={<JobOpportunitiesPage/>}/>

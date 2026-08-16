@@ -30,14 +30,26 @@ const createListing = async (serviceData) => {
     });
     return response.data;
 };
-
+const deleteListing = async (listingId) => {
+    const token = localStorage.getItem("token");
+    const response = await axios.delete(`${API_URL}listings/${listingId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+};
 const getCategories = async () => {
-    const response = await axios.get(API_URL + "categories");
+    const token = localStorage.getItem("token");
+    const response = await axios.get(API_URL + "categories", {
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+    });
     return response.data.data || response.data;
 };
 
 const getDistricts = async () => {
-    const response = await axios.get(API_URL + "districts");
+    const token = localStorage.getItem("token");
+    const response = await axios.get(API_URL + "districts", {
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+    });
     return response.data.data || response.data;
 };
 const getListingById = async (listingId) => {
@@ -54,7 +66,8 @@ const freelancerOfferService = {
     uploadImage,
     getCategories,
     getDistricts,
-    getListingById
+    getListingById,
+    deleteListing
 };
 
 export default freelancerOfferService;
