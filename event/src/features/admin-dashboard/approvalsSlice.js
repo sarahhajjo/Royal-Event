@@ -1,7 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import adminService from "../../services/adminService/adminService.js";
 
-
 // ─────────────────────────────────────────────────────────────────────────────
 // Helpers
 // ─────────────────────────────────────────────────────────────────────────────
@@ -25,67 +24,81 @@ function formatRelativeTime(dateString) {
     return date.toLocaleDateString();
 }
 
-// ⚠️ عدّلي أسماء الحقول لتطابق شكل الـ response الحقيقي من /admin/bookings
-function normalizeBooking(raw) {
+// 👑 تحديث دالة التهيئة لتتطابق مع هيكل الـ Listing العائد من الـ API
+function normalizeListing(raw) {
     return {
         id: raw.id,
-        type: raw.type ?? raw.booking_type, // service | hall | product | arrangement
-        title: raw.title ?? raw.name ?? raw.listing?.title ?? "Untitled",
-        badge: (raw.type ?? raw.booking_type ?? "").toString().toUpperCase(),
-        image: raw.image ?? raw.photo ?? raw.listing?.image ?? null,
-        submittedBy: raw.submitted_by ?? raw.provider_name ?? raw.company_name ?? raw.user?.name ?? "—",
+        // التعامل مع العناوين متعددة اللغات أو النص المباشر
+        title: raw.title?.en || raw.title?.ar || raw.title || "Untitled",
+        type: raw.type || "service", // service, hall, physical_product, package
+        badge: (raw.type || "UNKNOWN").replace('_', ' ').toUpperCase(),
+        image: raw.images?.[0]?.url || raw.images?.[0]?.path || null,
+        submittedBy: raw.provider?.name || "—",
         timeLabel: formatRelativeTime(raw.created_at),
-        status: raw.status ?? "pending",
+        status: raw.status ?? "pending_approval",
+        category: raw.category?.name || "—",
         raw,
     };
 }
-
 // ─────────────────────────────────────────────────────────────────────────────
 // Async Thunks
 // ─────────────────────────────────────────────────────────────────────────────
 
-// GET /admin/bookings?status=pending&booking_type=...&date_from=...&date_to=...&per_page=...&page=...
 export const fetchApprovals = createAsyncThunk(
     "approvals/fetchApprovals",
     async (_, { getState, rejectWithValue }) => {
-        const { activeFilter, dateFrom, dateTo, page, perPage } = getState().approvals;
+        const { activeFilter, page } = getState().approvals;
         try {
-            const data = await adminService.getBookings({
-                status: "pending",
-                booking_type: activeFilter === "all" ? undefined : activeFilter,
-                date_from: dateFrom || undefined,
-                date_to: dateTo || undefined,
-                per_page: perPage,
-                page,
+            const data = await adminService.getListings(page);
+
+            let list = Array.isArray(data) ? data : data.data || [];
+
+            // 1. استبعاد الوظائف
+            list = list.filter(item => item.type !== "job");
+
+            // 2. تطبيق فلتر الشركة والفريلانسر
+            if (activeFilter === "company") {
+                list = list.filter(item => item.type !== "service");
+            } else if (activeFilter === "freelancer") {
+                list = list.filter(item => item.type === "service");
+            }
+
+            // 👑 3. الترتيب (إعطاء الأولوية للطلبات المعلقة)
+            list.sort((a, b) => {
+                // إذا كان a معلق و b غير معلق، نضع a في البداية
+                if (a.status === "pending_approval" && b.status !== "pending_approval") return -1;
+
+                // إذا كان b معلق و a غير معلق، نضع b في البداية
+                if (a.status !== "pending_approval" && b.status === "pending_approval") return 1;
+
+                // إذا كان الاثنين نفس الحالة، نرتبهم من الأحدث للأقدم بناءً على تاريخ الإنشاء
+                return new Date(b.created_at) - new Date(a.created_at);
             });
-            // ⚠️ شكل الـ pagination هون مبني على استجابة Laravel القياسية (data / current_page / last_page / total)
-            // عدّلي حسب شكل الـ response الفعلي عندك إذا كان مختلف
-            const list = Array.isArray(data) ? data : data.data ?? data.bookings ?? [];
+
             return {
-                items: list.map(normalizeBooking),
-                currentPage: data.current_page ?? page,
-                lastPage: data.last_page ?? 1,
-                total: data.total ?? list.length,
+                items: list.map(normalizeListing),
+                currentPage: data.meta?.current_page || page,
+                lastPage: data.meta?.last_page || 1,
+                total: data.meta?.total || list.length,
             };
         } catch (err) {
-            return rejectWithValue(err.response?.data?.message || "فشل تحميل الطلبات");
+            return rejectWithValue(err.response?.data?.message || "فشل تحميل الخدمات");
         }
     }
 );
-
 export const approveRequest = createAsyncThunk(
     "approvals/approveRequest",
     async (id, { rejectWithValue }) => {
         try {
-            await adminService.approveBooking(id);
+            // استخدام التابع الخاص بقبول الـ Listing
+            await adminService.approveListing(id);
             return id;
         } catch (err) {
-            return rejectWithValue(err.response?.data?.message || "فشل قبول الطلب");
+            return rejectWithValue(err.response?.data?.message || "فشل قبول الخدمة");
         }
     }
 );
 
-// رفض — لازم سبب إلزامي (rejection_reason)
 export const rejectRequest = createAsyncThunk(
     "approvals/rejectRequest",
     async ({ id, reason }, { rejectWithValue }) => {
@@ -93,10 +106,11 @@ export const rejectRequest = createAsyncThunk(
             return rejectWithValue("سبب الرفض مطلوب");
         }
         try {
-            await adminService.rejectBooking(id, reason);
+            // استخدام التابع الخاص برفض الـ Listing
+            await adminService.rejectListing(id, reason);
             return id;
         } catch (err) {
-            return rejectWithValue(err.response?.data?.message || "فشل رفض الطلب");
+            return rejectWithValue(err.response?.data?.message || "فشل رفض الخدمة");
         }
     }
 );
@@ -109,12 +123,12 @@ const approvalsSlice = createSlice({
     initialState: {
         items: [],
 
-        activeFilter: "all",   // all | service | hall | product | arrangement
-        dateFrom: null,        // "YYYY-MM-DD" أو null
+        activeFilter: "all",   // all | service | hall | physical_product | package
+        dateFrom: null,
         dateTo: null,
 
         page: 1,
-        perPage: 20,
+        perPage: 15,
         lastPage: 1,
         total: 0,
 
@@ -159,6 +173,7 @@ const approvalsSlice = createSlice({
                 state.actionStatus[action.meta.arg] = "approving";
             })
             .addCase(approveRequest.fulfilled, (state, action) => {
+                // إزالة العنصر من القائمة بعد قبوله
                 state.items = state.items.filter((item) => item.id !== action.payload);
                 delete state.actionStatus[action.payload];
             })
@@ -172,6 +187,7 @@ const approvalsSlice = createSlice({
                 state.actionStatus[action.meta.arg.id] = "rejecting";
             })
             .addCase(rejectRequest.fulfilled, (state, action) => {
+                // إزالة العنصر من القائمة بعد رفضه
                 state.items = state.items.filter((item) => item.id !== action.payload);
                 delete state.actionStatus[action.payload];
             })

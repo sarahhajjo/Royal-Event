@@ -79,6 +79,12 @@ export const adminService = {
         const response = await apiClient.get(`/admin/bookings/${id}`);
         return response.data.data || response.data;
     },
+    getListings: async (page = 1) => {
+        // تمرير رقم الصفحة من أجل الـ Pagination (حسب بيانات الـ meta اللي عندك)
+        const response = await apiClient.get('/listings', { params: { page } });
+        // نرجع الكائن كاملاً لنستفيد من response.data.data للمصفوفة، و response.data.meta للتصفح
+        return response.data;
+    },
 
     approveBooking: (id) =>
         apiClient.put(`/admin/bookings/${id}/approve`),
