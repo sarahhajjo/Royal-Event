@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchListings } from "../components/offers/OffersSlice.js"; // تأكدي من مسار الملف لديكِ
+import { fetchListings } from "../components/offers/OffersSlice.js";
+import { Box, Typography } from "@mui/material";
 import Sidebar from "../components/layout/Sidebar";
 import Header from "../components/layout/Header";
 import OfferTabs from "../components/offers/OfferTabs";
@@ -19,8 +20,6 @@ export default function OfferManagementPage() {
     }, [dispatch]);
 
     // فلترة البيانات بناءً على الحالة
-    // ملاحظة: تأكدي من قيم الـ status التي يرسلها الباك إند (مثلاً 'approved', 'pending', 'rejected')
-// في ملف OfferManagementPage.jsx
     const safeOffers = Array.isArray(offers) ? offers : [];
     const filteredOffers = safeOffers.filter(offer => {
         if (!offer) return false;
@@ -35,13 +34,22 @@ export default function OfferManagementPage() {
         return true;
     });
 
-
     return (
-        <div className="min-h-screen bg-bg-default text-text-primary transition-colors duration-300">
+        <Box
+            sx={{
+                minHeight: '100vh',
+                bgcolor: (theme) => theme.palette.background.default,
+                color: (theme) => theme.palette.text.primary,
+                transition: 'background-color 0.3s, color 0.3s'
+            }}
+        >
             <Sidebar />
-            <div className="pl-[260px]">
+            <Box sx={{ pl: '260px' }}>
                 <Header title="My Catalog" />
-                <main className="max-w-7xl mx-auto p-8">
+                <Box
+                    component="main"
+                    sx={{ maxWidth: '1280px', mx: 'auto', p: 4 }}
+                >
                     <PageBreadcrumb
                         title="My Catalog"
                         subtitle="Track the status of your offers and manage them easily."
@@ -60,20 +68,32 @@ export default function OfferManagementPage() {
                     />
 
                     {isLoading ? (
-                        <div className="flex justify-center p-10">جاري تحميل خدماتك...</div>
+                        <Box sx={{ display: 'flex', justifyContent: 'center', p: 5 }}>
+                            <Typography sx={{ color: (theme) => theme.palette.text.secondary }}>
+                                جاري تحميل خدماتك...
+                            </Typography>
+                        </Box>
                     ) : (
-                        <div className="grid grid-cols-1 gap-6 max-w-7xl mx-auto">
+                        <Box sx={{ display: 'grid', gridTemplateColumns: '1fr', gap: 3, maxWidth: '1280px', mx: 'auto' }}>
                             {filteredOffers.length > 0 ? (
                                 filteredOffers.map(offer => (
                                     <OfferCard key={offer.id} offer={offer} />
                                 ))
                             ) : (
-                                <p className="col-span-full text-center text-gray-500">لا توجد خدمات في هذا القسم حالياً.</p>
+                                <Typography
+                                    sx={{
+                                        gridColumn: '1 / -1',
+                                        textAlign: 'center',
+                                        color: (theme) => theme.palette.text.secondary
+                                    }}
+                                >
+                                    لا توجد خدمات في هذا القسم حالياً.
+                                </Typography>
                             )}
-                        </div>
+                        </Box>
                     )}
-                </main>
-            </div>
-        </div>
+                </Box>
+            </Box>
+        </Box>
     );
 }

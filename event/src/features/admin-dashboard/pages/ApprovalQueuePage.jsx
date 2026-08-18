@@ -26,6 +26,7 @@ import RejectReasonDialog from "../pendingApproval-component/RejectReasonDialog.
 import Sidebar from "../components/Sidebar.jsx";
 import ListingDetailsDrawer from "./ListingDetailsDrawer.jsx";
 import {useNavigate} from "react-router-dom";
+import axios from "axios";
 
 // 👑 استيراد مكون السلايدر الجانبي لتفاصيل الخدمة
 
@@ -80,20 +81,46 @@ export default function ApprovalQueuePage() {
     const handlePageChange   = (page) => dispatch(setPage(page));
 
     // 👑 فتح السلايدر الجانبي وتمرير تفاصيل الخدمة المختارة عند الضغط على Details
-    const handleViewDetails  = (item) => {
-        const fullItemData = item.raw || item;
-        setSelectedListing(fullItemData);
+    // 👑 تعديل دالة عرض التفاصيل لتتوافق مع الـ Listing والـ Job Offer
+    const handleViewDetails = async (item) => {
+        const rawData = item.raw || item;
+        const isJob = rawData.type === 'job' || rawData.job_title !== undefined;
+
+        if (isJob) {
+            try {
+                // استدعاء تفاصيل الوظيفة من الرابط الذي أرسلتيه
+                const token = localStorage.getItem("token");
+                const response = await axios.get(`http://127.0.0.1:8000/api/job-offers/${rawData.id}`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                setSelectedListing({ ...response.data.data, type: 'job' });
+            } catch (error) {
+                console.error("Failed to fetch job details:", error);
+                setSelectedListing({ ...rawData, type: 'job' });
+            }
+        } else {
+            setSelectedListing(rawData);
+        }
         setDrawerOpen(true);
     };
-    const handleApprove      = (id) => dispatch(approveRequest(id));
 
-    const handleRejectClick   = (id) => {
+    // 👑 تعديل القبول ليدعم الوظائف والـ Listings
+    const handleApprove = (id) => {
         const item = items.find((i) => i.id === id);
-        setRejectTarget({ id, title: item?.title });
+        const isJob = item?.type === 'job' || item?.raw?.job_title !== undefined;
+
+        dispatch(approveRequest({ id, type: isJob ? 'job' : 'listing' }));
+    };
+
+    // 👑 تعديل الرفض ليدعم الوظائف والـ Listings
+    const handleRejectClick = (id) => {
+        const item = items.find((i) => i.id === id);
+        const isJob = item?.type === 'job' || item?.raw?.job_title !== undefined;
+        setRejectTarget({ id, title: item?.title, type: isJob ? 'job' : 'listing' });
     };
 
     const handleRejectConfirm = (reason) => {
-        dispatch(rejectRequest({ id: rejectTarget.id, reason }));
+        dispatch(rejectRequest({ id: rejectTarget.id, reason, type: rejectTarget.type }));
         setRejectTarget(null);
     };
 

@@ -1,15 +1,33 @@
+import React from 'react';
+import { Chip } from '@mui/material';
+
 const STATUS_STYLES = {
-    active: "bg-green-500/10 text-green-500 border-green-500/20",
-    "under review": "bg-amber-500/10 text-amber-500 border-amber-500/20",
-    rejected: "bg-red-500/10 text-red-500 border-red-500/20",
-    withdrawn: "bg-gray-500/10 text-gray-400 border-gray-500/20",
+    active: { bg: 'rgba(34, 197, 94, 0.1)', color: '#22c55e', border: 'rgba(34, 197, 94, 0.2)' },
+    "under review": { bg: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b', border: 'rgba(245, 158, 11, 0.2)' },
+    rejected: { bg: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: 'rgba(239, 68, 68, 0.2)' },
+    withdrawn: { bg: 'rgba(107, 114, 128, 0.1)', color: '#9ca3af', border: 'rgba(107, 114, 128, 0.2)' },
 };
 
 export default function OfferStatusBadge({ status }) {
     const s = status.toLowerCase();
+    const style = STATUS_STYLES[s] || STATUS_STYLES.withdrawn;
+
     return (
-        <span className={`px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider border rounded-full ${STATUS_STYLES[s] || STATUS_STYLES.withdrawn}`}>
-            {status}
-        </span>
+        <Chip
+            label={status}
+            size="small"
+            sx={{
+                borderRadius: '999px',
+                textTransform: 'uppercase',
+                fontSize: '0.62rem',
+                fontWeight: 700,
+                letterSpacing: 0.8,
+                height: 22,
+                px: 0.5,
+                bgcolor: style.bg,
+                color: style.color,
+                border: `1px solid ${style.border}`
+            }}
+        />
     );
 }

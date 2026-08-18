@@ -1,9 +1,7 @@
 import React, { useState, useContext, useEffect } from "react";
 import { ColorModeContext } from "../../../main.jsx";
 import { useDispatch, useSelector } from "react-redux";
-
-// استيراد الدوال من الـ Slice الجديد
-
+import { Box, Typography } from "@mui/material";
 
 import Sidebar from "../components/layout/Sidebar";
 import Header from "../components/layout/Header";
@@ -11,7 +9,7 @@ import StatCard from "../components/orders/StatCard";
 import OrderTabs from "../components/orders/OrderTabs";
 import OrderCard from "../components/orders/OrderCard";
 import PageBreadcrumb from "../components/PageBreadcrumb.jsx";
-import {fetchProviderBookings, selectAllOrders, selectOrdersStatus} from "../components/orders/OrdersSlice.js";
+import { fetchProviderBookings, selectAllOrders, selectOrdersStatus } from "../components/orders/OrdersSlice.js";
 
 const TAB_FILTERS = {
     active: (order) => order.status === "pending" || order.status === "confirmed" || order.status === "accepted",
@@ -50,24 +48,50 @@ export default function OrderManagementPage() {
     );
 
     return (
-        <div dir="ltr" className="flex min-h-screen bg-bg-default text-text-primary transition-colors duration-300">
+        <Box
+            dir="ltr"
+            sx={{
+                display: 'flex',
+                minHeight: '100vh',
+                bgcolor: (theme) => theme.palette.background.default,
+                color: (theme) => theme.palette.text.primary,
+                transition: 'background-color 0.3s, color 0.3s'
+            }}
+        >
             <Sidebar />
 
-            <div className="flex-1">
+            <Box sx={{ flex: 1 }}>
                 <Header />
 
-                <main className="mx-auto max-w-6xl space-y-6 p-6">
+                <Box
+                    component="main"
+                    sx={{
+                        mx: 'auto',
+                        maxWidth: '1152px', // ~ max-w-6xl
+                        p: 3,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 3
+                    }}
+                >
                     <PageBreadcrumb
                         title="Order Management"
                         subtitle="Oversee your royal event requests, manage bookings, and coordinate with clients."
                     />
 
-                    <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+                    {/* بطاقات الإحصائيات */}
+                    <Box
+                        sx={{
+                            display: 'grid',
+                            gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(4, 1fr)' },
+                            gap: 2
+                        }}
+                    >
                         <StatCard label="Total earnings" value="SAR 0" />
                         <StatCard label="Pending tasks" value={tabCounts.active || 0} />
                         <StatCard label="Client rating" value="0.0 ★" />
                         <StatCard label="Success rate" value="0%" />
-                    </div>
+                    </Box>
 
                     <OrderTabs
                         activeTab={activeTab}
@@ -76,23 +100,45 @@ export default function OrderManagementPage() {
                     />
 
                     {/* قائمة الطلبات مع حالة التحميل */}
-                    <div className="grid grid-cols-1 gap-4">
+                    <Box sx={{ display: 'grid', gridTemplateColumns: '1fr', gap: 2 }}>
                         {loadingStatus === "loading" ? (
-                            <div className="col-span-full rounded-xl border border-border bg-bg-paper p-10 text-center text-sm text-text-secondary">
-                                Loading your bookings...
-                            </div>
+                            <Box
+                                sx={{
+                                    gridColumn: '1 / -1',
+                                    borderRadius: '12px',
+                                    border: (theme) => `1px solid ${theme.palette.divider}`,
+                                    bgcolor: (theme) => theme.palette.background.paper,
+                                    p: 5,
+                                    textAlign: 'center'
+                                }}
+                            >
+                                <Typography sx={{ fontSize: '0.85rem', color: (theme) => theme.palette.text.secondary }}>
+                                    Loading your bookings...
+                                </Typography>
+                            </Box>
                         ) : filteredOrders.length === 0 ? (
-                            <div className="col-span-full rounded-xl border border-border bg-bg-paper p-10 text-center text-sm text-text-secondary">
-                                No requests in this category yet.
-                            </div>
+                            <Box
+                                sx={{
+                                    gridColumn: '1 / -1',
+                                    borderRadius: '12px',
+                                    border: (theme) => `1px solid ${theme.palette.divider}`,
+                                    bgcolor: (theme) => theme.palette.background.paper,
+                                    p: 5,
+                                    textAlign: 'center'
+                                }}
+                            >
+                                <Typography sx={{ fontSize: '0.85rem', color: (theme) => theme.palette.text.secondary }}>
+                                    No requests in this category yet.
+                                </Typography>
+                            </Box>
                         ) : (
                             filteredOrders.map((order) => (
                                 <OrderCard key={order.id} order={order} />
                             ))
                         )}
-                    </div>
-                </main>
-            </div>
-        </div>
+                    </Box>
+                </Box>
+            </Box>
+        </Box>
     );
 }

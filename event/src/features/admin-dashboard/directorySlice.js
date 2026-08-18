@@ -13,7 +13,7 @@ export const fetchAdminUsers = createAsyncThunk('directory/fetchAdminUsers', asy
     }
 });
 
-// 🚀 2. جلب بروفايل مستخدم واحد بالـ ID (جديد)
+// 2. جلب بروفايل مستخدم واحد بالـ ID
 export const fetchUserProfileById = createAsyncThunk('directory/fetchUserProfileById', async (id, thunkAPI) => {
     try {
         return await adminService.getOrganizerById(id);
@@ -44,10 +44,9 @@ export const fetchCompanyById = createAsyncThunk('directory/fetchCompanyById', a
 });
 
 // 6. جلب فريلانسر محدد بالـ ID
-// (حالياً يستخدم نفس دالة الـ Provider، يمكنك تعديلها لاحقاً إذا خصص الباك إند رابطاً للفريلانسرز)
 export const fetchFreelancerById = createAsyncThunk('directory/fetchFreelancerById', async (id, thunkAPI) => {
     try {
-        return await adminService.getProviderById(id); // عدلتها لتعمل بشكل صحيح
+        return await adminService.getProviderById(id);
     } catch (error) {
         return thunkAPI.rejectWithValue(error.response?.data || error.message);
     }
@@ -64,9 +63,20 @@ export const updateProviderStatus = createAsyncThunk('directory/updateStatus', a
 // 8. تحديث حالة الفريلانسر
 export const updateFreelancerStatus = createAsyncThunk('directory/updateFreelancerStatus', async ({ id, status, reason }) => {
     const response = status === 'approved'
-        ? await adminService.approveProvider(id) // عادة نفس الرابط في الباك إند
+        ? await adminService.approveProvider(id)
         : await adminService.rejectProvider(id, reason);
     return response.data?.data || response.data;
+});
+
+// 🚀 9. جلب QR Code الخاص بمزود الخدمة (للأدمن)
+export const fetchAdminFreelancerQr = createAsyncThunk('directory/fetchAdminFreelancerQr', async (id, thunkAPI) => {
+    try {
+        const response = await api.get(`/admin/providers/${id}/qr-code`);
+        return response.data?.qr_url || response.data?.data?.qr_url || null;
+    } catch (error) {
+        // نمرر الخطأ كالمعتاد لكن سنتجاهله في الـ extraReducers
+        return thunkAPI.rejectWithValue(error.response?.data || error.message);
+    }
 });
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -91,12 +101,15 @@ const directorySlice = createSlice({
         users: [],
         usersLoading: false,
 
-        // 🚀 متغيرات بروفايل المستخدم
         selectedUser: null,
         userProfileLoading: false,
 
         selectedCompany: null,
         selectedFreelancer: null,
+
+        // متغيرات الـ QR الخاصة بالأدمن
+        adminQrUrl: null,
+        qrLoading: false,
 
         loading: false,
         companyLoading: false,
@@ -105,9 +118,11 @@ const directorySlice = createSlice({
         error: null,
     },
     reducers: {
-        // لتنظيف بيانات المستخدم عند الخروج من صفحة البروفايل
         clearSelectedUser: (state) => {
             state.selectedUser = null;
+        },
+        clearAdminQr: (state) => {
+            state.adminQrUrl = null;
         }
     },
     extraReducers: (builder) => {
@@ -126,7 +141,7 @@ const directorySlice = createSlice({
                 state.error = action.payload;
             })
 
-            // 🚀 ── User Profile (جديد) ──
+            // ── User Profile ──
             .addCase(fetchUserProfileById.pending, (state) => {
                 state.userProfileLoading = true;
                 state.error = null;
@@ -180,10 +195,27 @@ const directorySlice = createSlice({
             })
             .addCase(fetchFreelancerById.rejected, (state, action) => {
                 state.freelancerLoading = false;
-                state.error = action.payload;
+                state.error = action.payload; // هنا نعرض الخطأ لأن بيانات الفريلانسر أساسية
+            })
+
+            // 🚀 ── Admin QR Code ──
+            .addCase(fetchAdminFreelancerQr.pending, (state) => {
+                state.qrLoading = true;
+                state.adminQrUrl = null;
+                // ⚠️ لا نضع state.error = null هنا كي لا نمسح أخطاء سابقة بالخطأ
+            })
+            .addCase(fetchAdminFreelancerQr.fulfilled, (state, action) => {
+                state.qrLoading = false;
+                state.adminQrUrl = action.payload;
+            })
+            .addCase(fetchAdminFreelancerQr.rejected, (state) => {
+                state.qrLoading = false;
+                state.adminQrUrl = null;
+                // 👑 السر هنا: لا نكتب state.error = action.payload
+                // نتجاهل الخطأ بصمت لتبقى الصفحة تعمل ويظل مربع الـ QR فارغاً
             });
     },
 });
 
-export const { clearSelectedUser } = directorySlice.actions;
+export const { clearSelectedUser, clearAdminQr } = directorySlice.actions;
 export default directorySlice.reducer;

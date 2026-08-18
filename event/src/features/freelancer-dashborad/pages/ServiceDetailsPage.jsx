@@ -25,6 +25,25 @@ const formatDate = (isoString, locale = "en-GB") => {
     }).format(date);
 };
 
+// 👑 دالة إصلاح مسار الصورة لتظهر بشكل كامل وسليم
+const fixImageUrl = (img) => {
+    if (!img) return null;
+    if (typeof img === 'string' && img.startsWith('http')) return img;
+    const imagePath = typeof img === 'string' ? img : (img.url || img.path || '');
+    if (!imagePath) return null;
+    if (imagePath.startsWith('http')) return imagePath;
+
+    const BACKEND_URL = 'http://127.0.0.1:8000';
+    let cleanPath = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
+    if (cleanPath.includes('/uploads/') && !cleanPath.includes('/storage/')) {
+        cleanPath = cleanPath.replace('/uploads/', '/storage/uploads/');
+    }
+    if (!cleanPath.startsWith('/storage/')) {
+        cleanPath = `/storage${cleanPath}`;
+    }
+    return `${BACKEND_URL}${cleanPath}`;
+};
+
 const buildAvailableDates = (variants = [], locale = "en-GB") =>
     variants.flatMap((variant) =>
         (variant.availabilities || []).flatMap((availability) =>
@@ -104,11 +123,12 @@ export default function ServiceDetailsPage() {
         id: serviceData.id,
         title: pickLocalized(serviceData.title, "Untitled"),
         description: pickLocalized(serviceData.description, "No description."),
+        // 👑 تمرير الصور على دالة الإصلاح fixImageUrl لتعمل الروابط بدقة
         images:
             serviceData.images?.length > 0
-                ? serviceData.images.map((img) => img.url || img.path)
+                ? serviceData.images.map((img) => fixImageUrl(img))
                 : primaryVariant?.images?.length > 0
-                    ? primaryVariant.images.map((img) => img.url || img.path)
+                    ? primaryVariant.images.map((img) => fixImageUrl(img))
                     : ["https://placehold.co/1200x800/eeeeee/999999?text=No+Image"],
         category: serviceData.category?.name || "Uncategorized",
         location: serviceData.district?.name || "Unknown",
@@ -159,7 +179,7 @@ export default function ServiceDetailsPage() {
                         onBack={() => navigate(-1)}
                     />
 
-                    {/* أزرار الإدارة (تعديل وحذف) بشكل مرتب وواضح تحت الـ TopBar */}
+                    {/* أزرار الإدارة (تعديل وحذف) */}
                     <div className="flex items-center gap-3">
                         <button
                             onClick={() => navigate(`/edit-service/${serviceId}`)}
@@ -181,7 +201,7 @@ export default function ServiceDetailsPage() {
                         description={serviceData.description}
                         category={serviceData.category?.name}
                         location={serviceData.district?.name}
-                        images={serviceData.images || []}
+                        images={mappedService.images}
                     />
 
                     <ServiceInfoGrid

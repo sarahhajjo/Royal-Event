@@ -125,10 +125,10 @@ const CoreDetails = ({ data = {}, onChange }) => {
                             <MenuItem value="" disabled>
                                 {isLoading ? "Loading Categories..." : "Select Category"}
                             </MenuItem>
-                            {categories.map((c) => (
-                                <MenuItem key={c.id} value={c.id} sx={{ fontFamily: "'Raleway', sans-serif", fontSize: "0.82rem" }}>
-                                    {/* 👑 نفس الشي هون */}
-                                    {c.name_en}
+                            {categories.map((cat) => (
+                                <MenuItem key={cat.id} value={cat.id}>
+                                    {/* 👈 تعديل هنا ليأخذ الاسم حسب اللغة، مثلاً الإنجليزية أو العربية */}
+                                    {cat.name?.en || cat.name?.ar || cat.name}
                                 </MenuItem>
                             ))}
                         </Select>
@@ -147,12 +147,11 @@ const CoreDetails = ({ data = {}, onChange }) => {
                                 {isLoading ? "Loading Districts..." : "Select District"}
                             </MenuItem>
 
-                                {districts.map((d) => (
-                                        <MenuItem key={d.id} value={d.id} sx={{ fontFamily: "'Raleway', sans-serif", fontSize: "0.82rem" }}>
-                                            {/* 👑 التعديل هون: استخدمنا name_en مباشرة */}
-                                            {d.name_en}
-                                        </MenuItem>
-                                    ))}
+                            {districts.map((district) => (
+                                <MenuItem key={district.id} value={district.id}>
+                                    {district.name} {/* 👈 تأكدي أنه يقرأ district.name */}
+                                </MenuItem>
+                            ))}
 
                         </Select>
                     </FormControl>

@@ -1,11 +1,12 @@
 import React from 'react';
+import { Box, Typography, Button } from '@mui/material';
 import { acceptBookingAction, rejectBookingAction } from "./OrdersSlice.js";
 import { useDispatch } from "react-redux";
-import { useNavigate } from "react-router-dom"; // 🔥 استيراد الـ navigate
+import { useNavigate } from "react-router-dom";
 
 export default function OrderCard({ order }) {
     const dispatch = useDispatch();
-    const navigate = useNavigate(); // 🔥 تفعيل الـ navigate
+    const navigate = useNavigate();
 
     const handleAccept = (e) => {
         e.stopPropagation(); // منع انتقال الصفحة عند الضغط على الأزرار
@@ -23,71 +24,164 @@ export default function OrderCard({ order }) {
     };
 
     return (
-        <div
-            onClick={handleCardClick} // 🔥 الضغط على الكرت ينقلك للتفاصيل
-            className="flex flex-col sm:flex-row bg-bg-paper rounded-xl border border-border overflow-hidden shadow-sm transition-transform hover:-translate-y-1 cursor-pointer">
-
-            {/* 🖼️ قسم الصورة */}
-            <div className="relative w-full sm:w-1/3 h-48 sm:h-auto shrink-0">
-                <img
+        <Box
+            onClick={handleCardClick}
+            sx={{
+                display: 'flex',
+                flexDirection: { xs: 'column', sm: 'row' },
+                bgcolor: (theme) => theme.palette.background.paper,
+                borderRadius: '12px',
+                border: (theme) => `1px solid ${theme.palette.divider}`,
+                overflow: 'hidden',
+                boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                cursor: 'pointer',
+                transition: 'transform 0.2s',
+                '&:hover': { transform: 'translateY(-4px)' }
+            }}
+        >
+            {/* قسم الصورة */}
+            <Box sx={{ position: 'relative', width: { xs: '100%', sm: '33.33%' }, height: { xs: 192, sm: 'auto' }, flexShrink: 0 }}>
+                <Box
+                    component="img"
                     src={order.image}
                     alt={order.title}
-                    className="h-full w-full object-cover"
+                    sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
                 />
-                <div className="absolute right-3 top-3 rounded-full bg-black/60 px-3 py-1 text-xs font-medium text-white backdrop-blur-sm">
+                <Box
+                    sx={{
+                        position: 'absolute',
+                        top: 12,
+                        right: 12,
+                        borderRadius: '999px',
+                        bgcolor: 'rgba(0,0,0,0.6)',
+                        px: 1.5,
+                        py: 0.5,
+                        fontSize: '0.72rem',
+                        fontWeight: 500,
+                        color: '#fff',
+                        backdropFilter: 'blur(4px)'
+                    }}
+                >
                     {order.status}
-                </div>
-            </div>
+                </Box>
+            </Box>
 
-            {/* 📝 قسم التفاصيل */}
-            <div className="flex flex-1 flex-col justify-between p-5">
-                <div>
-                    <h3 className="text-xl font-bold text-text-primary">{order.title}</h3>
+            {/* قسم التفاصيل */}
+            <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', p: 2.5 }}>
+                <Box>
+                    <Typography sx={{ fontSize: '1.25rem', fontWeight: 700, color: (theme) => theme.palette.text.primary }}>
+                        {order.title}
+                    </Typography>
 
                     {/* شبكة التفاصيل */}
-                    <div className="mt-4 grid grid-cols-2 gap-4 text-sm sm:grid-cols-4">
-                        <div>
-                            <p className="text-text-secondary">Client</p>
-                            <p className="font-medium text-text-primary mt-0.5">{order.client}</p>
-                        </div>
-                        <div>
-                            <p className="text-text-secondary">Event date</p>
-                            <p className="font-medium text-text-primary mt-0.5">{order.eventDate}</p>
-                        </div>
-                        <div>
-                            <p className="text-text-secondary">Time</p>
-                            <p className="font-medium text-text-primary mt-0.5" dir="ltr">
+                    <Box
+                        sx={{
+                            mt: 2,
+                            display: 'grid',
+                            gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(4, 1fr)' },
+                            gap: 2,
+                            fontSize: '0.85rem'
+                        }}
+                    >
+                        <Box>
+                            <Typography sx={{ fontSize: '0.85rem', color: (theme) => theme.palette.text.secondary }}>Client</Typography>
+                            <Typography sx={{ fontSize: '0.85rem', fontWeight: 500, color: (theme) => theme.palette.text.primary, mt: 0.3 }}>
+                                {order.client}
+                            </Typography>
+                        </Box>
+                        <Box>
+                            <Typography sx={{ fontSize: '0.85rem', color: (theme) => theme.palette.text.secondary }}>Event date</Typography>
+                            <Typography sx={{ fontSize: '0.85rem', fontWeight: 500, color: (theme) => theme.palette.text.primary, mt: 0.3 }}>
+                                {order.eventDate}
+                            </Typography>
+                        </Box>
+                        <Box>
+                            <Typography sx={{ fontSize: '0.85rem', color: (theme) => theme.palette.text.secondary }}>Time</Typography>
+                            <Typography dir="ltr" sx={{ fontSize: '0.85rem', fontWeight: 500, color: (theme) => theme.palette.text.primary, mt: 0.3 }}>
                                 {order.time}
-                            </p>
-                        </div>
-                        <div>
-                            <p className="text-text-secondary">Price</p>
-                            <p className="font-medium text-primary mt-0.5">{order.price}</p>
-                        </div>
-                    </div>
-                </div>
+                            </Typography>
+                        </Box>
+                        <Box>
+                            <Typography sx={{ fontSize: '0.85rem', color: (theme) => theme.palette.text.secondary }}>Price</Typography>
+                            <Typography sx={{ fontSize: '0.85rem', fontWeight: 500, color: (theme) => theme.palette.primary.main, mt: 0.3 }}>
+                                {order.price}
+                            </Typography>
+                        </Box>
+                    </Box>
+                </Box>
 
-                {/* 🔘 قسم الأزرار في الأسفل */}
-                <div className="mt-6 flex items-center gap-3 border-t border-border pt-4">
+                {/* قسم الأزرار بالأسفل */}
+                <Box
+                    sx={{
+                        mt: 3,
+                        pt: 2,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1.5,
+                        borderTop: (theme) => `1px solid ${theme.palette.divider}`
+                    }}
+                >
                     {order.status === 'pending' ? (
                         <>
-                            <button
+                            <Button
                                 onClick={handleAccept}
-                                className="flex-1 rounded-lg bg-primary py-2.5 text-sm font-semibold text-black transition hover:opacity-90">
+                                fullWidth
+                                variant="contained"
+                                sx={{
+                                    borderRadius: '10px',
+                                    textTransform: 'none',
+                                    fontSize: '0.85rem',
+                                    fontWeight: 600,
+                                    py: 1.1,
+                                    bgcolor: (theme) => theme.palette.primary.main,
+                                    color: '#000',
+                                    '&:hover': { bgcolor: (theme) => theme.palette.primary.main, opacity: 0.9 }
+                                }}
+                            >
                                 Accept request
-                            </button>
-                            <button
+                            </Button>
+                            <Button
                                 onClick={handleReject}
-                                className="px-6 py-2 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm font-semibold hover:bg-red-500/20 transition shadow-sm">                                Reject request
-                            </button>
+                                variant="outlined"
+                                sx={{
+                                    borderRadius: '12px',
+                                    textTransform: 'none',
+                                    fontSize: '0.85rem',
+                                    fontWeight: 600,
+                                    px: 3,
+                                    py: 1,
+                                    bgcolor: 'rgba(239, 68, 68, 0.1)',
+                                    borderColor: 'rgba(239, 68, 68, 0.3)',
+                                    color: '#f87171',
+                                    boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                                    whiteSpace: 'nowrap',
+                                    '&:hover': {
+                                        bgcolor: 'rgba(239, 68, 68, 0.2)',
+                                        borderColor: 'rgba(239, 68, 68, 0.3)'
+                                    }
+                                }}
+                            >
+                                Reject request
+                            </Button>
                         </>
                     ) : (
-                        <div className="flex-1 text-center py-2.5 text-sm font-medium text-text-secondary bg-bg-default rounded-lg">
+                        <Box
+                            sx={{
+                                flex: 1,
+                                textAlign: 'center',
+                                py: 1.1,
+                                fontSize: '0.85rem',
+                                fontWeight: 500,
+                                color: (theme) => theme.palette.text.secondary,
+                                bgcolor: (theme) => theme.palette.background.default,
+                                borderRadius: '10px'
+                            }}
+                        >
                             This order is {order.status}
-                        </div>
+                        </Box>
                     )}
-                </div>
-            </div>
-        </div>
+                </Box>
+            </Box>
+        </Box>
     );
 }

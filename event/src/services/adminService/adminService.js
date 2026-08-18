@@ -81,11 +81,25 @@ export const adminService = {
     },
     getListings: async (page = 1) => {
         // تمرير رقم الصفحة من أجل الـ Pagination (حسب بيانات الـ meta اللي عندك)
-        const response = await apiClient.get('/listings', { params: { page } });
-        // نرجع الكائن كاملاً لنستفيد من response.data.data للمصفوفة، و response.data.meta للتصفح
+        const response = await apiClient.get('/admin/pending-listings', { params: { page } });        // نرجع الكائن كاملاً لنستفيد من response.data.data للمصفوفة، و response.data.meta للتصفح
         return response.data;
     },
+// أضيفي هذا التابع داخل الـ adminService
+    getPendingJobOffers: async (page = 1) => {
+        const response = await apiClient.get('/admin/job-offers/pending', { params: { page } });
+        return response.data;
+    },
+    // ─── Job Offers (الـ الوظائف) ───────────────────────────────────
+    getJobOfferById: async (id) => {
+        const response = await apiClient.get(`/job-offers/${id}`);
+        return response.data.data || response.data;
+    },
 
+    approveJobOffer: (id) =>
+        apiClient.put(`/admin/job-offers/${id}/approve`),
+
+    rejectJobOffer: (id, reason) =>
+        apiClient.put(`/admin/job-offers/${id}/reject`, { rejection_reason: reason }),
     approveBooking: (id) =>
         apiClient.put(`/admin/bookings/${id}/approve`),
 

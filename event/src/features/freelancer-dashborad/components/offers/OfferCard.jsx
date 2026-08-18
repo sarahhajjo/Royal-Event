@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from "react";
-// 1. استيراد useNavigate
 import { useNavigate } from "react-router-dom";
+import { Box, Typography, Button } from "@mui/material";
 import OfferStatusBadge from "./OfferStatusBadge";
 import freelancerCatalogService from "../../../../services/freelancerService/freelancerCatalogService.js";
 
 export default function OfferCard({ offer }) {
-    // 2. تعريف navigate
     const navigate = useNavigate();
     const [images, setImages] = useState([]);
 
@@ -34,43 +33,81 @@ export default function OfferCard({ offer }) {
         : "https://placehold.co/600x400/eeeeee/999999?text=No+Image";
 
     return (
-        <div className="flex flex-row border border-border bg-bg-paper rounded-xl overflow-hidden hover:border-primary/30 transition-all duration-300 h-48">
-
-            <img
+        <Box
+            sx={{
+                display: 'flex',
+                flexDirection: 'row',
+                border: (theme) => `1px solid ${theme.palette.divider}`,
+                bgcolor: (theme) => theme.palette.background.paper,
+                borderRadius: '12px',
+                overflow: 'hidden',
+                height: 192,
+                transition: 'border-color 0.3s',
+                '&:hover': {
+                    borderColor: (theme) => `${theme.palette.primary.main}4D` // ~ primary/30
+                }
+            }}
+        >
+            <Box
+                component="img"
                 src={displayImage}
                 alt={offer.title?.en || offer.title?.ar || "Service Image"}
-                className="w-56 h-full object-cover"
+                sx={{ width: 224, height: '100%', objectFit: 'cover', flexShrink: 0 }}
             />
 
-            <div className="p-6 flex flex-col justify-between flex-1">
-                <div>
-                    <div className="flex justify-between items-start mb-3">
-                        <span className="text-[11px] uppercase font-bold text-primary tracking-widest">
+            <Box sx={{ p: 3, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', flex: 1 }}>
+                <Box>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1.5 }}>
+                        <Typography
+                            sx={{
+                                fontSize: '0.68rem',
+                                textTransform: 'uppercase',
+                                fontWeight: 700,
+                                color: (theme) => theme.palette.primary.main,
+                                letterSpacing: 1.2
+                            }}
+                        >
                             {offer.category?.name || "Uncategorized"}
-                        </span>
+                        </Typography>
                         <OfferStatusBadge status={offer.status} />
-                    </div>
-                    <h3 className="text-lg font-bold text-text-primary">
+                    </Box>
+                    <Typography sx={{ fontSize: '1.1rem', fontWeight: 700, color: (theme) => theme.palette.text.primary }}>
                         {offer.title?.en || offer.title?.ar || offer.title}
-                    </h3>
-                </div>
+                    </Typography>
+                </Box>
 
-                <div className="flex justify-between items-center">
-                    <span className="text-xl font-bold text-text-primary">
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Typography sx={{ fontSize: '1.25rem', fontWeight: 700, color: (theme) => theme.palette.text.primary }}>
                         {offer.price || (offer.variants && offer.variants[0]?.price) || 0}
-                        <span className="text-sm font-normal text-text-secondary ml-1">SAR</span>
-                    </span>
+                        <Box
+                            component="span"
+                            sx={{ fontSize: '0.85rem', fontWeight: 400, color: (theme) => theme.palette.text.secondary, ml: 0.5 }}
+                        >
+                            SAR
+                        </Box>
+                    </Typography>
 
-                    {/* 3. إضافة حدث onClick وتوجيه المستخدم للرابط المطلوب */}
-                    <button
+                    <Button
                         onClick={() => navigate(`/service_detail/${offer.id}`)}
-                        className="text-sm px-6 py-2 border border-border rounded text-text-secondary hover:bg-bg-default hover:text-primary transition-colors"
+                        variant="outlined"
+                        sx={{
+                            fontSize: '0.85rem',
+                            textTransform: 'none',
+                            px: 3,
+                            py: 1,
+                            borderColor: (theme) => theme.palette.divider,
+                            color: (theme) => theme.palette.text.secondary,
+                            '&:hover': {
+                                bgcolor: (theme) => theme.palette.background.default,
+                                color: (theme) => theme.palette.primary.main,
+                                borderColor: (theme) => theme.palette.divider
+                            }
+                        }}
                     >
                         View Details
-                    </button>
-                </div>
-            </div>
-
-        </div>
+                    </Button>
+                </Box>
+            </Box>
+        </Box>
     );
 }

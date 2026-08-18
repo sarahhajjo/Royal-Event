@@ -1,28 +1,28 @@
 import axios from "axios";
 
-const API_URL = "http://127.0.0.1:8000/api/listings";
+// الأساسي للـ API العام
+const BASE_URL = "http://127.0.0.1:8000/api/";
 
 const getMyListings = async () => {
-    // نجلب التوكن من الـ localStorage (أو أي مكان تخزنين فيه التوكن)
     const token = localStorage.getItem("token");
-    const response = await axios.get(API_URL, {
+    const response = await axios.get(BASE_URL + "listings/provider/my-services", {
         headers: { Authorization: `Bearer ${token}` }
     });
     return response.data.data || response.data;
 };
+
 const getListingImages = async (listingId) => {
     const token = localStorage.getItem("token");
-    // المسار المطلوب: http://127.0.0.1:8000/api/listings/{id}/images
-    const response = await axios.get(`${API_URL}/${listingId}/images`, {
+    // 👑 التصحيح هنا: استخدام الرابط الصحيح المتطابق مع لارافيل listings/{id}/images
+    const response = await axios.get(`${BASE_URL}listings/${listingId}/images`, {
         headers: { Authorization: `Bearer ${token}` }
     });
-    // نفترض أن الباك إند يعيد مصفوفة الصور مباشرة أو داخل مفتاح data
     return response.data.data || response.data;
 };
 
 const freelancerCatalogService = {
     getMyListings,
-    getListingImages // لا تنسي تصدير التابع الجديد هنا
+    getListingImages
 };
 
 export default freelancerCatalogService;

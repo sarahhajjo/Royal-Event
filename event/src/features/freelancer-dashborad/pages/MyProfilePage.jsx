@@ -1,31 +1,110 @@
-import React, { useEffect } from 'react';
-import { Box, Typography, Paper, Avatar, TextField, Stack, CircularProgress, Button } from '@mui/material';
+import React, { useEffect, useRef, useState } from 'react';
+import { Box, Typography, Paper, Avatar, TextField, Stack, CircularProgress, Button, IconButton } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import BusinessCenterOutlinedIcon  from '@mui/icons-material/BusinessCenterOutlined';
 import EmailOutlinedIcon           from '@mui/icons-material/EmailOutlined';
 import PhoneIphoneOutlinedIcon     from '@mui/icons-material/PhoneIphoneOutlined';
 import VerifiedUserOutlinedIcon    from '@mui/icons-material/VerifiedUserOutlined';
-import ArticleOutlinedIcon         from '@mui/icons-material/ArticleOutlined';
 import StarIcon                    from '@mui/icons-material/Star';
 import EditIcon                    from '@mui/icons-material/Edit';
+import SaveIcon                    from '@mui/icons-material/Save';
+import CancelIcon                  from '@mui/icons-material/Cancel';
+import QrCodeScannerOutlinedIcon   from '@mui/icons-material/QrCodeScannerOutlined';
+import CloudUploadOutlinedIcon     from '@mui/icons-material/CloudUploadOutlined';
 
 import { useSelector, useDispatch } from 'react-redux';
-import { fetchMyProfile } from './../freelancerProfileSlice';
+// تأكد من استيراد دالة التعديل الجديدة updateMyProfile
+import { fetchMyProfile, fetchFreelancerQrCode, uploadFreelancerQrCode, updateMyProfile } from './../freelancerProfileSlice';
 import dayjs from 'dayjs';
 
 import Sidebar from '../components/layout/Sidebar.jsx';
 import Header from '../components/layout/Header.jsx';
+
+const fixImageUrl = (img) => {
+    if (!img) return null;
+    if (img.startsWith('http')) return img;
+    const BACKEND_URL = 'http://127.0.0.1:8000';
+    let cleanPath = img.startsWith('/') ? img : `/${img}`;
+    if (cleanPath.includes('/uploads/') && !cleanPath.includes('/storage/')) {
+        cleanPath = cleanPath.replace('/uploads/', '/storage/uploads/');
+    }
+    if (!cleanPath.startsWith('/storage/')) {
+        cleanPath = `/storage${cleanPath}`;
+    }
+    return `${BACKEND_URL}${cleanPath}`;
+};
 
 export default function MyProfilePage() {
     const theme  = useTheme();
     const isDark = theme.palette.mode === 'dark';
     const dispatch = useDispatch();
 
-    const { profileData, status, error } = useSelector((state) => state.freelancerProfile);
+    const { profileData, qrCodeUrl, status, isUploadingQr, error } = useSelector((state) => state.freelancerProfile);
+    const qrFileInputRef = useRef(null);
+
+    // ─── States الخاصة بالتعديل ───
+    const [isEditing, setIsEditing] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
+    const [formData, setFormData] = useState({
+        brand_name: '',
+        experience_years: ''
+    });
 
     useEffect(() => {
         dispatch(fetchMyProfile());
+        dispatch(fetchFreelancerQrCode());
     }, [dispatch]);
+
+    // ─── دوال التعديل ───
+    const handleEditClick = () => {
+        // تعبئة البيانات الحالية في الـ formData عند فتح وضع التعديل
+        setFormData({
+            brand_name: profileData?.provider?.brand_name || '',
+            experience_years: profileData?.provider_details?.experience_years || ''
+        });
+        setIsEditing(true);
+    };
+
+    const handleCancelEdit = () => {
+        setIsEditing(false);
+    };
+
+    const handleChange = (e) => {
+        setFormData({
+            ...formData,
+            [e.target.name]: e.target.value
+        });
+    };
+
+    const handleSaveProfile = async () => {
+        setIsSaving(true);
+        try {
+            await dispatch(updateMyProfile(formData)).unwrap();
+            setIsEditing(false);
+            dispatch(fetchMyProfile()); // إعادة جلب البيانات لتحديث الواجهة
+        } catch (err) {
+            console.error("Failed to update profile:", err);
+            // يمكنك هنا إضافة Alert أو Snackbar لعرض الخطأ
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const handleQrUpload = async (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        try {
+            await dispatch(uploadFreelancerQrCode(file)).unwrap();
+            dispatch(fetchFreelancerQrCode());
+        } catch (err) {
+            console.error(err);
+        } finally {
+            if (qrFileInputRef.current) {
+                qrFileInputRef.current.value = '';
+            }
+        }
+    };
 
     if (status === 'loading') {
         return (
@@ -55,7 +134,6 @@ export default function MyProfilePage() {
         );
     }
 
-    // 👑 التعديل هنا: تفكيك البيانات لتتطابق تماماً مع الـ JSON المرسل
     const user = profileData.user || {};
     const provider = profileData.provider || {};
     const providerDetails = profileData.provider_details || {};
@@ -64,27 +142,25 @@ export default function MyProfilePage() {
     const initial = fullName !== 'N/A' ? fullName.charAt(0).toUpperCase() : '?';
     const email = user.email || 'N/A';
     const phone = user.phone || 'Not Provided';
-    const isVerified = provider.is_verified === true || provider.is_verified === 1;
     const createdAt = user.created_at ? dayjs(user.created_at).format('MMM DD, YYYY') : 'N/A';
 
-    const brandName = provider.brand_name || 'N/A';
+    const brandNameDisplay = provider.brand_name || 'N/A';
     const moderationStatus = provider.moderation_status || 'N/A';
     const providerType = provider.provider_type || 'Freelancer';
     const rating = provider.rating ?? 'N/A';
 
+    const currentQrUrl = qrCodeUrl || provider.qr_url || provider.qr_code_url || null;
+
     const nationalId = providerDetails.national_id || 'N/A';
-    const experienceYears = providerDetails.experience_years ? `${providerDetails.experience_years} Years` : 'N/A';
-    const addressDetails = providerDetails.address_details || 'Not Provided';
+    const experienceYearsDisplay = providerDetails.experience_years ? `${providerDetails.experience_years} Years` : 'N/A';
 
     const isPhoneVerified = !!user.is_phone_verified;
     const isEmailVerified = !!user.is_email_verified;
 
-    // 👑 التعديل هنا: قراءة name_en بدلاً من name.en
     const industryCategories = provider.categories && provider.categories.length > 0
         ? provider.categories.map(c => c.name_en || c.name_ar || 'Unknown').join(' • ')
         : 'N/A';
 
-    // الألوان والتنسيقات
     const gold        = theme.palette.primary.main;
     const border      = isDark ? 'rgba(197,160,89,0.2)' : 'rgba(179,140,69,0.3)';
     const cardBg      = theme.palette.background.paper;
@@ -119,12 +195,9 @@ export default function MyProfilePage() {
 
     return (
         <Box sx={{ bgcolor: 'background.default', minHeight: '100vh' }}>
-
             <Sidebar activeItem="My Profile" />
 
-            {/* 👑 التعديل هنا: إزاحة المحتوى ليترك مساحة للسايد بار (ml: 260px) */}
             <Box component="main" sx={{ ml: { xs: 0, md: '260px' }, display: 'flex', flexDirection: 'column' }}>
-
                 <Header title="My Profile" user={{ name: fullName, role: providerType, avatar: '' }} />
 
                 <Box sx={{ width: '100%', maxWidth: 1100, mx: 'auto', p: { xs: 2, md: 4 } }}>
@@ -138,13 +211,39 @@ export default function MyProfilePage() {
                                 Manage your credentials, personal details, and account status.
                             </Typography>
                         </Box>
-                        <Button
-                            variant="contained"
-                            startIcon={<EditIcon />}
-                            sx={{ backgroundColor: gold, color: isDark ? '#000' : '#fff', fontWeight: 'bold', '&:hover': { backgroundColor: isDark ? '#b38f40' : '#8c6b30' } }}
-                        >
-                            Edit Profile
-                        </Button>
+
+                        {/* ─── أزرار التعديل والحفظ ─── */}
+                        {!isEditing ? (
+                            <Button
+                                variant="contained"
+                                startIcon={<EditIcon />}
+                                onClick={handleEditClick}
+                                sx={{ backgroundColor: gold, color: isDark ? '#000' : '#fff', fontWeight: 'bold', '&:hover': { backgroundColor: isDark ? '#b38f40' : '#8c6b30' } }}
+                            >
+                                Edit Profile
+                            </Button>
+                        ) : (
+                            <Box sx={{ display: 'flex', gap: 2 }}>
+                                <Button
+                                    variant="outlined"
+                                    startIcon={<CancelIcon />}
+                                    onClick={handleCancelEdit}
+                                    disabled={isSaving}
+                                    sx={{ color: theme.palette.text.secondary, borderColor: border }}
+                                >
+                                    Cancel
+                                </Button>
+                                <Button
+                                    variant="contained"
+                                    startIcon={isSaving ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
+                                    onClick={handleSaveProfile}
+                                    disabled={isSaving}
+                                    sx={{ backgroundColor: gold, color: isDark ? '#000' : '#fff', fontWeight: 'bold', '&:hover': { backgroundColor: isDark ? '#b38f40' : '#8c6b30' } }}
+                                >
+                                    Save Changes
+                                </Button>
+                            </Box>
+                        )}
                     </Box>
 
                     <Box sx={{ display: 'flex', gap: 3, alignItems: 'flex-start', flexDirection: { xs: 'column', md: 'row' }, width: '100%' }}>
@@ -190,12 +289,73 @@ export default function MyProfilePage() {
                                         <Typography sx={{ fontSize: '0.85rem', color: theme.palette.text.primary, fontWeight: 500 }}>Identity Verification</Typography>
                                         <Box sx={{ border: `1px solid ${moderationStatus === 'approved' ? '#2ecc71' : '#e74c3c'}`, color: moderationStatus === 'approved' ? '#2ecc71' : '#e74c3c', px: 1.2, py: 0.25, borderRadius: 1, fontSize: '0.6rem', fontWeight: 700 }}>
                                             {moderationStatus === 'approved' ? 'APPROVED' : 'PENDING'}
-                                        </Box>                                    </Box>
+                                        </Box>
+                                    </Box>
                                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                         <Typography sx={{ fontSize: '0.85rem', color: theme.palette.text.primary, fontWeight: 500 }}>Joined Platform</Typography>
                                         <Typography sx={{ fontSize: '0.8rem', color: theme.palette.text.secondary }}>{createdAt}</Typography>
                                     </Box>
                                 </Paper>
+
+                                {/* قسم الـ Payment QR Code */}
+                                <Paper elevation={0} sx={card}>
+                                    <CardHeader icon={QrCodeScannerOutlinedIcon} title="Payment QR Code" />
+                                    <Typography sx={{ fontSize: '0.75rem', color: theme.palette.text.secondary, mb: 2 }}>
+                                        Upload your official payment QR Code to allow clients to pay seamlessly.
+                                    </Typography>
+
+                                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                                        <Box sx={{
+                                            width: 140,
+                                            height: 140,
+                                            border: `2px dashed ${border}`,
+                                            borderRadius: 2,
+                                            display: 'flex',
+                                            justifyContent: 'center',
+                                            alignItems: 'center',
+                                            backgroundColor: isDark ? 'rgba(0,0,0,0.2)' : '#ffffff',
+                                            overflow: 'hidden',
+                                            position: 'relative'
+                                        }}>
+                                            {isUploadingQr ? (
+                                                <CircularProgress size={30} sx={{ color: gold }} />
+                                            ) : currentQrUrl ? (
+                                                <img
+                                                    src={fixImageUrl(currentQrUrl)}
+                                                    alt="Payment QR Code"
+                                                    style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                                                />
+                                            ) : (
+                                                <QrCodeScannerOutlinedIcon sx={{ fontSize: 40, color: theme.palette.text.secondary, opacity: 0.5 }} />
+                                            )}
+                                        </Box>
+
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            hidden
+                                            ref={qrFileInputRef}
+                                            onChange={handleQrUpload}
+                                        />
+                                        <Button
+                                            variant="outlined"
+                                            startIcon={<CloudUploadOutlinedIcon />}
+                                            onClick={() => qrFileInputRef.current && qrFileInputRef.current.click()}
+                                            disabled={isUploadingQr}
+                                            sx={{
+                                                color: gold,
+                                                borderColor: border,
+                                                textTransform: 'none',
+                                                fontSize: '0.75rem',
+                                                fontWeight: 600,
+                                                '&:hover': { borderColor: gold, backgroundColor: isDark ? 'rgba(197,160,89,0.05)' : 'rgba(197,160,89,0.08)' }
+                                            }}
+                                        >
+                                            {currentQrUrl ? 'Update QR Code' : 'Upload QR Code'}
+                                        </Button>
+                                    </Box>
+                                </Paper>
+
                             </Stack>
                         </Box>
 
@@ -205,19 +365,38 @@ export default function MyProfilePage() {
                                 <Paper elevation={0} sx={card}>
                                     <CardHeader icon={BusinessCenterOutlinedIcon} title="Professional Credentials" />
 
+                                    {/* ─── الحقول القابلة للتعديل ─── */}
                                     <Box sx={{ mb: 2.5 }}>
                                         <FieldLabel>Brand / Stage Name</FieldLabel>
-                                        <TextField fullWidth size="small" value={brandName} disabled sx={inp} />
+                                        <TextField
+                                            fullWidth
+                                            size="small"
+                                            name="brand_name"
+                                            value={isEditing ? formData.brand_name : brandNameDisplay}
+                                            onChange={handleChange}
+                                            disabled={!isEditing}
+                                            sx={inp}
+                                        />
                                     </Box>
 
                                     <Box sx={{ display: 'flex', gap: 2.5, mb: 2.5, flexDirection: { xs: 'column', sm: 'row' } }}>
                                         <Box sx={{ flex: 1 }}>
                                             <FieldLabel>National ID</FieldLabel>
+                                            {/* عادة الرقم الوطني لا يُعدل، تركناه Disabled */}
                                             <TextField fullWidth size="small" value={nationalId} disabled sx={inp} />
                                         </Box>
                                         <Box sx={{ flex: 1 }}>
                                             <FieldLabel>Experience Years</FieldLabel>
-                                            <TextField fullWidth size="small" value={experienceYears} disabled sx={inp} />
+                                            <TextField
+                                                fullWidth
+                                                size="small"
+                                                name="experience_years"
+                                                type="number"
+                                                value={isEditing ? formData.experience_years : experienceYearsDisplay.replace(' Years', '')}
+                                                onChange={handleChange}
+                                                disabled={!isEditing}
+                                                sx={inp}
+                                            />
                                         </Box>
                                     </Box>
 
@@ -255,19 +434,6 @@ export default function MyProfilePage() {
                                             </Typography>
                                         </Box>
                                     </Box>
-                                </Paper>
-
-                                <Paper elevation={0} sx={card}>
-                                    <CardHeader icon={ArticleOutlinedIcon} title="Platform Presentation" />
-                                    <FieldLabel>Address Details</FieldLabel>
-                                    <TextField
-                                        fullWidth
-                                        multiline
-                                        rows={3}
-                                        value={addressDetails}
-                                        disabled
-                                        sx={{ ...inp, '& .MuiInputBase-input': { padding: '12px 14px' } }}
-                                    />
                                 </Paper>
 
                             </Stack>

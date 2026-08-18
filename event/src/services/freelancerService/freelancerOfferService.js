@@ -42,7 +42,10 @@ const getCategories = async () => {
     const response = await axios.get(API_URL + "categories", {
         headers: token ? { Authorization: `Bearer ${token}` } : {}
     });
-    return response.data.data || response.data;
+    // استخراج المصفوفة بشكل صحيح ومضمون
+    const res = response.data;
+    if (Array.isArray(res)) return res;
+    return res.data || res.categories || [];
 };
 
 const getDistricts = async () => {
@@ -50,7 +53,10 @@ const getDistricts = async () => {
     const response = await axios.get(API_URL + "districts", {
         headers: token ? { Authorization: `Bearer ${token}` } : {}
     });
-    return response.data.data || response.data;
+    // استخراج المصفوفة بشكل صحيح ومضمون
+    const res = response.data;
+    if (Array.isArray(res)) return res;
+    return res.data || res.districts || [];
 };
 const getListingById = async (listingId) => {
     const token = localStorage.getItem("token");
