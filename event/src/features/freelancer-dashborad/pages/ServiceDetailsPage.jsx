@@ -2,16 +2,16 @@ import React, { useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { useTranslation } from "react-i18next";
+import { Box, Typography, Button, CircularProgress, useTheme } from "@mui/material";
 import axios from "axios";
 import { fetchServiceDetails, clearServiceDetails } from "../components/service-details/ServiceDetailsSlice";
 import { pickLocalized } from "../../../i18n/localize.js";
 
 import Sidebar from "../components/layout/Sidebar";
 import Header from "../components/layout/Header";
-import Footer from "../components/layout/Footer";
+import PageBreadcrumb from "../components/PageBreadcrumb.jsx";
 import { ServiceDetailsTopBar, ServiceOverviewCard, ServiceInfoGrid, ServiceBottomSection } from "../components/service-details";
 
-// ── Helpers ──────────────────────────────────────────────
 const formatTime = (time) => (time ? time.slice(0, 5) : "");
 
 const formatDate = (isoString, locale = "en-GB") => {
@@ -25,7 +25,6 @@ const formatDate = (isoString, locale = "en-GB") => {
     }).format(date);
 };
 
-// 👑 دالة إصلاح مسار الصورة لتظهر بشكل كامل وسليم
 const fixImageUrl = (img) => {
     if (!img) return null;
     if (typeof img === 'string' && img.startsWith('http')) return img;
@@ -58,10 +57,12 @@ const buildAvailableDates = (variants = [], locale = "en-GB") =>
     );
 
 export default function ServiceDetailsPage() {
+    const theme = useTheme();
+    const isDark = theme.palette.mode === 'dark';
     const navigate = useNavigate();
     const { serviceId } = useParams();
     const dispatch = useDispatch();
-    const { t, i18n } = useTranslation();
+    const { i18n } = useTranslation();
     const locale = i18n.language?.startsWith("ar") ? "ar" : "en-GB";
 
     const handleDeleteService = async () => {
@@ -91,29 +92,39 @@ export default function ServiceDetailsPage() {
         };
     }, [dispatch, serviceId]);
 
+    // 👑 الستايل الزجاجي الموحد والمتكيف مع الثيم
+    const glassSx = {
+        background: isDark ? "rgba(15, 15, 20, 0.65)" : "rgba(250, 248, 245, 0.55)",
+        backdropFilter: "blur(16px)",
+        WebkitBackdropFilter: "blur(16px)",
+        border: "1px solid",
+        borderColor: isDark ? "rgba(255, 255, 255, 0.08)" : "rgba(0, 0, 0, 0.04)",
+        borderRadius: "16px",
+        boxShadow: isDark ? "0 8px 32px 0 rgba(0, 0, 0, 0.4)" : "0 8px 32px 0 rgba(130, 120, 110, 0.08)",
+        p: { xs: 3, md: 4, lg: 5 },
+    };
+
     if (isLoading) {
         return (
-            <div key="loading-screen-container" className="flex min-h-screen bg-bg-default items-center justify-center">
-                <div className="text-xl text-primary">
-                    <span>Loading service details...</span>
-                </div>
-            </div>
+            <Box dir="ltr" sx={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center', bgcolor: 'background.default', color: 'text.primary' }}>
+                <CircularProgress color="primary" />
+                <Typography sx={{ ml: 2, fontSize: '1rem', fontFamily: "'Raleway', sans-serif" }}>Loading service details...</Typography>
+            </Box>
         );
     }
 
     if (error || !serviceData) {
         return (
-            <div key="error-screen-container" className="flex min-h-screen bg-bg-default items-center justify-center flex-col gap-4">
-                <div className="text-xl text-red-500">
-                    <span>{error || "Service not found."}</span>
-                </div>
-                <button
+            <Box dir="ltr" sx={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 2, bgcolor: 'background.default', color: 'error.main' }}>
+                <Typography sx={{ fontSize: '1.1rem' }}>{error || "Service not found."}</Typography>
+                <Button
                     onClick={() => navigate(-1)}
-                    className="mt-4 px-6 py-2 border border-border rounded text-text-secondary hover:bg-bg-paper hover:text-primary transition-all"
+                    variant="outlined"
+                    sx={{ borderRadius: '10px', borderColor: theme.palette.divider, color: theme.palette.text.secondary }}
                 >
                     Go Back
-                </button>
-            </div>
+                </Button>
+            </Box>
         );
     }
 
@@ -123,7 +134,6 @@ export default function ServiceDetailsPage() {
         id: serviceData.id,
         title: pickLocalized(serviceData.title, "Untitled"),
         description: pickLocalized(serviceData.description, "No description."),
-        // 👑 تمرير الصور على دالة الإصلاح fixImageUrl لتعمل الروابط بدقة
         images:
             serviceData.images?.length > 0
                 ? serviceData.images.map((img) => fixImageUrl(img))
@@ -165,67 +175,105 @@ export default function ServiceDetailsPage() {
     };
 
     return (
-        <div key={`details-page-${serviceId}`} className="flex min-h-screen bg-bg-default text-text-primary">
+        <Box
+            dir="ltr"
+            sx={{
+                display: 'flex',
+                height: '100vh',
+                overflow: 'hidden',
+                backgroundImage: isDark
+                    ? 'linear-gradient(to bottom, rgba(15, 15, 20, 0.75), rgba(15, 15, 20, 0.95)), url("/images/image_58ec0a.jpg")'
+                    : 'linear-gradient(to bottom, rgba(240, 235, 225, 0.4), rgba(255, 255, 255, 0.85)), url("/images/image_58ec0a.jpg")',
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                backgroundAttachment: 'fixed',
+                backgroundRepeat: 'no-repeat',
+                color: theme.palette.text.primary,
+            }}
+        >
             <Sidebar />
 
-            <div className="flex flex-1 flex-col">
-                <Header />
+            <Box sx={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, overflow: "hidden" }}>
+                <Header title="Service Details" />
 
-                <main className="flex-1 space-y-6 p-6">
-                    <ServiceDetailsTopBar
-                        serviceId={mappedService.id}
-                        status={mappedService.status}
-                        statusLabel={mappedService.statusLabel}
-                        onBack={() => navigate(-1)}
-                    />
+                <Box
+                    component="main"
+                    sx={{
+                        flex: 1,
+                        overflowY: 'auto',
+                        px: { xs: 3, md: 4, lg: 5 },
+                        py: 3.5,
+                        display: 'flex',
+                        flexDirection: 'column',
+                    }}
+                >
+                    <Box sx={{ ...glassSx, maxWidth: '1152px', mx: 'auto', width: '100%', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                        <ServiceDetailsTopBar
+                            serviceId={mappedService.id}
+                            status={mappedService.status}
+                            statusLabel={mappedService.statusLabel}
+                            onBack={() => navigate(-1)}
+                        />
 
-                    {/* أزرار الإدارة (تعديل وحذف) */}
-                    <div className="flex items-center gap-3">
-                        <button
-                            onClick={() => navigate(`/edit-service/${serviceId}`)}
-                            className="px-6 py-2 rounded-xl bg-primary text-bg-default text-sm font-semibold hover:opacity-90 transition shadow-sm"
-                        >
-                            Edit Service
-                        </button>
+                        {/* أزرار الإدارة (تعديل وحذف) */}
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                            <Button
+                                onClick={() => navigate(`/edit-service/${serviceId}`)}
+                                variant="contained"
+                                sx={{ borderRadius: '10px', textTransform: 'none', px: 3, py: 1, fontWeight: 700, fontSize: '0.85rem' }}
+                            >
+                                Edit Service
+                            </Button>
 
-                        <button
-                            onClick={handleDeleteService}
-                            className="px-6 py-2 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm font-semibold hover:bg-red-500/20 transition shadow-sm"
-                        >
-                            Delete Service
-                        </button>
-                    </div>
+                            <Button
+                                onClick={handleDeleteService}
+                                variant="outlined"
+                                sx={{
+                                    borderRadius: '10px',
+                                    textTransform: 'none',
+                                    px: 3,
+                                    py: 1,
+                                    fontWeight: 600,
+                                    fontSize: '0.85rem',
+                                    bgcolor: 'rgba(239, 68, 68, 0.1)',
+                                    borderColor: 'rgba(239, 68, 68, 0.3)',
+                                    color: '#f87171',
+                                    '&:hover': { bgcolor: 'rgba(239, 68, 68, 0.2)', borderColor: 'rgba(239, 68, 68, 0.3)' }
+                                }}
+                            >
+                                Delete Service
+                            </Button>
+                        </Box>
 
-                    <ServiceOverviewCard
-                        title={serviceData.title}
-                        description={serviceData.description}
-                        category={serviceData.category?.name}
-                        location={serviceData.district?.name}
-                        images={mappedService.images}
-                    />
+                        <ServiceOverviewCard
+                            title={serviceData.title}
+                            description={serviceData.description}
+                            category={serviceData.category?.name}
+                            location={serviceData.district?.name}
+                            images={mappedService.images}
+                        />
 
-                    <ServiceInfoGrid
-                        contact={mappedService.contact}
-                        pricing={mappedService.pricing}
-                        status={mappedService.serviceStatus}
-                        policy={mappedService.cancellationPolicy}
-                    />
+                        <ServiceInfoGrid
+                            contact={mappedService.contact}
+                            pricing={mappedService.pricing}
+                            status={mappedService.serviceStatus}
+                            policy={mappedService.cancellationPolicy}
+                        />
 
-                    <ServiceBottomSection
-                        variants={mappedService.variants}
-                        dates={mappedService.dates}
-                        materialComposition={serviceData.material_composition}
-                        calendarProps={{
-                            monthLabel: "July 2026",
-                            onPrevMonth: () => {},
-                            onNextMonth: () => {},
-                            onViewAll: () => navigate(`/catalog/services/${serviceId}/schedule`),
-                        }}
-                    />
-                </main>
-
-                <Footer />
-            </div>
-        </div>
+                        <ServiceBottomSection
+                            variants={mappedService.variants}
+                            dates={mappedService.dates}
+                            materialComposition={serviceData.material_composition}
+                            calendarProps={{
+                                monthLabel: "July 2026",
+                                onPrevMonth: () => {},
+                                onNextMonth: () => {},
+                                onViewAll: () => navigate(`/catalog/services/${serviceId}/schedule`),
+                            }}
+                        />
+                    </Box>
+                </Box>
+            </Box>
+        </Box>
     );
 }

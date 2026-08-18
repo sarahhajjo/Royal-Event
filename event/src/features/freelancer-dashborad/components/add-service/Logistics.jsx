@@ -1,42 +1,44 @@
 import React, { useState } from "react";
 import {
     Paper, Box, Typography, TextField, Button, Switch,
-    FormControlLabel, Radio, RadioGroup, Chip
+    FormControlLabel, Radio, RadioGroup, Chip, useTheme
 } from "@mui/material";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 
 import { StaticDatePicker, LocalizationProvider, TimePicker } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import dayjs from "dayjs"; // 👑 تأكدي من إضافة هذا الاستيراد
-
-const fieldSx = {
-    "& .MuiOutlinedInput-root": {
-        fontFamily: "'Raleway', sans-serif",
-        fontSize: "0.85rem",
-        color: "text.primary",
-        bgcolor: "background.paper",
-        "& fieldset": { borderColor: "divider" },
-        "&:hover fieldset": { borderColor: "primary.main" },
-        "&.Mui-focused fieldset": { borderColor: "primary.main" },
-    },
-    "& .MuiInputLabel-root": {
-        color: "text.secondary",
-        "&.Mui-focused": { color: "primary.main" },
-    },
-    "& .MuiIconButton-root": { color: "primary.main" }
-};
-
-const labelSx = {
-    fontSize: "0.72rem",
-    color: "text.secondary",
-    fontFamily: "'Raleway', sans-serif",
-    letterSpacing: "0.08em",
-    textTransform: "uppercase",
-    mb: 1,
-};
+import dayjs from "dayjs";
 
 const Logistics = ({ data = {}, onChange }) => {
+    const theme = useTheme();
+
+    const fieldSx = {
+        "& .MuiOutlinedInput-root": {
+            fontFamily: "'Raleway', sans-serif",
+            fontSize: "0.85rem",
+            color: theme.palette.text.primary,
+            bgcolor: theme.palette.mode === 'dark' ? "rgba(255, 255, 255, 0.03)" : "rgba(255, 255, 255, 0.6)",
+            "& fieldset": { borderColor: theme.palette.divider },
+            "&:hover fieldset": { borderColor: "primary.main" },
+            "&.Mui-focused fieldset": { borderColor: "primary.main" },
+        },
+        "& .MuiInputLabel-root": {
+            color: theme.palette.text.secondary,
+            "&.Mui-focused": { color: theme.palette.primary.main },
+        },
+        "& .MuiIconButton-root": { color: theme.palette.primary.main }
+    };
+
+    const labelSx = {
+        fontSize: "0.72rem",
+        color: theme.palette.text.secondary,
+        fontFamily: "'Raleway', sans-serif",
+        letterSpacing: "0.08em",
+        textTransform: "uppercase",
+        mb: 1,
+    };
+
     const handle = (field) => (e) => onChange?.({ ...data, [field]: e.target.value });
     const selectionMode = data.dateSelectionMode || "Date Range";
 
@@ -121,7 +123,7 @@ const Logistics = ({ data = {}, onChange }) => {
                     cursor: 'pointer', borderRadius: '50%', margin: '2px auto',
                     fontFamily: "'Raleway', sans-serif", fontSize: "0.8rem",
                     backgroundColor: isSelected ? "primary.main" : isBetween ? "primary.light" : 'transparent',
-                    color: isSelected ? '#fff' : 'text.primary',
+                    color: isSelected ? '#fff' : theme.palette.text.primary,
                     fontWeight: isSelected ? 700 : 400,
                     transition: "all 0.2s",
                     '&:hover': { backgroundColor: "primary.main", color: '#fff' }
@@ -132,36 +134,46 @@ const Logistics = ({ data = {}, onChange }) => {
         );
     };
 
-    // 👑 التعديل هنا: تحديد التاريخ الافتراضي للتقويم لكي يعرض الشهر الصحيح عند الفتح
     const initialCalendarDate = selectionMode === "Date Range"
         ? (data.startDate || null)
         : (data.selectedDates && data.selectedDates.length > 0 ? dayjs(data.selectedDates[0]) : null);
 
     return (
-        <Paper elevation={0} sx={{ p: 3, mb: 3, bgcolor: "background.paper", border: "1px solid divider" }}>
+        <Paper
+            elevation={0}
+            sx={{
+                p: 4,
+                mb: 3,
+                background: theme.palette.mode === 'dark' ? "rgba(15, 15, 20, 0.65)" : "rgba(250, 248, 245, 0.6)",
+                backdropFilter: "blur(16px)",
+                WebkitBackdropFilter: "blur(16px)",
+                border: "1px solid",
+                borderColor: theme.palette.mode === 'dark' ? "rgba(255, 255, 255, 0.08)" : "rgba(0, 0, 0, 0.06)",
+                borderRadius: "16px",
+                boxShadow: theme.palette.mode === 'dark' ? "0 8px 32px 0 rgba(0, 0, 0, 0.4)" : "0 8px 32px 0 rgba(130, 120, 110, 0.08)",
+                color: theme.palette.text.primary
+            }}
+        >
             <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 3 }}>
                 <CalendarMonthIcon sx={{ color: "primary.main", fontSize: "1.2rem" }} />
-                <Typography sx={{ fontFamily: "'Cinzel', serif", fontSize: "0.95rem", color: "text.primary", fontWeight: 600 }}>
+                <Typography sx={{ fontFamily: "'Cinzel', serif", fontSize: "1.1rem", color: theme.palette.text.primary, fontWeight: 600 }}>
                     Date, Time & Availability
                 </Typography>
             </Box>
 
             <LocalizationProvider dateAdapter={AdapterDayjs}>
-
                 <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 3, flexWrap: "wrap", gap: 2 }}>
                     <Typography sx={labelSx}>Selection Mode</Typography>
                     <RadioGroup row value={selectionMode} onChange={(e) => onChange?.({...data, dateSelectionMode: e.target.value, startDate: null, endDate: null, selectedDates: []})}>
-                        <FormControlLabel value="Date Range" control={<Radio size="small" />} label={<Typography sx={{ fontSize: "0.8rem" }}>Date Range</Typography>} />
-                        <FormControlLabel value="Multiple Days" control={<Radio size="small" />} label={<Typography sx={{ fontSize: "0.8rem" }}>Multiple Days</Typography>} />
+                        <FormControlLabel value="Date Range" control={<Radio size="small" />} label={<Typography sx={{ fontSize: "0.8rem", color: theme.palette.text.primary }}>Date Range</Typography>} />
+                        <FormControlLabel value="Multiple Days" control={<Radio size="small" />} label={<Typography sx={{ fontSize: "0.8rem", color: theme.palette.text.primary }}>Multiple Days</Typography>} />
                     </RadioGroup>
                 </Box>
 
-                <Box sx={{ p: 1, border: "1px solid", borderColor: "divider", borderRadius: 2, mb: 3, maxWidth: 360, mx: "auto", bgcolor: "background.default" }}>
+                <Box sx={{ p: 1, border: "1px solid", borderColor: theme.palette.divider, borderRadius: 2, mb: 3, maxWidth: 360, mx: "auto", bgcolor: theme.palette.mode === 'dark' ? "rgba(255,255,255,0.02)" : "rgba(255,255,255,0.5)" }}>
                     <StaticDatePicker
                         displayStaticWrapperAs="desktop"
-                        // تمرير القيمة المحسوبة هنا
                         value={initialCalendarDate}
-                        // يمكننا أيضاً إخبار التقويم صراحة بأي شهر يجب أن يفتح إذا لم تكن هناك قيمة مبدئية
                         defaultCalendarMonth={initialCalendarDate || dayjs()}
                         disablePast
                         slots={{ day: renderCustomDay }}
@@ -169,16 +181,16 @@ const Logistics = ({ data = {}, onChange }) => {
                         sx={{
                             bgcolor: "transparent",
                             '.MuiPickersToolbar-root': { display: 'none' },
-                            '.MuiPickersCalendarHeader-label': { fontFamily: "'Cinzel', serif", color: 'text.primary' },
-                            '.MuiDayCalendar-weekDayLabel': { color: 'text.secondary' },
-                            '.MuiIconButton-root': { color: 'text.primary' }
+                            '.MuiPickersCalendarHeader-label': { fontFamily: "'Cinzel', serif", color: theme.palette.text.primary },
+                            '.MuiDayCalendar-weekDayLabel': { color: theme.palette.text.secondary },
+                            '.MuiIconButton-root': { color: theme.palette.text.primary }
                         }}
                     />
                 </Box>
 
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 3 }}>
                     <Switch size="small" checked={!!data.isAllDay} onChange={(e) => onChange?.({ ...data, isAllDay: e.target.checked })} />
-                    <Typography sx={{ fontSize: "0.85rem", color: "text.primary", fontWeight: 600 }}>All Day (No specific shifts)</Typography>
+                    <Typography sx={{ fontSize: "0.85rem", color: theme.palette.text.primary, fontWeight: 600 }}>All Day (No specific shifts)</Typography>
                 </Box>
 
                 {!data.isAllDay && (
@@ -193,33 +205,20 @@ const Logistics = ({ data = {}, onChange }) => {
                                 label="Start"
                                 value={shiftStart}
                                 onChange={(newValue) => setShiftStart(newValue)}
-                                slotProps={{
-                                    textField: {
-                                        size: "small",
-                                        sx: { ...fieldSx, minWidth: 140 }
-                                    }
-                                }}
+                                slotProps={{ textField: { size: "small", sx: { ...fieldSx, minWidth: 140 } } }}
                             />
-
-                            <Typography sx={{ color: "text.secondary", fontWeight: "bold" }}>-</Typography>
-
+                            <Typography sx={{ color: theme.palette.text.secondary, fontWeight: "bold" }}>-</Typography>
                             <TimePicker
                                 label="End"
                                 value={shiftEnd}
                                 onChange={(newValue) => setShiftEnd(newValue)}
-                                slotProps={{
-                                    textField: {
-                                        size: "small",
-                                        sx: { ...fieldSx, minWidth: 140 }
-                                    }
-                                }}
+                                slotProps={{ textField: { size: "small", sx: { ...fieldSx, minWidth: 140 } } }}
                             />
-
                             <Button variant="contained" onClick={handleAddShift} sx={{ height: 40 }}>ADD</Button>
                         </Box>
 
                         {shifts.length > 0 && (
-                            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', p: 1.5, bgcolor: 'rgba(201,168,76,0.05)', borderRadius: 1, border: '1px dashed rgba(201,168,76,0.3)' }}>
+                            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', p: 1.5, bgcolor: 'rgba(212,175,55,0.05)', borderRadius: 1, border: '1px dashed rgba(212,175,55,0.3)' }}>
                                 {shifts.map((shift, index) => (
                                     <Chip
                                         key={index}
@@ -236,7 +235,7 @@ const Logistics = ({ data = {}, onChange }) => {
                 )}
             </LocalizationProvider>
 
-            <Box sx={{ pt: 2, borderTop: "1px solid", borderColor: "divider" }}>
+            <Box sx={{ pt: 2, borderTop: "1px solid", borderColor: theme.palette.divider }}>
                 <Typography sx={labelSx}>Secondary Contact Number</Typography>
                 <TextField fullWidth placeholder="+963 900 000 000" value={data.secondaryPhone || ""} onChange={handle("secondaryPhone")} size="small" sx={fieldSx} />
             </Box>
@@ -244,4 +243,5 @@ const Logistics = ({ data = {}, onChange }) => {
     );
 };
 
+Logistics.displayName = "Logistics";
 export default Logistics;

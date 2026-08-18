@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Box, Typography, Button } from "@mui/material";
+import { Box, Typography, Button, useTheme } from "@mui/material";
 import OfferStatusBadge from "./OfferStatusBadge";
 import freelancerCatalogService from "../../../../services/freelancerService/freelancerCatalogService.js";
 
 export default function OfferCard({ offer }) {
     const navigate = useNavigate();
+    const theme = useTheme();
     const [images, setImages] = useState([]);
 
     useEffect(() => {
@@ -37,14 +38,17 @@ export default function OfferCard({ offer }) {
             sx={{
                 display: 'flex',
                 flexDirection: 'row',
-                border: (theme) => `1px solid ${theme.palette.divider}`,
-                bgcolor: (theme) => theme.palette.background.paper,
+                // 👑 إزالة الخلفية الصلبة وجعلها شفافة لتندمج مع زجاج الصفحة الأساسية
+                bgcolor: 'transparent',
+                border: '1px solid',
+                borderColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)',
                 borderRadius: '12px',
                 overflow: 'hidden',
                 height: 192,
-                transition: 'border-color 0.3s',
+                transition: 'all 0.3s ease',
                 '&:hover': {
-                    borderColor: (theme) => `${theme.palette.primary.main}4D` // ~ primary/30
+                    borderColor: theme.palette.primary.main,
+                    bgcolor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)',
                 }
             }}
         >
@@ -63,7 +67,7 @@ export default function OfferCard({ offer }) {
                                 fontSize: '0.68rem',
                                 textTransform: 'uppercase',
                                 fontWeight: 700,
-                                color: (theme) => theme.palette.primary.main,
+                                color: theme.palette.primary.main,
                                 letterSpacing: 1.2
                             }}
                         >
@@ -71,17 +75,17 @@ export default function OfferCard({ offer }) {
                         </Typography>
                         <OfferStatusBadge status={offer.status} />
                     </Box>
-                    <Typography sx={{ fontSize: '1.1rem', fontWeight: 700, color: (theme) => theme.palette.text.primary }}>
+                    <Typography sx={{ fontSize: '1.1rem', fontWeight: 700, color: theme.palette.text.primary }}>
                         {offer.title?.en || offer.title?.ar || offer.title}
                     </Typography>
                 </Box>
 
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Typography sx={{ fontSize: '1.25rem', fontWeight: 700, color: (theme) => theme.palette.text.primary }}>
+                    <Typography sx={{ fontSize: '1.25rem', fontWeight: 700, color: theme.palette.text.primary }}>
                         {offer.price || (offer.variants && offer.variants[0]?.price) || 0}
                         <Box
                             component="span"
-                            sx={{ fontSize: '0.85rem', fontWeight: 400, color: (theme) => theme.palette.text.secondary, ml: 0.5 }}
+                            sx={{ fontSize: '0.85rem', fontWeight: 400, color: theme.palette.text.secondary, ml: 0.5 }}
                         >
                             SAR
                         </Box>
@@ -95,12 +99,12 @@ export default function OfferCard({ offer }) {
                             textTransform: 'none',
                             px: 3,
                             py: 1,
-                            borderColor: (theme) => theme.palette.divider,
-                            color: (theme) => theme.palette.text.secondary,
+                            borderColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)',
+                            color: theme.palette.text.secondary,
                             '&:hover': {
-                                bgcolor: (theme) => theme.palette.background.default,
-                                color: (theme) => theme.palette.primary.main,
-                                borderColor: (theme) => theme.palette.divider
+                                bgcolor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.04)',
+                                color: theme.palette.primary.main,
+                                borderColor: theme.palette.primary.main
                             }
                         }}
                     >

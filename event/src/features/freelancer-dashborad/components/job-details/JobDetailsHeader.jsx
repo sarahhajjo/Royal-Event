@@ -1,11 +1,13 @@
 import React, { useState } from "react";
+import { Box, Typography, Button, useTheme } from "@mui/material";
 import { MapPin, MoveRight, Loader2, CheckCircle2 } from "lucide-react";
 import freelancerJobService from "../../../../services/freelancerService/freelancerJobService.js";
 import JobBadge from "../job-opportunities/JobBadge.jsx";
 
-export default function JobDetailsHeader({ jobId, title, venue, eventType , applicationStatus}) {
+export default function JobDetailsHeader({ jobId, title, venue, eventType, applicationStatus }) {
+    const theme = useTheme();
     const [isApplying, setIsApplying] = useState(false);
-    const [applyStatus, setApplyStatus] = useState(null); // 'success' أو 'error'
+    const [applyStatus, setApplyStatus] = useState(null);
 
     const handleApply = async () => {
         setIsApplying(true);
@@ -13,7 +15,6 @@ export default function JobDetailsHeader({ jobId, title, venue, eventType , appl
         try {
             await freelancerJobService.applyForJob(jobId);
             setApplyStatus('success');
-            // يمكنك هنا أيضاً إظهار إشعار (Toast) بنجاح التقديم
         } catch (error) {
             console.error("Apply error:", error);
             setApplyStatus('error');
@@ -24,31 +25,50 @@ export default function JobDetailsHeader({ jobId, title, venue, eventType , appl
     };
 
     return (
-        <div className="flex flex-col gap-4 border-b border-border pb-6 md:flex-row md:items-center md:justify-between">
-            <div className="flex flex-col gap-3">
+        <Box sx={{
+            display: 'flex',
+            flexDirection: { xs: 'column', md: 'row' },
+            md: { alignItems: 'center', justifyContent: 'space-between' },
+            gap: 3,
+            borderBottom: '1px solid',
+            borderColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
+            pb: 3.5
+        }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
                 {eventType && (
-                    <div className="w-max">
+                    <Box sx={{ width: 'max-content' }}>
                         <JobBadge label={eventType} variant="outline" />
-                    </div>
+                    </Box>
                 )}
-                <h1 className="font-serif text-4xl font-bold text-text-primary md:text-5xl tracking-tight">
+                <Typography sx={{ fontFamily: "'Cinzel', serif", fontSize: { xs: '2rem', md: '2.5rem' }, fontWeight: 700, color: theme.palette.text.primary, letterSpacing: '-0.02em' }}>
                     {title}
-                </h1>
-                <p className="flex items-center gap-2 text-sm text-text-secondary">
-                    <MapPin size={16} className="text-primary" />
+                </Typography>
+                <Typography sx={{ display: 'flex', alignItems: 'center', gap: 1.5, fontSize: '0.85rem', color: theme.palette.text.secondary }}>
+                    <MapPin size={16} color={theme.palette.primary.main} />
                     {venue}
-                </p>
-            </div>
+                </Typography>
+            </Box>
+
             {applicationStatus ? (
-                <div className="flex items-center gap-2 rounded-lg border border-primary/50 bg-primary/10 px-6 py-3 font-semibold text-primary">
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, borderRadius: '10px', border: '1px solid', borderColor: 'rgba(212,175,55,0.5)', bgcolor: 'rgba(212,175,55,0.1)', px: 3, py: 1.5, fontWeight: 600, color: 'primary.main', fontSize: '0.85rem' }}>
                     Your Status: {applicationStatus}
-                </div>
+                </Box>
             ) : (
-                /* زر التقديم الذكي (يظهر فقط إذا لم يكن هناك حالة سابقة) */
-                <button
+                <Button
                     onClick={handleApply}
                     disabled={isApplying || applyStatus === 'success'}
-                    className="flex items-center gap-2 rounded-lg bg-primary px-6 py-3 font-semibold text-bg-default transition hover:opacity-90 disabled:opacity-70 disabled:cursor-not-allowed"
+                    variant="contained"
+                    sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1.5,
+                        borderRadius: '10px',
+                        px: 3.5,
+                        py: 1.5,
+                        fontSize: '0.85rem',
+                        fontWeight: 700,
+                        textTransform: 'none',
+                    }}
                 >
                     {isApplying ? (
                         <>جاري التقديم... <Loader2 size={18} className="animate-spin" /></>
@@ -57,8 +77,8 @@ export default function JobDetailsHeader({ jobId, title, venue, eventType , appl
                     ) : (
                         <>Apply Now <MoveRight size={18} /></>
                     )}
-                </button>
+                </Button>
             )}
-        </div>
+        </Box>
     );
 }

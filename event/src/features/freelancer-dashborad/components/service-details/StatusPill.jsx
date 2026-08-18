@@ -1,23 +1,36 @@
 import React from "react";
+import { Box } from "@mui/material";
 
-/**
- * شارة صغيرة تعرض حالة الخدمة (مثال: PENDING APPROVAL)
- * قابلة لإعادة الاستخدام مع أي حالة ولون.
- */
 const STATUS_STYLES = {
-  pending: "bg-primary/10 text-primary border-primary/30",
-  approved: "bg-emerald-400/10 text-emerald-400 border-emerald-400/30",
-  rejected: "bg-red-400/10 text-red-400 border-red-400/30",
+  pending: { bgcolor: 'rgba(212, 175, 55, 0.1)', color: 'primary.main', borderColor: 'rgba(212, 175, 55, 0.3)' },
+  approved: { bgcolor: 'rgba(74, 222, 128, 0.1)', color: '#4ade80', borderColor: 'rgba(74, 222, 128, 0.3)' },
+  rejected: { bgcolor: 'rgba(248, 113, 113, 0.1)', color: '#f87171', borderColor: 'rgba(248, 113, 113, 0.3)' },
 };
 
 export default function StatusPill({ label = "Pending Approval", variant = "pending" }) {
-  const styles = STATUS_STYLES[variant] ?? STATUS_STYLES.pending;
+  const currentStyle = STATUS_STYLES[variant] ?? STATUS_STYLES.pending;
 
   return (
-    <span
-      className={`inline-flex items-center rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-wide ${styles}`}
-    >
-      {label}
-    </span>
+      <Box
+          component="span"
+          sx={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            borderRadius: '999px',
+            border: '1px solid',
+            borderColor: currentStyle.borderColor,
+            bgcolor: currentStyle.bgcolor,
+            color: currentStyle.color,
+            px: 2,
+            py: 0.5,
+            fontSize: '0.65rem',
+            fontWeight: 700,
+            textTransform: 'uppercase',
+            letterSpacing: '0.08em',
+            fontFamily: "'Raleway', sans-serif"
+          }}
+      >
+        {label}
+      </Box>
   );
 }

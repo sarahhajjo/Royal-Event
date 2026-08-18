@@ -1,62 +1,105 @@
 import React, { useState } from "react";
+import { Box, Typography, useTheme } from "@mui/material";
 import { Sparkles, MapPin } from "lucide-react";
 import ServiceGallery from "./ServiceGallery";
 import GalleryLightbox from "./GalleryLightbox";
 
-// 🔥 دالة ذكية لاستخراج النص من الـ Object لتفادي خطأ الشاشة البيضاء
 const getLocalizedText = (text) => {
-  if (!text) return "";
-  if (typeof text === "object") {
-    return text.en || text.ar || "بدون عنوان";
-  }
-  return text;
+    if (!text) return "";
+    if (typeof text === "object") {
+        return text.en || text.ar || "بدون عنوان";
+    }
+    return text;
 };
 
 export default function ServiceOverviewCard({
-                                              title,
-                                              description,
-                                              images = [],
-                                              category,
-                                              location,
+                                                title,
+                                                description,
+                                                images = [],
+                                                category,
+                                                location,
                                             }) {
-  const [lightboxIndex, setLightboxIndex] = useState(null);
+    const theme = useTheme();
+    const isDark = theme.palette.mode === 'dark';
+    const [lightboxIndex, setLightboxIndex] = useState(null);
 
-  return (
-      <div className="grid grid-cols-1 gap-6 rounded-2xl border border-border bg-bg-paper p-6 lg:grid-cols-2">
-        {/* النص */}
-        <div className="flex flex-col justify-center">
-          {/* استخدمنا الدالة هنا لضمان قراءة النص بشكل صحيح */}
-          <h2 className="mb-3 text-3xl font-bold text-primary">{getLocalizedText(title)}</h2>
-          <p className="mb-5 text-sm leading-relaxed text-text-secondary">{getLocalizedText(description)}</p>
+    return (
+        <Box
+            sx={{
+                display: 'grid',
+                gridTemplateColumns: { xs: '1fr', lg: 'repeat(2, 1fr)' },
+                gap: 4,
+                borderRadius: '16px',
+                border: '1px solid',
+                borderColor: theme.palette.divider,
+                bgcolor: isDark ? 'rgba(15, 15, 20, 0.4)' : 'rgba(255, 255, 255, 0.4)',
+                p: { xs: 3, md: 4 }
+            }}
+        >
+            {/* النص */}
+            <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                <Typography sx={{ mb: 2, fontFamily: "'Cinzel', serif", fontSize: { xs: '1.8rem', md: '2.2rem' }, fontWeight: 700, color: 'primary.main' }}>
+                    {getLocalizedText(title)}
+                </Typography>
+                <Typography sx={{ mb: 3, fontSize: '0.9rem', lineHeight: 1.7, color: theme.palette.text.secondary, fontFamily: "'Raleway', sans-serif" }}>
+                    {getLocalizedText(description)}
+                </Typography>
 
-          <div className="flex flex-wrap gap-3">
-            {category && (
-                <span className="inline-flex items-center gap-2 rounded-lg border border-border bg-bg-default px-3 py-1.5 text-xs text-text-secondary">
-              <Sparkles size={14} className="text-primary" />
-                  {/* واستخدمناها هنا أيضاً */}
-                  {getLocalizedText(category)}
-            </span>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5 }}>
+                    {category && (
+                        <Box
+                            sx={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: 1,
+                                borderRadius: '8px',
+                                border: '1px solid',
+                                borderColor: theme.palette.divider,
+                                bgcolor: isDark ? 'rgba(255, 255, 255, 0.02)' : 'rgba(255, 255, 255, 0.6)',
+                                px: 2,
+                                py: 0.8,
+                                fontSize: '0.75rem',
+                                color: theme.palette.text.secondary
+                            }}
+                        >
+                            <Sparkles size={14} color={theme.palette.primary.main} />
+                            {getLocalizedText(category)}
+                        </Box>
+                    )}
+                    {location && (
+                        <Box
+                            sx={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: 1,
+                                borderRadius: '8px',
+                                border: '1px solid',
+                                borderColor: theme.palette.divider,
+                                bgcolor: isDark ? 'rgba(255, 255, 255, 0.02)' : 'rgba(255, 255, 255, 0.6)',
+                                px: 2,
+                                py: 0.8,
+                                fontSize: '0.75rem',
+                                color: theme.palette.text.secondary
+                            }}
+                        >
+                            <MapPin size={14} color={theme.palette.primary.main} />
+                            {getLocalizedText(location)}
+                        </Box>
+                    )}
+                </Box>
+            </Box>
+
+            {/* الصور */}
+            <ServiceGallery images={images} alt={getLocalizedText(title)} onOpenLightbox={setLightboxIndex} />
+
+            {lightboxIndex !== null && (
+                <GalleryLightbox
+                    images={images}
+                    activeIndex={lightboxIndex}
+                    onClose={() => setLightboxIndex(null)}
+                    onChangeIndex={setLightboxIndex}
+                />
             )}
-            {location && (
-                <span className="inline-flex items-center gap-2 rounded-lg border border-border bg-bg-default px-3 py-1.5 text-xs text-text-secondary">
-              <MapPin size={14} className="text-primary" />
-                  {getLocalizedText(location)}
-            </span>
-            )}
-          </div>
-        </div>
-
-        {/* الصور */}
-        <ServiceGallery images={images} alt={getLocalizedText(title)} onOpenLightbox={setLightboxIndex} />
-
-        {lightboxIndex !== null && (
-            <GalleryLightbox
-                images={images}
-                activeIndex={lightboxIndex}
-                onClose={() => setLightboxIndex(null)}
-                onChangeIndex={setLightboxIndex}
-            />
-        )}
-      </div>
-  );
+        </Box>
+    );
 }

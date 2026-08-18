@@ -1,23 +1,26 @@
 import React from 'react';
-import { Box, Typography } from '@mui/material';
+import { Box, Typography, useTheme } from '@mui/material';
 
 export default function BookingServiceCard({ listing, variant, price, currency, image }) {
+    const theme = useTheme();
+    const isDark = theme.palette.mode === 'dark';
+
     return (
         <Box
             sx={{
-                gridColumn: { md: 'span 2' }, // ~ col-span-2 على الشاشات المتوسطة فأكبر
+                gridColumn: { md: 'span 2' },
                 display: 'flex',
                 flexDirection: { xs: 'column', md: 'row' },
-                bgcolor: '#1a1714',
-                borderRadius: '16px',
-                border: (theme) => `1px solid ${theme.palette.divider}`,
+                bgcolor: isDark ? 'rgba(15, 15, 20, 0.4)' : 'rgba(255, 255, 255, 0.4)',
+                borderRadius: '12px',
+                border: '1px solid',
+                borderColor: theme.palette.divider,
                 overflow: 'hidden'
             }}
         >
-            {/* صورة الخدمة */}
             <Box
                 sx={{
-                    width: { xs: '100%', md: '41.666%' }, // ~ md:w-5/12
+                    width: { xs: '100%', md: '41.666%' },
                     height: { xs: 256, md: 'auto' },
                     position: 'relative'
                 }}
@@ -30,7 +33,6 @@ export default function BookingServiceCard({ listing, variant, price, currency, 
                 />
             </Box>
 
-            {/* تفاصيل الخدمة والسعر */}
             <Box sx={{ flex: 1, p: 3, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                 <Box>
                     <Typography
@@ -38,16 +40,16 @@ export default function BookingServiceCard({ listing, variant, price, currency, 
                             fontSize: '0.65rem',
                             textTransform: 'uppercase',
                             letterSpacing: 2,
-                            color: (theme) => theme.palette.primary.main,
+                            color: 'primary.main',
                             fontWeight: 600
                         }}
                     >
                         Service
                     </Typography>
-                    <Typography sx={{ fontSize: '1.5rem', fontWeight: 700, color: (theme) => theme.palette.text.primary, mt: 0.5 }}>
+                    <Typography sx={{ fontSize: '1.3rem', fontWeight: 700, color: theme.palette.text.primary, mt: 0.5 }}>
                         {listing?.title || "خدمة بدون عنوان"}
                     </Typography>
-                    <Typography sx={{ color: (theme) => theme.palette.text.secondary, mt: 0.5 }}>
+                    <Typography sx={{ color: theme.palette.text.secondary, mt: 0.5, fontSize: '0.85rem' }}>
                         {variant?.name || "الباقة الأساسية"}
                     </Typography>
                 </Box>
@@ -55,18 +57,19 @@ export default function BookingServiceCard({ listing, variant, price, currency, 
                 <Box
                     sx={{
                         mt: 3,
-                        pt: 3,
-                        borderTop: (theme) => `1px solid ${theme.palette.divider}`,
+                        pt: 2.5,
+                        borderTop: '1px solid',
+                        borderColor: theme.palette.divider,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'space-between'
                     }}
                 >
                     <Box>
-                        <Typography sx={{ fontSize: '0.85rem', color: (theme) => theme.palette.text.secondary }}>
+                        <Typography sx={{ fontSize: '0.75rem', color: theme.palette.text.secondary }}>
                             Total Price
                         </Typography>
-                        <Typography sx={{ fontSize: '1.5rem', fontWeight: 700, color: (theme) => theme.palette.primary.main, mt: 0.3 }}>
+                        <Typography sx={{ fontSize: '1.3rem', fontWeight: 700, color: 'primary.main', mt: 0.2 }}>
                             {price ? `${parseFloat(price).toLocaleString()} ${currency || 'SYP'}` : "0"}
                         </Typography>
                     </Box>

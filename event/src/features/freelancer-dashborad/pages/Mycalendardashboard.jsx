@@ -26,8 +26,6 @@ const HOURS = Array.from({ length: 24 }, (_, i) => {
     return `${hour12} ${period}`;
 });
 
-const playfairFont = { fontFamily: "'Playfair Display', serif" };
-
 const timeToMinutes = (timeStr) => {
     const [hours, minutes] = timeStr.split(':').map(Number);
     return hours * 60 + minutes;
@@ -84,7 +82,7 @@ function EventCard({ event, onDelete }) {
                     px: 1,
                     py: 0.5,
                     width: '100%',
-                    maxWidth: 110,
+                    maxWidth: 130,
                     flexShrink: 0,
                     mb: 0.5,
                     transition: 'all 0.3s ease',
@@ -131,22 +129,6 @@ export default function MyCalendarDashboard() {
     const theme = useTheme();
     const isDark = theme.palette.mode === 'dark';
     const dispatch = useDispatch();
-
-    // ألوان ديناميكية تتفاعل مع الثيم
-    const dynamicColors = {
-        bgMain: 'transparent',
-        bgCard: theme.palette.background.paper,
-        gold: theme.palette.primary.main,
-        goldHover: isDark ? '#d4b06a' : '#9a7536',
-        textSecondary: theme.palette.text.secondary,
-        textMuted: isDark ? '#c9c0b3' : '#A39887',
-        border: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(179, 140, 69, 0.2)',
-        textPrimary: theme.palette.text.primary,
-        hoverBg: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
-        todayBg: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)',
-        bookingCardBg: isDark ? '#241a15' : '#FDFBF7',
-        chipBg: isDark ? 'rgba(197, 160, 89, 0.1)' : 'rgba(179, 140, 69, 0.1)',
-    };
 
     const calendarState = useSelector(state => state.freelancerCalendar || state.myCalendar || {});
     const { loading = false, error = null, successMessage = null, blockedDates = [] } = calendarState;
@@ -273,51 +255,78 @@ export default function MyCalendarDashboard() {
         dayjs(b.blocked_date).isSame(realToday, 'day')
     );
 
+    // 👑 الستايل الزجاجي الموحد والمتكيف مع الثيم وصورة القلعة
+    const glassSx = {
+        background: isDark ? "rgba(15, 15, 20, 0.65)" : "rgba(250, 248, 245, 0.55)",
+        backdropFilter: "blur(16px)",
+        WebkitBackdropFilter: "blur(16px)",
+        border: "1px solid",
+        borderColor: isDark ? "rgba(255, 255, 255, 0.08)" : "rgba(0, 0, 0, 0.04)",
+        borderRadius: "16px",
+        boxShadow: isDark ? "0 8px 32px 0 rgba(0, 0, 0, 0.4)" : "0 8px 32px 0 rgba(130, 120, 110, 0.08)",
+        p: 3,
+    };
+
     const inputStyles = {
         '& .MuiOutlinedInput-root': {
-            color: dynamicColors.textPrimary, '& fieldset': { borderColor: dynamicColors.border },
-            '&:hover fieldset': { borderColor: dynamicColors.gold }, '&.Mui-focused fieldset': { borderColor: dynamicColors.gold },
+            color: theme.palette.text.primary,
+            bgcolor: isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(255, 255, 255, 0.6)',
+            borderRadius: 1.5,
+            '& fieldset': { borderColor: theme.palette.divider },
+            '&:hover fieldset': { borderColor: 'primary.main' },
+            '&.Mui-focused fieldset': { borderColor: 'primary.main' },
         },
-        '& .MuiInputLabel-root': { color: dynamicColors.textSecondary },
-        '& .MuiInputLabel-root.Mui-focused': { color: dynamicColors.gold },
+        '& .MuiInputLabel-root': { color: theme.palette.text.secondary },
+        '& .MuiInputLabel-root.Mui-focused': { color: 'primary.main' },
     };
 
     const timePickerInputStyle = {
         '& .MuiOutlinedInput-root': {
-            color: dynamicColors.textPrimary, height: '44px',
-            '& fieldset': { borderColor: dynamicColors.border },
-            '&:hover fieldset': { borderColor: dynamicColors.gold },
-            '&.Mui-focused fieldset': { borderColor: dynamicColors.gold },
-            '& .MuiSvgIcon-root': { color: dynamicColors.textSecondary, transition: 'color 0.2s', fontSize: '18px' },
-            '&.Mui-focused .MuiSvgIcon-root': { color: dynamicColors.gold },
+            color: theme.palette.text.primary, height: '44px',
+            bgcolor: isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(255, 255, 255, 0.6)',
+            '& fieldset': { borderColor: theme.palette.divider },
+            '&:hover fieldset': { borderColor: 'primary.main' },
+            '&.Mui-focused fieldset': { borderColor: 'primary.main' },
+            '& .MuiSvgIcon-root': { color: theme.palette.text.secondary, fontSize: '18px' },
+            '&.Mui-focused .MuiSvgIcon-root': { color: 'primary.main' },
             '& .MuiInputBase-input': { px: 1, fontSize: '0.85rem' }
         },
-        '& .MuiInputLabel-root': { color: dynamicColors.textSecondary, fontSize: '0.85rem' },
-        '& .MuiInputLabel-root.Mui-focused': { color: dynamicColors.gold },
+        '& .MuiInputLabel-root': { color: theme.palette.text.secondary, fontSize: '0.85rem' },
+        '& .MuiInputLabel-root.Mui-focused': { color: 'primary.main' },
     };
 
     return (
-        <Box sx={{ display: "flex", height: "100vh", bgcolor: "background.default", overflow: "hidden" }}>
+        <Box
+            dir="ltr"
+            sx={{
+                display: 'flex',
+                height: '100vh',
+                overflow: 'hidden',
+                backgroundImage: isDark
+                    ? 'linear-gradient(to bottom, rgba(15, 15, 20, 0.75), rgba(15, 15, 20, 0.95)), url("/images/image_58ec0a.jpg")'
+                    : 'linear-gradient(to bottom, rgba(240, 235, 225, 0.4), rgba(255, 255, 255, 0.85)), url("/images/image_58ec0a.jpg")',
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                backgroundAttachment: 'fixed',
+                backgroundRepeat: 'no-repeat',
+                color: theme.palette.text.primary,
+            }}
+        >
             <Sidebar />
 
             <Box sx={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, overflow: "hidden" }}>
                 <Header title="My Calendar" notificationCount={3} isOnline={true} />
 
-                <Box component="main" sx={{ flex: 1, px: { xs: 3, md: 5, lg: 6 }, py: 4.5, overflowY: "auto", bgcolor: dynamicColors.bgMain }}>
-                    <Box sx={{ maxWidth: 'xl', mx: 'auto', color: dynamicColors.textPrimary, fontFamily: 'sans-serif' }}>
+                <Box component="main" sx={{ flex: 1, overflowY: "auto", px: { xs: 3, md: 4, lg: 5 }, py: 3.5, display: 'flex', flexDirection: 'column' }}>
+                    <Box sx={{ maxWidth: '100%', mx: 'auto', width: '100%', display: 'flex', flexDirection: 'column', gap: 3.5 }}>
 
                         {/* --- HEADER --- */}
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4, flexWrap: 'wrap', gap: 2 }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2, borderBottom: '1px solid', borderColor: theme.palette.divider, pb: 3 }}>
                             <Box>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
-                                    <Box component="svg" viewBox="0 0 24 24" sx={{ width: { xs: '28px', sm: '36px' }, height: { xs: '28px', sm: '36px' }, fill: 'none', stroke: dynamicColors.gold, strokeWidth: 1.2 }}>
-                                        <path d="M12 2.5L21.5 12L12 21.5L2.5 12Z" />
-                                    </Box>
-                                    <Typography sx={{ fontFamily: "'Playfair Display', serif", fontSize: { xs: '2rem', sm: '2.5rem' }, fontWeight: 500, color: dynamicColors.gold, lineHeight: 1 }}>
-                                        My Calendar
-                                    </Typography>
-                                </Box>
-                                <Typography sx={{ color: dynamicColors.textSecondary, fontSize: '14px' }}>
+                                <Typography sx={{ fontFamily: "'Cinzel', serif", fontSize: { xs: '2rem', sm: '2.5rem' }, fontWeight: 700, color: 'primary.main', mb: 0.5 }}>
+                                    My Calendar
+                                </Typography>
+                                <Typography sx={{ color: theme.palette.text.secondary, fontSize: '0.85rem' }}>
                                     Information designed for accurate insights
                                 </Typography>
                             </Box>
@@ -327,35 +336,34 @@ export default function MyCalendarDashboard() {
                                 onClick={handleMainSubmit}
                                 disabled={loading}
                                 sx={{
-                                    height: '48px', px: 5, fontSize: '1rem', letterSpacing: 1, bgcolor: dynamicColors.gold, color: isDark ? '#140e0c' : '#ffffff', fontWeight: 800, borderRadius: 2,
-                                    boxShadow: `0 4px 14px ${dynamicColors.gold}55`,
-                                    '&:hover': { bgcolor: dynamicColors.goldHover, boxShadow: `0 6px 20px ${dynamicColors.gold}88` },
-                                    '&.Mui-disabled': { bgcolor: `${dynamicColors.gold}88` }
+                                    height: '46px', px: 4, fontSize: '0.9rem', letterSpacing: 1, fontWeight: 700, borderRadius: 2,
+                                    '&.Mui-disabled': { opacity: 0.7 }
                                 }}
                             >
-                                {loading ? <CircularProgress size={24} color="inherit" /> : 'BLOCK DATE'}
+                                {loading ? <CircularProgress size={22} color="inherit" /> : 'BLOCK DATE'}
                             </Button>
                         </Box>
 
-                        {successMessage && <Alert severity="success" sx={{ mb: 3, bgcolor: 'rgba(76, 175, 80, 0.1)', color: '#81c784', border: '1px solid rgba(76, 175, 80, 0.3)' }}>{successMessage}</Alert>}
-                        {error && <Alert severity="error" sx={{ mb: 3, bgcolor: 'rgba(211, 47, 47, 0.1)', color: '#ffb4ab', border: '1px solid rgba(211, 47, 47, 0.3)' }}>{error}</Alert>}
+                        {successMessage && <Alert severity="success" sx={{ mb: 1, bgcolor: 'rgba(76, 175, 80, 0.1)', color: '#81c784', border: '1px solid rgba(76, 175, 80, 0.3)' }}>{successMessage}</Alert>}
+                        {error && <Alert severity="error" sx={{ mb: 1, bgcolor: 'rgba(211, 47, 47, 0.1)', color: '#ffb4ab', border: '1px solid rgba(211, 47, 47, 0.3)' }}>{error}</Alert>}
 
+                        {/* 👑 تعديل الـ Grid ليصبح القسم الأيمن (الجدول الأسبوعي) عريضاً وفخماً جداً (lg={8.5}) بينما اليسار (lg={3.5}) */}
                         <Grid container spacing={3}>
                             {/* Left Column */}
                             <Grid item xs={12} md={4} lg={3.5}>
-                                <Stack spacing={3} sx={{ width: '100%', maxWidth: 300 }}>
+                                <Stack spacing={3}>
                                     {/* Month Calendar */}
-                                    <Paper sx={{ bgcolor: dynamicColors.bgCard, border: `1px solid ${dynamicColors.border}`, borderRadius: 4, p: 2.5 }}>
+                                    <Paper sx={{ ...glassSx, bgcolor: isDark ? 'rgba(15,15,20,0.4)' : 'rgba(255,255,255,0.4)', boxShadow: 'none' }}>
                                         <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
-                                            <Typography sx={{ ...playfairFont, color: dynamicColors.gold, fontWeight: 600, fontSize: '1.05rem' }}>{viewMonth.format('MMMM YYYY')}</Typography>
+                                            <Typography sx={{ fontFamily: "'Cinzel', serif", color: 'primary.main', fontWeight: 600, fontSize: '1.05rem' }}>{viewMonth.format('MMMM YYYY')}</Typography>
                                             <Stack direction="row" spacing={0.5}>
-                                                <IconButton onClick={handlePrevMonth} size="small" sx={{ color: dynamicColors.textSecondary, padding: '4px', '&:hover': { bgcolor: dynamicColors.hoverBg } }}><ChevronLeftIcon fontSize="small" /></IconButton>
-                                                <IconButton onClick={handleNextMonth} size="small" sx={{ color: dynamicColors.textSecondary, padding: '4px', '&:hover': { bgcolor: dynamicColors.hoverBg } }}><ChevronRightIcon fontSize="small" /></IconButton>
+                                                <IconButton onClick={handlePrevMonth} size="small" sx={{ color: theme.palette.text.secondary, '&:hover': { bgcolor: 'action.hover' } }}><ChevronLeftIcon fontSize="small" /></IconButton>
+                                                <IconButton onClick={handleNextMonth} size="small" sx={{ color: theme.palette.text.secondary, '&:hover': { bgcolor: 'action.hover' } }}><ChevronRightIcon fontSize="small" /></IconButton>
                                             </Stack>
                                         </Stack>
 
                                         <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 0.5, textAlign: 'center' }}>
-                                            {WEEK_DAYS.map((d) => <Typography key={d} sx={{ fontSize: '11px', color: dynamicColors.textSecondary, fontWeight: 500, pb: 0.5 }}>{d}</Typography>)}
+                                            {WEEK_DAYS.map((d) => <Typography key={d} sx={{ fontSize: '11px', color: theme.palette.text.secondary, fontWeight: 500, pb: 0.5 }}>{d}</Typography>)}
                                             {calendarDays.map((day, i) => {
                                                 const isSelected = day === selectedDate.date() && viewMonth.isSame(selectedDate, 'month');
                                                 const isToday = day === dayjs().date() && viewMonth.isSame(dayjs(), 'month');
@@ -364,8 +372,9 @@ export default function MyCalendarDashboard() {
                                                         {day && (
                                                             <Box onClick={() => handleDaySelect(day)} sx={{
                                                                 width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', fontSize: '13px', cursor: 'pointer', transition: 'all 0.2s',
-                                                                bgcolor: isSelected ? dynamicColors.gold : isToday ? dynamicColors.todayBg : 'transparent', color: isSelected ? (isDark ? '#140e0c' : '#ffffff') : isToday ? dynamicColors.textPrimary : dynamicColors.textMuted,
-                                                                fontWeight: isSelected ? 600 : 400, '&:hover': { bgcolor: isSelected ? dynamicColors.goldHover : dynamicColors.hoverBg }
+                                                                bgcolor: isSelected ? 'primary.main' : isToday ? 'action.selected' : 'transparent',
+                                                                color: isSelected ? (isDark ? '#000' : '#fff') : theme.palette.text.primary,
+                                                                fontWeight: isSelected ? 700 : 400, '&:hover': { bgcolor: isSelected ? 'primary.main' : 'action.hover' }
                                                             }}>{day}</Box>
                                                         )}
                                                     </Box>
@@ -375,10 +384,10 @@ export default function MyCalendarDashboard() {
                                     </Paper>
 
                                     {/* CREATE A SHIFT / BLOCK DATE */}
-                                    <Paper sx={{ bgcolor: dynamicColors.bgCard, border: `1px solid ${dynamicColors.border}`, borderRadius: 4, p: 2.5 }}>
+                                    <Paper sx={{ ...glassSx, bgcolor: isDark ? 'rgba(15,15,20,0.4)' : 'rgba(255,255,255,0.4)', boxShadow: 'none' }}>
                                         <FormControlLabel
-                                            control={<Switch checked={isAllDay} onChange={(e) => setIsAllDay(e.target.checked)} sx={{ '& .MuiSwitch-switchBase.Mui-checked': { color: dynamicColors.gold }, '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { backgroundColor: dynamicColors.gold } }} />}
-                                            label={<Typography sx={{ fontSize: '13px', fontWeight: 'bold' }}>All Day (No specific shifts)</Typography>}
+                                            control={<Switch checked={isAllDay} onChange={(e) => setIsAllDay(e.target.checked)} sx={{ '& .MuiSwitch-switchBase.Mui-checked': { color: 'primary.main' }, '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { backgroundColor: 'primary.main' } }} />}
+                                            label={<Typography sx={{ fontSize: '0.85rem', fontWeight: 600, color: theme.palette.text.primary }}>All Day (No specific shifts)</Typography>}
                                             sx={{ mb: 2 }}
                                         />
 
@@ -386,32 +395,32 @@ export default function MyCalendarDashboard() {
                                             <LocalizationProvider dateAdapter={AdapterDayjs}>
                                                 <Box>
                                                     {shiftError && <Alert severity="error" sx={{ mb: 2, bgcolor: 'rgba(211, 47, 47, 0.1)', color: '#ffb4ab', border: '1px solid rgba(211, 47, 47, 0.3)', p: 1, '& .MuiAlert-message': { fontSize: '12px' } }}>{shiftError}</Alert>}
-                                                    <Typography sx={{ color: dynamicColors.gold, fontWeight: 700, fontSize: '0.85rem', letterSpacing: 1, textTransform: 'uppercase', mb: 2 }}>CREATE A SHIFT</Typography>
+                                                    <Typography sx={{ color: 'primary.main', fontWeight: 700, fontSize: '0.75rem', letterSpacing: 1, textTransform: 'uppercase', mb: 2 }}>CREATE A SHIFT</Typography>
 
                                                     <Stack spacing={2}>
                                                         <Stack direction="row" spacing={1.5} alignItems="center">
-                                                            <TimePicker label="Start Time" value={draftStart} onChange={setDraftStart} slotProps={{ textField: { size: 'small', fullWidth: true, sx: timePickerInputStyle } }} sx={{ flex: 1, minWidth: 0 }} />
-                                                            <TimePicker label="End Time" value={draftEnd} onChange={setDraftEnd} slotProps={{ textField: { size: 'small', fullWidth: true, sx: timePickerInputStyle } }} sx={{ flex: 1, minWidth: 0 }} />
+                                                            <TimePicker label="Start" value={draftStart} onChange={setDraftStart} slotProps={{ textField: { size: 'small', fullWidth: true, sx: timePickerInputStyle } }} sx={{ flex: 1, minWidth: 0 }} />
+                                                            <TimePicker label="End" value={draftEnd} onChange={setDraftEnd} slotProps={{ textField: { size: 'small', fullWidth: true, sx: timePickerInputStyle } }} sx={{ flex: 1, minWidth: 0 }} />
                                                         </Stack>
 
                                                         <Button
                                                             onClick={handleAddShift} variant="contained" disabled={!draftStart || !draftEnd} fullWidth
-                                                            sx={{ height: '42px', bgcolor: dynamicColors.chipBg, color: dynamicColors.gold, fontWeight: 700, boxShadow: 'none', '&:hover': { bgcolor: isDark ? 'rgba(197, 160, 89, 0.3)' : 'rgba(179, 140, 69, 0.2)', boxShadow: 'none' }, '&.Mui-disabled': { bgcolor: dynamicColors.hoverBg, color: dynamicColors.textMuted } }}
+                                                            sx={{ height: '40px', bgcolor: 'rgba(212, 175, 55, 0.15)', color: 'primary.main', fontWeight: 700, boxShadow: 'none', '&:hover': { bgcolor: 'rgba(212, 175, 55, 0.25)', boxShadow: 'none' }, '&.Mui-disabled': { bgcolor: 'action.disabledBackground', color: 'text.disabled' } }}
                                                         >
                                                             ADD SHIFT
                                                         </Button>
 
                                                         <Box>
-                                                            <Typography sx={{ fontSize: '12px', color: dynamicColors.textSecondary, mb: 1, fontWeight: 'bold', mt: 1 }}>Selected Shifts:</Typography>
+                                                            <Typography sx={{ fontSize: '0.75rem', color: theme.palette.text.secondary, mb: 1, fontWeight: 700, mt: 1 }}>Selected Shifts:</Typography>
                                                             {shiftRanges.length > 0 ? (
-                                                                <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', minHeight: 100, p: 2, borderRadius: '6px', border: `1px dashed ${dynamicColors.border}`, overflowY: 'auto' }}>
+                                                                <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', minHeight: 90, p: 2, borderRadius: 2, border: '1px dashed', borderColor: theme.palette.divider, overflowY: 'auto' }}>
                                                                     {shiftRanges.map((range, idx) => (
-                                                                        <Chip key={idx} label={`${range.startLabel} - ${range.endLabel}`} onDelete={() => handleDeleteShift(idx)} sx={{ backgroundColor: dynamicColors.chipBg, color: dynamicColors.gold, border: `1px solid ${dynamicColors.gold}`, '& .MuiChip-deleteIcon': { color: dynamicColors.gold, '&:hover': { color: dynamicColors.goldHover } } }} />
+                                                                        <Chip key={idx} label={`${range.startLabel} - ${range.endLabel}`} onDelete={() => handleDeleteShift(idx)} sx={{ backgroundColor: 'rgba(212, 175, 55, 0.15)', color: 'primary.main', border: '1px solid', borderColor: 'primary.main', '& .MuiChip-deleteIcon': { color: 'primary.main', '&:hover': { color: 'primary.dark' } } }} />
                                                                     ))}
                                                                 </Box>
                                                             ) : (
-                                                                <Box sx={{ p: 3, borderRadius: '6px', border: `1px dashed ${dynamicColors.border}`, textAlign: 'center', minHeight: 100, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                                                    <Typography sx={{ fontSize: '13px', color: dynamicColors.textSecondary }}>No shifts selected.</Typography>
+                                                                <Box sx={{ p: 3, borderRadius: 2, border: '1px dashed', borderColor: theme.palette.divider, textAlign: 'center', minHeight: 90, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                                    <Typography sx={{ fontSize: '0.8rem', color: theme.palette.text.secondary }}>No shifts selected.</Typography>
                                                                 </Box>
                                                             )}
                                                         </Box>
@@ -422,8 +431,8 @@ export default function MyCalendarDashboard() {
 
                                         {isAllDay && (
                                             <Box sx={{ mt: 1 }}>
-                                                <Box sx={{ p: 3, borderRadius: '6px', border: `1px dashed ${dynamicColors.gold}`, bgcolor: dynamicColors.chipBg, display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 50 }}>
-                                                    <Typography sx={{ fontSize: '14px', color: dynamicColors.gold, fontWeight: 'bold', textAlign: 'center' }}>Currently set to "All Day" mode. No shifts required.</Typography>
+                                                <Box sx={{ p: 2.5, borderRadius: 2, border: '1px dashed', borderColor: 'primary.main', bgcolor: 'rgba(212, 175, 55, 0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 50 }}>
+                                                    <Typography sx={{ fontSize: '0.85rem', color: 'primary.main', fontWeight: 700, textAlign: 'center' }}>Currently set to "All Day" mode.</Typography>
                                                 </Box>
                                             </Box>
                                         )}
@@ -431,36 +440,36 @@ export default function MyCalendarDashboard() {
                                 </Stack>
                             </Grid>
 
-                            {/* Right Column: Weekly Schedule */}
-                            <Grid item xs={12} md={8} lg={8.5}>
-                                <Paper sx={{ bgcolor: dynamicColors.bgCard, border: `1px solid ${dynamicColors.border}`, borderRadius: 4, p: 3, height: 732, display: 'flex', flexDirection: 'column', width: 730, minHeight: 621 }}>
-                                    <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
-                                        <Typography sx={{ ...playfairFont, color: dynamicColors.gold, fontWeight: 600, fontSize: '1.125rem' }}>{selectedDate.format('MMMM DD - YYYY')}</Typography>
+                            {/* Right Column: Weekly Schedule (عريض جداً وبمساحة واسعة مريحة جداً lg={8.5}) */}
+                            <Grid item xs={12} md={12} lg={10.5}>
+                                <Paper sx={{ ...glassSx, bgcolor: isDark ? 'rgba(15,15,20,0.4)' : 'rgba(255,255,255,0.4)', boxShadow: 'none', height: 720, display: 'flex', flexDirection: 'column', width: '150%', maxWidth: 'none' }}>
+                                    <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2.5}>
+                                        <Typography sx={{ fontFamily: "'Cinzel', serif", color: 'primary.main', fontWeight: 600, fontSize: '1.1rem' }}>{selectedDate.format('MMMM DD - YYYY')}</Typography>
                                         <Stack direction="row" spacing={1} alignItems="center">
-                                            <Button onClick={handleToday} variant="text" size="small" sx={{ color: dynamicColors.textMuted, bgcolor: dynamicColors.hoverBg, borderRadius: 4, textTransform: 'none', px: 2, '&:hover': { bgcolor: dynamicColors.todayBg } }}>Today</Button>
-                                            <IconButton onClick={() => { setSelectedDate(selectedDate.subtract(1, 'day')); setViewMonth(selectedDate.subtract(1, 'day')); }} size="small" sx={{ color: dynamicColors.textSecondary, '&:hover': { bgcolor: dynamicColors.hoverBg } }}><ChevronLeftIcon fontSize="small" /></IconButton>
-                                            <IconButton onClick={() => { setSelectedDate(selectedDate.add(1, 'day')); setViewMonth(selectedDate.add(1, 'day')); }} size="small" sx={{ color: dynamicColors.textSecondary, '&:hover': { bgcolor: dynamicColors.hoverBg } }}><ChevronRightIcon fontSize="small" /></IconButton>
+                                            <Button onClick={handleToday} variant="text" size="small" sx={{ color: theme.palette.text.secondary, bgcolor: 'action.hover', borderRadius: 2, textTransform: 'none', px: 2, '&:hover': { bgcolor: 'action.selected' } }}>Today</Button>
+                                            <IconButton onClick={() => { setSelectedDate(selectedDate.subtract(1, 'day')); setViewMonth(selectedDate.subtract(1, 'day')); }} size="small" sx={{ color: theme.palette.text.secondary, '&:hover': { bgcolor: 'action.hover' } }}><ChevronLeftIcon fontSize="small" /></IconButton>
+                                            <IconButton onClick={() => { setSelectedDate(selectedDate.add(1, 'day')); setViewMonth(selectedDate.add(1, 'day')); }} size="small" sx={{ color: theme.palette.text.secondary, '&:hover': { bgcolor: 'action.hover' } }}><ChevronRightIcon fontSize="small" /></IconButton>
                                         </Stack>
                                     </Stack>
 
-                                    <Box sx={{ display: 'grid', gridTemplateColumns: '50px repeat(7, 1fr)', gap: 1, textAlign: 'center', pb: 2, borderBottom: `1px solid ${dynamicColors.border}` }}>
-                                        <Typography sx={{ fontSize: '10px', color: dynamicColors.textSecondary, textAlign: 'left', alignSelf: 'flex-end', pb: 0.5 }}>GMT+8</Typography>
+                                    <Box sx={{ display: 'grid', gridTemplateColumns: '70px repeat(7, 1fr)', gap: 1.5, textAlign: 'center', pb: 2, borderBottom: '1px solid', borderColor: theme.palette.divider }}>
+                                        <Typography sx={{ fontSize: '11px', color: theme.palette.text.secondary, textAlign: 'left', alignSelf: 'flex-end', pb: 0.5 }}>GMT+8</Typography>
                                         {dynamicWeekColumns.map((c) => {
                                             const isSelected = c.fullDate.isSame(selectedDate, 'day');
                                             return (
-                                                <Box key={c.date} onClick={() => { setSelectedDate(c.fullDate); setViewMonth(c.fullDate); }} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 1, borderRadius: 3, cursor: 'pointer', transition: '0.2s', bgcolor: isSelected ? dynamicColors.gold : 'transparent', '&:hover': { bgcolor: isSelected ? dynamicColors.goldHover : dynamicColors.hoverBg } }}>
-                                                    <Typography sx={{ fontSize: '14px', fontWeight: 600, color: isSelected ? (isDark ? '#140e0c' : '#ffffff') : dynamicColors.textPrimary }}>{String(c.date).padStart(2, '0')}</Typography>
-                                                    <Typography sx={{ fontSize: '10px', color: isSelected ? (isDark ? 'rgba(20, 14, 12, 0.7)' : 'rgba(255,255,255,0.8)') : dynamicColors.textSecondary }}>{c.label}</Typography>
+                                                <Box key={c.date} onClick={() => { setSelectedDate(c.fullDate); setViewMonth(c.fullDate); }} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 1, borderRadius: 2, cursor: 'pointer', transition: '0.2s', bgcolor: isSelected ? 'primary.main' : 'transparent', '&:hover': { bgcolor: isSelected ? 'primary.main' : 'action.hover' } }}>
+                                                    <Typography sx={{ fontSize: '14px', fontWeight: 600, color: isSelected ? (isDark ? '#000' : '#fff') : theme.palette.text.primary }}>{String(c.date).padStart(2, '0')}</Typography>
+                                                    <Typography sx={{ fontSize: '10px', color: isSelected ? (isDark ? 'rgba(0, 0, 0, 0.7)' : 'rgba(255,255,255,0.8)') : theme.palette.text.secondary }}>{c.label}</Typography>
                                                 </Box>
                                             );
                                         })}
                                     </Box>
 
-                                    <Box sx={{ display: 'flex', flexDirection: 'column', overflowY: 'auto', flex: 1, pr: 1, '&::-webkit-scrollbar': { width: '6px' }, '&::-webkit-scrollbar-thumb': { backgroundColor: dynamicColors.hoverBg, borderRadius: '4px' } }}>
+                                    <Box sx={{ display: 'flex', flexDirection: 'column', overflowY: 'auto', flex: 1, pr: 1, '&::-webkit-scrollbar': { width: '6px' }, '&::-webkit-scrollbar-thumb': { backgroundColor: theme.palette.divider, borderRadius: '4px' } }}>
                                         {HOURS.map((hourLabel, hourIndex) => {
                                             return (
-                                                <Box key={hourLabel} sx={{ display: 'grid', gridTemplateColumns: '50px repeat(7, 1fr)', gap: 1, alignItems: 'flex-start', py: 2, borderBottom: `1px solid ${dynamicColors.border}` }}>
-                                                    <Typography sx={{ fontSize: '11px', color: dynamicColors.textSecondary, pt: 1 }}>{hourLabel}</Typography>
+                                                <Box key={hourLabel} sx={{ display: 'grid', gridTemplateColumns: '70px repeat(7, 1fr)', gap: 1.5, alignItems: 'flex-start', py: 2.5, borderBottom: '1px solid', borderColor: theme.palette.divider }}>
+                                                    <Typography sx={{ fontSize: '12px', color: theme.palette.text.secondary, pt: 1 }}>{hourLabel}</Typography>
 
                                                     {dynamicWeekColumns.map((c) => {
                                                         const cellEvents = (blockedDates || []).filter(b => {
@@ -492,35 +501,35 @@ export default function MyCalendarDashboard() {
                         </Grid>
 
                         {/* --- BOTTOM ROW (Note + Bookings) --- */}
-                        <Grid container spacing={3} sx={{ mt: 3 }}>
+                        <Grid container spacing={3} sx={{ pb: 3 }}>
                             <Grid item xs={12} md={4} lg={3.5}>
-                                <Paper sx={{ bgcolor: dynamicColors.bgCard, border: `1px solid ${dynamicColors.border}`, borderRadius: 4, p: 2.5, height: '100%', width: 300}}>
-                                    <Typography sx={{ ...playfairFont, color: dynamicColors.gold, fontWeight: 600, fontSize: '1.125rem', mb: 2 }}>Note</Typography>
+                                <Paper sx={{ ...glassSx, bgcolor: isDark ? 'rgba(15,15,20,0.4)' : 'rgba(255,255,255,0.4)', boxShadow: 'none', height: '100%', width: '100%' }}>
+                                    <Typography sx={{ fontFamily: "'Cinzel', serif", color: 'primary.main', fontWeight: 600, fontSize: '1.1rem', mb: 2 }}>Note</Typography>
                                     <TextField fullWidth multiline rows={4} label="Optional Note" name="note" placeholder="Add a note for this time..." value={note} onChange={(e) => setNote(e.target.value)} InputLabelProps={{ shrink: true }} sx={inputStyles} />
                                 </Paper>
                             </Grid>
 
                             <Grid item xs={12} md={8} lg={8.5}>
-                                <Paper sx={{ bgcolor: dynamicColors.bgCard, border: `1px solid ${dynamicColors.border}`, borderRadius: 4, p: 2.5, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' ,width :730}}>
-                                    <Typography sx={{ ...playfairFont, color: dynamicColors.gold, fontWeight: 600, fontSize: '1.125rem', mb: 2 }}>
+                                <Paper sx={{ ...glassSx, bgcolor: isDark ? 'rgba(15,15,20,0.4)' : 'rgba(255,255,255,0.4)', boxShadow: 'none', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', width: '100%' }}>
+                                    <Typography sx={{ fontFamily: "'Cinzel', serif", color: 'primary.main', fontWeight: 600, fontSize: '1.1rem', mb: 2 }}>
                                         Daily Bookings ({realToday.format('MMM DD')})
                                     </Typography>
 
-                                    <Stack direction="row" spacing={2} sx={{ overflowX: 'auto', pb: 1, '&::-webkit-scrollbar': { height: '6px' }, '&::-webkit-scrollbar-thumb': { backgroundColor: dynamicColors.hoverBg, borderRadius: '4px' } }}>
+                                    <Stack direction="row" spacing={2} sx={{ overflowX: 'auto', pb: 1, '&::-webkit-scrollbar': { height: '6px' }, '&::-webkit-scrollbar-thumb': { backgroundColor: theme.palette.divider, borderRadius: '4px' } }}>
                                         {todaysBookings.length > 0 ? (
                                             todaysBookings.map((b) => (
-                                                <Box key={b.id} sx={{ minWidth: 240, bgcolor: dynamicColors.bookingCardBg, borderLeft: `4px solid ${dynamicColors.gold}`, borderRadius: 2, px: 2, py: 1.5 }}>
-                                                    <Typography sx={{ fontSize: '12px', color: dynamicColors.textMuted, fontWeight: 500 }}>
+                                                <Box key={b.id} sx={{ minWidth: 240, bgcolor: isDark ? '#241a15' : '#FDFBF7', borderLeft: '4px solid', borderColor: 'primary.main', borderRadius: 2, px: 2, py: 1.5 }}>
+                                                    <Typography sx={{ fontSize: '12px', color: theme.palette.text.secondary, fontWeight: 500 }}>
                                                         {b.start_time && b.end_time ? `${formatDisplayTime(b.start_time)} - ${formatDisplayTime(b.end_time)}` : 'All Day'}
                                                     </Typography>
-                                                    <Typography sx={{ fontSize: '14px', fontWeight: 600, color: dynamicColors.gold, mt: 0.5 }}>
+                                                    <Typography sx={{ fontSize: '14px', fontWeight: 600, color: 'primary.main', mt: 0.5 }}>
                                                         {b.note || 'Blocked Time'}
                                                     </Typography>
-                                                    <Typography sx={{ fontSize: '12px', color: dynamicColors.textSecondary, mt: 0.5 }}>Type: Blocked Date</Typography>
+                                                    <Typography sx={{ fontSize: '12px', color: theme.palette.text.secondary, mt: 0.5 }}>Type: Blocked Date</Typography>
                                                 </Box>
                                             ))
                                         ) : (
-                                            <Typography sx={{ color: dynamicColors.textSecondary, fontSize: '13px', py: 2 }}>
+                                            <Typography sx={{ color: theme.palette.text.secondary, fontSize: '0.85rem', py: 2 }}>
                                                 No bookings or blocked times for today.
                                             </Typography>
                                         )}

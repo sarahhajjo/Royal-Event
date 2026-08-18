@@ -1,10 +1,11 @@
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { Box, Typography, useTheme } from "@mui/material";
 import { fetchJobOffers } from "../components/job-opportunities/JobOffersSlice.js";
 
 import Sidebar from "../components/layout/Sidebar";
 import Header from "../components/layout/Header";
-import Footer from "../components/layout/Footer";
+import PageBreadcrumb from "../components/PageBreadcrumb.jsx";
 import JobFiltersBar from "../components/job-opportunities/JobFiltersBar.jsx";
 import JobListingsSection from "../components/job-opportunities/JobListingsSection.jsx";
 
@@ -35,6 +36,7 @@ const mapJobData = (job) => ({
 });
 
 export default function JobOpportunitiesPage() {
+    const theme = useTheme();
     const dispatch = useDispatch();
     const [filters, setFilters] = useState(DEFAULT_FILTERS);
 
@@ -47,29 +49,22 @@ export default function JobOpportunitiesPage() {
     const jobsArray = Array.isArray(jobs) ? jobs : (jobs?.data || []);
     const mappedJobs = useMemo(() => jobsArray.map(mapJobData), [jobsArray]);
 
-    // فلترة الوظائف بناءً على اختيارات المستخدم
     const filteredJobs = useMemo(() => {
         return mappedJobs.filter((job) => {
-
-            // 1. فلتر البحث (نبحث في العنوان وفي المتطلبات)
             const searchLower = filters.search.trim().toLowerCase();
             const matchesSearch = searchLower === "" ||
                 job.title.toLowerCase().includes(searchLower) ||
                 job.requirements.toLowerCase().includes(searchLower);
 
-            // 2. فلتر الخبرة (Experience)
             const matchesExperience = filters.experience === "All Levels" ||
                 job.experienceLevel?.toLowerCase() === filters.experience.toLowerCase();
 
-            // 3. فلتر نوع الفعالية (Event Type) - تمت إضافته هنا
             const matchesEventType = filters.eventType === "All Events" ||
                 job.eventType?.toLowerCase() === filters.eventType.toLowerCase();
 
-            // 4. فلتر نوع التوظيف (Employment Type)
             const matchesEmployment = filters.employmentType === "All Types" ||
                 job.employmentType?.toLowerCase() === filters.employmentType.toLowerCase();
 
-            // يجب أن تتطابق جميع الشروط حتى تظهر الوظيفة
             return matchesSearch && matchesExperience && matchesEventType && matchesEmployment;
         });
     }, [filters, mappedJobs]);
@@ -82,50 +77,90 @@ export default function JobOpportunitiesPage() {
         console.log("View details:", job.id);
     };
 
+    // 👑 الستايل الزجاجي الموحد والمتكيف مع الثيم
+    const glassSx = {
+        background: theme.palette.mode === 'dark' ? "rgba(15, 15, 20, 0.65)" : "rgba(250, 248, 245, 0.55)",
+        backdropFilter: "blur(16px)",
+        WebkitBackdropFilter: "blur(16px)",
+        border: "1px solid",
+        borderColor: theme.palette.mode === 'dark' ? "rgba(255, 255, 255, 0.08)" : "rgba(0, 0, 0, 0.04)",
+        borderRadius: "16px",
+        boxShadow: theme.palette.mode === 'dark' ? "0 8px 32px 0 rgba(0, 0, 0, 0.4)" : "0 8px 32px 0 rgba(130, 120, 110, 0.08)",
+    };
+
     return (
-        <div className="flex min-h-screen bg-bg-default text-text-primary">
+        <Box
+            dir="ltr"
+            sx={{
+                display: 'flex',
+                height: '100vh',
+                overflow: 'hidden',
+                backgroundImage: theme.palette.mode === 'dark'
+                    ? 'linear-gradient(to bottom, rgba(15, 15, 20, 0.75), rgba(15, 15, 20, 0.95)), url("/images/image_58ec0a.jpg")'
+                    : 'linear-gradient(to bottom, rgba(240, 235, 225, 0.4), rgba(255, 255, 255, 0.85)), url("/images/image_58ec0a.jpg")',
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                backgroundAttachment: 'fixed',
+                backgroundRepeat: 'no-repeat',
+                color: theme.palette.text.primary,
+            }}
+        >
             <Sidebar />
 
-            <div className="flex flex-1 flex-col">
+            <Box sx={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, overflow: "hidden" }}>
                 <Header title="Job Opportunities" />
 
-                <main className="flex-1 space-y-6 p-6">
-                    <p className="-mt-2 text-sm text-text-secondary">
-                        Discover your next prestigious role in world-class events.
-                    </p>
+                <Box
+                    component="main"
+                    sx={{
+                        flex: 1,
+                        overflowY: 'auto',
+                        px: { xs: 3, md: 4, lg: 5 },
+                        py: 3.5,
+                        display: 'flex',
+                        flexDirection: 'column',
+                    }}
+                >
+                    <Box sx={{ ...glassSx, p: { xs: 3, md: 4 }, display: 'flex', flexDirection: 'column', gap: 3.5 }}>
+                        <PageBreadcrumb
+                            title="Job Opportunities"
+                            subtitle="Discover your next prestigious role in world-class events."
+                        />
 
-                    {isLoading && (
-                        <div className="py-10 text-center text-primary">Loading job opportunities...</div>
-                    )}
+                        {isLoading && (
+                            <Box sx={{ py: 10, textAlign: 'center' }}>
+                                <Typography sx={{ color: 'primary.main', fontSize: '0.9rem' }}>Loading job opportunities...</Typography>
+                            </Box>
+                        )}
 
-                    {error && (
-                        <div className="py-10 text-center text-red-500">{error}</div>
-                    )}
+                        {error && (
+                            <Box sx={{ py: 10, textAlign: 'center' }}>
+                                <Typography sx={{ color: 'error.main', fontSize: '0.9rem' }}>{error}</Typography>
+                            </Box>
+                        )}
 
-                    {!isLoading && !error && (
-                        <>
-                            <JobFiltersBar filters={filters} onChange={setFilters} />
+                        {!isLoading && !error && (
+                            <>
+                                <JobFiltersBar filters={filters} onChange={setFilters} />
 
-                            {/* تم حذف البطاقة المميزة نهائياً من هنا */}
-
-                            {filteredJobs.length > 0 ? (
-                                <JobListingsSection
-                                    jobs={filteredJobs}
-
-                                    onApply={handleApply}
-                                    onViewDetails={handleViewDetails}
-                                />
-                            ) : (
-                                <div className="py-10 text-center text-text-secondary">
-                                    No job offers found matching your criteria.
-                                </div>
-                            )}
-                        </>
-                    )}
-                </main>
-
-                <Footer />
-            </div>
-        </div>
+                                {filteredJobs.length > 0 ? (
+                                    <JobListingsSection
+                                        jobs={filteredJobs}
+                                        onApply={handleApply}
+                                        onViewDetails={handleViewDetails}
+                                    />
+                                ) : (
+                                    <Box sx={{ py: 10, textAlign: 'center' }}>
+                                        <Typography sx={{ color: theme.palette.text.secondary, fontSize: '0.9rem' }}>
+                                            No job offers found matching your criteria.
+                                        </Typography>
+                                    </Box>
+                                )}
+                            </>
+                        )}
+                    </Box>
+                </Box>
+            </Box>
+        </Box>
     );
 }
