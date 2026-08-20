@@ -8,41 +8,43 @@ import StatCard from "./StatCard.jsx";
 /**
  * صف الإحصائيات الثلاثة بالأعلى:
  * Total Users / Freelancers / Corporates
- *
- * لاحقاً لما تربطها بـ Redux، بس بتجيب الـ data من الـ store
- * وتمررها كـ props هون بدل القيم الثابتة.
  */
-const StatsCards = ({ data }) => {
-    // قيم افتراضية للعرض - استبدلها بالـ data القادمة من Redux store
-    const stats = data || {
-        totalUsers: { value: "2.4k", footer: "+12% this month" },
-        freelancers: { value: 65, footer: "Verified Professional Network" },
-        company: { value: 35, footer: "Tier-1 Managed Accounts" },
+const StatsCards = ({ stats }) => {
+    // 👑 حماية الكود بقيم افتراضية في حال تأخرت البيانات
+    const currentStats = stats || {
+        totalUsers: 0,
+        freelancersPercent: 0,
+        companiesPercent: 0,
     };
 
     return (
         <Stack direction={{ xs: "column", md: "row" }} spacing={3}>
+            {/* بطاقة إجمالي المستخدمين */}
             <StatCard
                 label="Total Users"
                 icon={<PeopleAltOutlinedIcon />}
                 variant="number"
-                value={stats.totalUsers.value}
-                footer={stats.totalUsers.footer}
-                trend
+                value={currentStats.totalUsers} // 👈 ربط حقيقي
+                footer="Active accounts on platform"
+                trend={false} // أوقفتها مؤقتاً لأن الباك إند حالياً لا يرسل نسبة نمو
             />
+
+            {/* بطاقة الفريلانسرز */}
             <StatCard
                 label="Freelancers"
                 icon={<PersonSearchOutlinedIcon />}
                 variant="percentage"
-                value={stats.freelancers.value}
-                footer={stats.freelancers.footer}
+                value={currentStats.freelancersPercent} // 👈 ربط حقيقي
+                footer="Verified Professional Network"
             />
+
+            {/* بطاقة الشركات */}
             <StatCard
                 label="Company"
                 icon={<ApartmentOutlinedIcon />}
                 variant="percentage"
-                value={stats.company.value}
-                footer={stats.company.footer}
+                value={currentStats.companiesPercent} // 👈 ربط حقيقي
+                footer="Tier-1 Managed Accounts"
             />
         </Stack>
     );

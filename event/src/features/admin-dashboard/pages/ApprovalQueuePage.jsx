@@ -1,6 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { Box } from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import * as PropTypes from "prop-types";
+
+// 👑 1. إزالة axios واستيراد الخدمة الموحدة
+import adminService from "../../../services/adminService/adminService.js";
 
 import {
     fetchApprovals,
@@ -12,23 +17,20 @@ import {
     selectApprovalStatus,
     selectActiveFilter,
     selectActionStatus,
-    selectApprovalPagination, selectApprovalLastPage, selectApprovalTotal, selectApprovalPerPage,
+    selectApprovalPagination,
+    selectApprovalLastPage,
+    selectApprovalTotal,
+    selectApprovalPerPage,
 } from "./../approvalsSlice";
 
 import { T } from "./../Theme";
-
 import TopBar from "../components/TopBar.jsx";
 import ApprovalHeader from "../pendingApproval-component/ApprovalHeader.jsx";
 import ApprovalTabs from "../pendingApproval-component/ApprovalTabs.jsx";
 import ApprovalList from "../pendingApproval-component/ApprovalList.jsx";
-import * as PropTypes from "prop-types";
 import RejectReasonDialog from "../pendingApproval-component/RejectReasonDialog.jsx";
 import Sidebar from "../components/Sidebar.jsx";
 import ListingDetailsDrawer from "./ListingDetailsDrawer.jsx";
-import {useNavigate} from "react-router-dom";
-import axios from "axios";
-
-// 👑 استيراد مكون السلايدر الجانبي لتفاصيل الخدمة
 
 function ApprovalPagination(props) {
     return null;
@@ -53,23 +55,19 @@ export default function ApprovalQueuePage() {
     const activeFilter    = useSelector(selectActiveFilter);
     const actionStatusMap = useSelector(selectActionStatus);
 
-// 👑 التعديل هنا: جلب بيانات الـ pagination منفصلة لتطابق الـ Selectors الجديدة
     const page            = useSelector(selectApprovalPagination);
     const lastPage        = useSelector(selectApprovalLastPage);
     const total           = useSelector(selectApprovalTotal);
     const perPage         = useSelector(selectApprovalPerPage);
 
-// تجميعها في كائن واحد لتمريره للمكونات بسلاسة
     const pagination      = { page, lastPage, total, perPage };
 
     const currentUser = useSelector((state) => state.auth?.user) || {
         name: "Admin",
         role: "ADMINISTRATOR",
     };
-    // dialog state لسبب الرفض
-    const [rejectTarget, setRejectTarget] = useState(null);
 
-    // 👑 حالات التحكم بالسلايدر الجانبي للتفاصيل
+    const [rejectTarget, setRejectTarget] = useState(null);
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [selectedListing, setSelectedListing] = useState(null);
 
@@ -80,20 +78,19 @@ export default function ApprovalQueuePage() {
     const handleFilterChange = (value) => dispatch(setActiveFilter(value));
     const handlePageChange   = (page) => dispatch(setPage(page));
 
-    // 👑 فتح السلايدر الجانبي وتمرير تفاصيل الخدمة المختارة عند الضغط على Details
-    // 👑 تعديل دالة عرض التفاصيل لتتوافق مع الـ Listing والـ Job Offer
+    // 👑 2. تعديل الدالة لاستخدام adminService بدلاً من الروابط المباشرة
     const handleViewDetails = async (item) => {
         const rawData = item.raw || item;
         const isJob = rawData.type === 'job' || rawData.job_title !== undefined;
 
         if (isJob) {
             try {
-                // استدعاء تفاصيل الوظيفة من الرابط الذي أرسلتيه
-                const token = localStorage.getItem("token");
-                const response = await axios.get(`http://127.0.0.1:8000/api/job-offers/${rawData.id}`, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-                setSelectedListing({ ...response.data.data, type: 'job' });
+                // 👑 جلب التفاصيل عبر الخدمة الموحدة بدلاً من الرابط المباشر
+                const response = await adminService.getJobOfferById(rawData.id);
+
+                // التأكد من استخراج البيانات بشكل صحيح سواء كانت مغلفة بـ data أم لا
+                const data = response.data !== undefined ? response.data : response;
+                setSelectedListing({ ...data, type: 'job' });
             } catch (error) {
                 console.error("Failed to fetch job details:", error);
                 setSelectedListing({ ...rawData, type: 'job' });
@@ -104,15 +101,12 @@ export default function ApprovalQueuePage() {
         setDrawerOpen(true);
     };
 
-    // 👑 تعديل القبول ليدعم الوظائف والـ Listings
     const handleApprove = (id) => {
         const item = items.find((i) => i.id === id);
         const isJob = item?.type === 'job' || item?.raw?.job_title !== undefined;
-
         dispatch(approveRequest({ id, type: isJob ? 'job' : 'listing' }));
     };
 
-    // 👑 تعديل الرفض ليدعم الوظائف والـ Listings
     const handleRejectClick = (id) => {
         const item = items.find((i) => i.id === id);
         const isJob = item?.type === 'job' || item?.raw?.job_title !== undefined;
@@ -145,7 +139,6 @@ export default function ApprovalQueuePage() {
                 </Box>
             </Box>
 
-            {/* نافذة سبب الرفض */}
             <RejectReasonDialog
                 open={!!rejectTarget}
                 itemTitle={rejectTarget?.title}
@@ -153,7 +146,6 @@ export default function ApprovalQueuePage() {
                 onConfirm={handleRejectConfirm}
             />
 
-            {/* 👑 السلايدر الجانبي لعرض تفاصيل الخدمة */}
             <ListingDetailsDrawer
                 open={drawerOpen}
                 onClose={() => setDrawerOpen(false)}

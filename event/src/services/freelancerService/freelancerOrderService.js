@@ -1,25 +1,15 @@
-import axios from "axios";
-
-const API_URL = "http://127.0.0.1:8000/api/";
+import freelancerApi from './FreelancerApi'; // 👈 استيراد الكلاس المستقل
 
 // جلب حجوزات الفريلانسر
 const getProviderBookings = async () => {
-    const token = localStorage.getItem("token");
-
-    const response = await axios.get(API_URL + "provider/bookings", {
-        headers: {
-            "Authorization": `Bearer ${token}`
-        }
-    });
-
+    const response = await freelancerApi.get('/provider/bookings');
     return response.data;
 };
+
+// جلب صور الخدمة مع معالجة الأخطاء
 const getListingImages = async (listingId) => {
-    const token = localStorage.getItem("token");
     try {
-        const response = await axios.get(`${API_URL}listings/${listingId}/images`, {
-            headers: { "Authorization": `Bearer ${token}` }
-        });
+        const response = await freelancerApi.get(`/listings/${listingId}/images`);
         return response.data;
     } catch (error) {
         console.error(`فشل جلب صور الخدمة ${listingId}`, error);
@@ -29,38 +19,33 @@ const getListingImages = async (listingId) => {
 
 // قبول الحجز
 const acceptBooking = async (bookingId) => {
-    const token = localStorage.getItem("token");
-    // ملاحظة: استخدمت PUT، إذا كان الباك إند يستخدم POST بدليها لـ axios.post
-    const response = await axios.put(`${API_URL}bookings/${bookingId}/accept`, {}, {
-        headers: { "Authorization": `Bearer ${token}` }
-    });
+    const response = await freelancerApi.put(`/bookings/${bookingId}/accept`, {});
     return response.data;
 };
 
 // رفض الحجز
 const rejectBooking = async (bookingId) => {
-    const token = localStorage.getItem("token");
-    const response = await axios.put(`${API_URL}bookings/${bookingId}/reject`, {}, {
-        headers: { "Authorization": `Bearer ${token}` }
-    });
+    const response = await freelancerApi.put(`/bookings/${bookingId}/reject`, {});
     return response.data;
 };
 
+// جلب تفاصيل الحجز
 const getBookingDetails = async (bookingId) => {
-    const token = localStorage.getItem("token");
-    const response = await axios.get(`${API_URL}book/${bookingId}`, {
-        headers: { "Authorization": `Bearer ${token}` }
-    });
+    const response = await freelancerApi.get(`/book/${bookingId}`);
     return response.data;
 };
 
-// لا تنسي إضافتها داخل الكائن المصدر:
+const getProviderWallet = async () => {
+    const response = await freelancerApi.get('/provider/wallet');
+    return response.data.data || response.data;
+};
 const freelancerOrderService = {
     getProviderBookings,
     getListingImages,
     acceptBooking,
     rejectBooking,
-    getBookingDetails // 🔥 أضيفيها هنا
+    getBookingDetails,
+    getProviderWallet
 };
 
 export default freelancerOrderService;

@@ -1,20 +1,8 @@
 import React from "react";
-import { Box, Typography, Button } from "@mui/material";
-import FilterListIcon from "@mui/icons-material/FilterList";
-import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
+import { Box, Typography } from "@mui/material";
 import { T } from "../Theme";
 
-const actionBtnSx = {
-    borderColor: T.inputBorder,
-    color: T.textPrimary,
-    fontSize: "0.78rem",
-    fontWeight: 600,
-    textTransform: "none",
-    px: 2,
-    "&:hover": { borderColor: T.gold, bgcolor: "transparent" },
-};
-
-export default function ReceiptsTableToolbar({ onFilter, onExport }) {
+export default function ReceiptsTableToolbar() {
     return (
         <Box
             sx={{
@@ -36,15 +24,6 @@ export default function ReceiptsTableToolbar({ onFilter, onExport }) {
             >
                 Recent Receipts
             </Typography>
-
-            <Box sx={{ display: "flex", gap: 1.5 }}>
-                <Button variant="outlined" startIcon={<FilterListIcon />} onClick={onFilter} sx={actionBtnSx}>
-                    Filter
-                </Button>
-                <Button variant="outlined" startIcon={<FileDownloadOutlinedIcon />} onClick={onExport} sx={actionBtnSx}>
-                    Export
-                </Button>
-            </Box>
         </Box>
     );
 }

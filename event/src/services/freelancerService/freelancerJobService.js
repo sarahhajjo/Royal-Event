@@ -1,53 +1,30 @@
-import axios from "axios";
+import freelancerApi from './FreelancerApi'; // 👈 استيراد الكلاس المستقل
 
-const API_URL = "http://127.0.0.1:8000/api/";
-
-// دالة جلب الوظائف المتاحة
+// جلب الوظائف المتاحة
 const getJobOffers = async () => {
-    const token = localStorage.getItem("token");
-    const response = await axios.get(API_URL + "job-offers", {
-        headers: {
-            Authorization: `Bearer ${token}`
-        }
-    });
-    // إعادة مصفوفة البيانات (حسب شكل الاستجابة من الباك إند)
+    const response = await freelancerApi.get('/job-offers');
     return response.data.data || response.data;
 };
 
-
+// جلب تفاصيل وظيفة محددة
 const getJobOfferById = async (id) => {
-    const token = localStorage.getItem("token");
-    const response = await axios.get(`${API_URL}job-offers/${id}`, {
-        headers: {
-            Authorization: `Bearer ${token}`
-        }
-    });
-    return response.data.data; // نرجع الـ data مباشرة
-};
-const applyForJob = async (id) => {
-    const token = localStorage.getItem("token");
-    // نرسل POST request، ونرسل كائن فارغ {} كبيانات إذا كان الباك إند لا يطلب بيانات إضافية في الـ body
-    const response = await axios.post(`${API_URL}job-offers/${id}/apply`, {}, {
-        headers: {
-            Authorization: `Bearer ${token}`
-        }
-    });
-    return response.data;
-};
-const getMyAppliedJobs = async () => {
-    // 1. جلب التوكن يدوياً بدلاً من استخدام authHeaders غير المعرفة
-    const token = localStorage.getItem("token");
-
-    // 2. إرسال الطلب (تأكدي أن الرابط هنا يطابق الرابط المخصص لجلب وظائف الفريلانسر في الباك إند)
-    const response = await axios.get(`${API_URL}my-applied-jobs`, {
-        headers: {
-            Authorization: `Bearer ${token}` // 👈 إرسال التوكن بهذا الشكل
-        }
-    });
-
-    // 3. إرجاع البيانات
+    const response = await freelancerApi.get(`/job-offers/${id}`);
     return response.data.data;
 };
+
+// التقديم على وظيفة
+const applyForJob = async (id) => {
+    // نمرر كائن فارغ {} كجسم للطلب (body) لأن الطلب POST
+    const response = await freelancerApi.post(`/job-offers/${id}/apply`, {});
+    return response.data;
+};
+
+// جلب الوظائف التي قدمت عليها
+const getMyAppliedJobs = async () => {
+    const response = await freelancerApi.get('/my-applied-jobs');
+    return response.data.data;
+};
+
 const freelancerJobService = {
     getJobOffers,
     getJobOfferById,

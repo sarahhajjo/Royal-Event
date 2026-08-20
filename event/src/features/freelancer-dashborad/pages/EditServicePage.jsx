@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { Box, Typography, CircularProgress, useTheme } from '@mui/material';
-import axios from 'axios';
 
-// استيراد المكونات
+import freelancerOfferService from '../../../services/freelancerService/freelancerOfferService';
+
 import CoreDetails from '../components/add-service/CoreDetails';
 import CustomizationPricing from '../components/add-service/CustomizationPricing';
 import Logistics from '../components/add-service/Logistics';
@@ -17,11 +17,9 @@ import PageBreadcrumb from '../components/PageBreadcrumb.jsx';
 export default function EditServicePage() {
     const theme = useTheme();
     const isDark = theme.palette.mode === 'dark';
-    const { id } = useParams();
-    const dispatch = useDispatch();
+    const { id } = useParams(); // 👑 هذا سيعرف إذا كنا نعدل أو ننشئ
     const navigate = useNavigate();
 
-    // حالة محلية للفورم لضمان سلاسة الكتابة والتعديل
     const [formData, setFormData] = useState({
         title: { ar: "", en: "" },
         description: { ar: "", en: "" },
@@ -45,18 +43,21 @@ export default function EditServicePage() {
         secondaryPhone: "",
     });
 
-    const [isLoading, setIsLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(false); // تم تغييرها لتعمل مع الإضافة والتعديل
+    const [isPublishing, setIsPublishing] = useState(false);
 
-    // جلب بيانات الخدمة عند فتح الصفحة وتعبئتها بـ formData
     useEffect(() => {
+        // إذا كان هناك ID، إذن نحن نعدل، نقوم بجلب البيانات
         const loadServiceData = async () => {
             if (id) {
+                setIsLoading(true);
                 try {
-                    const token = localStorage.getItem("token");
-                    const response = await axios.get(`http://127.0.0.1:8000/api/listings/${id}`, {
-                        headers: { "Authorization": `Bearer ${token}` }
-                    });
-                    const item = response.data.data;
+                    console.log("🚀 Fetching Data for ID:", id);
+                    let item = await freelancerOfferService.getListingById(id);
+
+                    if (item && item.data && !item.title) {
+                        item = item.data;
+                    }
 
                     if (item) {
                         const firstVariant = item.variants?.[0] || {};
@@ -82,26 +83,31 @@ export default function EditServicePage() {
                             }
                         });
 
+                        const formatI18nField = (field) => {
+                            if (!field) return { ar: "", en: "" };
+                            if (typeof field === "string") return { ar: field, en: field };
+                            return { ar: field.ar || "", en: field.en || "" };
+                        };
+
                         setFormData({
-                            title: item.title || { ar: "", en: "" },
-                            description: item.description || { ar: "", en: "" },
-                            category_id: item.category_id || "",
-                            district_id: item.district_id || "",
+                            title: formatI18nField(item.title),
+                            description: formatI18nField(item.description),
+                            category_id: item.category?.id || item.category_id || "",
+                            district_id: item.district?.id || item.district_id || "",
                             material_composition: item.material_composition || "",
                             includesTools: !!item.material_composition,
-
                             price_type: firstVariant.price_type || "fixed",
                             currency: firstVariant.currency || "SAR",
-                            variants: item.variants?.length > 0 ? item.variants : [{ variant_name: { ar: "", en: "" }, price: 0 }],
-
+                            variants: item.variants?.length > 0 ? item.variants.map(variant => ({
+                                ...variant,
+                                variant_name: formatI18nField(variant.variant_name || variant.name),
+                                price: variant.price || 0,
+                            })) : [{ variant_name: { ar: "", en: "" }, price: 0 }],
                             images: item.images || [],
-
                             cancel_before_acceptance: Boolean(item.cancel_before_acceptance),
                             cancel_after_acceptance: Boolean(item.cancel_after_acceptance),
                             cancel_before_payment: Boolean(item.cancel_before_payment),
-
                             secondaryPhone: item.secondary_contact_number || "",
-
                             dateSelectionMode: extractedSelectedDates.length > 0 ? "Multiple Days" : "Date Range",
                             selectedDates: extractedSelectedDates,
                             shifts: extractedShifts,
@@ -111,7 +117,7 @@ export default function EditServicePage() {
                         });
                     }
                 } catch (error) {
-                    console.error("Failed to fetch service for edit", error);
+                    console.error("❌ Failed to fetch service for edit", error);
                 } finally {
                     setIsLoading(false);
                 }
@@ -120,7 +126,54 @@ export default function EditServicePage() {
         loadServiceData();
     }, [id]);
 
-    // 👑 الستايل الزجاجي الموحد والمتكيف مع الثيم
+    // 👑 3. دالة الحفظ الذكية (إنشاء أو تعديل)
+    const handleSaveService = async (e) => {
+        if (e) e.preventDefault(); // منع التحديث
+        setIsPublishing(true);
+
+        try {
+            const payload = { ...formData };
+
+            // تنظيف الثواني من الأوقات
+            if (payload.variants && payload.variants.length > 0) {
+                payload.variants = payload.variants.map(variant => ({
+                    ...variant,
+                    availabilities: variant.availabilities?.map(avail => ({
+                        ...avail,
+                        slots: avail.slots?.map(slot => ({
+                            ...slot,
+                            start_time: slot.start_time ? slot.start_time.substring(0, 5) : slot.start_time,
+                            end_time: slot.end_time ? slot.end_time.substring(0, 5) : slot.end_time,
+                        }))
+                    }))
+                }));
+            }
+
+            if (id) {
+                // يوجد ID => إذن نحن نقوم بالتعديل
+                console.log("🚀 جاري حفظ التعديلات...", payload);
+                await freelancerOfferService.updateListing(id, payload);
+                console.log("✅ تم التعديل بنجاح!");
+            } else {
+                // لا يوجد ID => إذن نحن نقوم بإنشاء خدمة جديدة
+                console.log("🚀 جاري إنشاء خدمة جديدة...", payload);
+                await freelancerOfferService.createListing(payload);
+                console.log("✅ تم إنشاء الخدمة بنجاح!");
+            }
+
+            navigate(-1); // العودة للخلف بعد النجاح
+
+        } catch (error) {
+            console.error("❌ حدث خطأ أثناء الحفظ:", error);
+            if (error.response && error.response.data) {
+                console.error("⚠️ تفاصيل الخطأ من السيرفر:", error.response.data.errors || error.response.data.message);
+                alert("فشل الحفظ! يرجى مراجعة الحقول المطلوبة.");
+            }
+        } finally {
+            setIsPublishing(false);
+        }
+    };
+
     const glassSx = {
         background: isDark ? "rgba(15, 15, 20, 0.65)" : "rgba(250, 248, 245, 0.55)",
         backdropFilter: "blur(16px)",
@@ -136,7 +189,7 @@ export default function EditServicePage() {
         return (
             <Box dir="ltr" sx={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center', bgcolor: 'background.default', color: 'text.primary' }}>
                 <CircularProgress color="primary" />
-                <Typography sx={{ ml: 2, fontSize: '1rem', fontFamily: "'Raleway', sans-serif" }}>جاري تحميل بيانات الخدمة للتعديل...</Typography>
+                <Typography sx={{ ml: 2, fontSize: '1rem', fontFamily: "'Raleway', sans-serif" }}>Loading service details...</Typography>
             </Box>
         );
     }
@@ -161,7 +214,7 @@ export default function EditServicePage() {
             <Sidebar />
 
             <Box sx={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, overflow: "hidden" }}>
-                <Header title="Edit Service" />
+                <Header title={id ? "Edit Service" : "Add New Service"} />
 
                 <Box
                     component="main"
@@ -176,11 +229,10 @@ export default function EditServicePage() {
                 >
                     <Box sx={{ ...glassSx, maxWidth: '1152px', mx: 'auto', width: '100%', display: 'flex', flexDirection: 'column', gap: 4 }}>
                         <PageBreadcrumb
-                            title="Edit Service"
-                            subtitle="Update your service details below."
+                            title={id ? "Edit Service" : "Add New Service"}
+                            subtitle={id ? "Update your service details below." : "Fill in the details to create a new service."}
                         />
 
-                        {/* تمرير البيانات وحالة التحديث لكل المكونات */}
                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3.5 }}>
                             <CoreDetails data={formData} onChange={setFormData} />
                             <CustomizationPricing data={formData} onChange={setFormData} />
@@ -188,7 +240,10 @@ export default function EditServicePage() {
                             <Logistics data={formData} onChange={setFormData} />
                         </Box>
 
-                        <ActionBar editMode={true} serviceId={id} data={formData} />
+                        <ActionBar
+                            onPublish={(e) => handleSaveService(e)} // 👑 نمرر الدالة الذكية هنا
+                            isPublishing={isPublishing}
+                        />
                     </Box>
                 </Box>
             </Box>

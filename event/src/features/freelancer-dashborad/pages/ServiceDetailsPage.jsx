@@ -3,7 +3,9 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { useTranslation } from "react-i18next";
 import { Box, Typography, Button, CircularProgress, useTheme } from "@mui/material";
-import axios from "axios";
+
+// 👑 1. استيراد الخدمة بدلاً من axios المباشر
+import freelancerOfferService from '../../../services/freelancerService/freelancerOfferService';
 import { fetchServiceDetails, clearServiceDetails } from "../components/service-details/ServiceDetailsSlice";
 import { pickLocalized } from "../../../i18n/localize.js";
 
@@ -32,7 +34,10 @@ const fixImageUrl = (img) => {
     if (!imagePath) return null;
     if (imagePath.startsWith('http')) return imagePath;
 
-    const BACKEND_URL = 'http://127.0.0.1:8000';
+    // 👑 الرابط الديناميكي بدلاً من الثابت
+    const base = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+    const BACKEND_URL = base.replace(/\/api\/?$/, '');
+
     let cleanPath = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
     if (cleanPath.includes('/uploads/') && !cleanPath.includes('/storage/')) {
         cleanPath = cleanPath.replace('/uploads/', '/storage/uploads/');
@@ -65,14 +70,19 @@ export default function ServiceDetailsPage() {
     const { i18n } = useTranslation();
     const locale = i18n.language?.startsWith("ar") ? "ar" : "en-GB";
 
-    const handleDeleteService = async () => {
+    // 👑 2. دالة الحذف النظيفة
+    const handleDeleteService = async (e) => {
+        if (e) e.preventDefault(); // منع التحديث المفاجئ
+
         if (window.confirm("Are you sure you want to delete this service?")) {
             try {
-                const token = localStorage.getItem("token");
-                await axios.delete(`http://127.0.0.1:8000/api/listings/${serviceId}`, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-                navigate("/catalog");
+                console.log("جاري حذف الخدمة...");
+                // استخدام الـ Service للحذف
+                await freelancerOfferService.deleteListing(serviceId);
+                console.log("✅ تم حذف الخدمة بنجاح!");
+                setTimeout(() => {
+                    navigate(-1);
+                }, 150);
             } catch (error) {
                 console.error("Failed to delete service:", error);
                 alert("حدث خطأ أثناء محاولة حذف الخدمة");
@@ -86,13 +96,11 @@ export default function ServiceDetailsPage() {
         if (serviceId) {
             dispatch(fetchServiceDetails(serviceId));
         }
-
         return () => {
             dispatch(clearServiceDetails());
         };
     }, [dispatch, serviceId]);
 
-    // 👑 الستايل الزجاجي الموحد والمتكيف مع الثيم
     const glassSx = {
         background: isDark ? "rgba(15, 15, 20, 0.65)" : "rgba(250, 248, 245, 0.55)",
         backdropFilter: "blur(16px)",
@@ -226,7 +234,8 @@ export default function ServiceDetailsPage() {
                             </Button>
 
                             <Button
-                                onClick={handleDeleteService}
+                                type="button" // 👑 لمنع الـ Refresh
+                                onClick={(e) => handleDeleteService(e)}
                                 variant="outlined"
                                 sx={{
                                     borderRadius: '10px',

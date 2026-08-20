@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import api from '../../services/api';
-import { adminService } from "../../services/adminService/adminService.js";
+// 👑 تم إزالة استيراد api المباشر من هنا
+import adminService from "../../services/adminService/adminService.js";
 
 // ── Thunks ────────────────────────────────────────────────────────────────────
 
@@ -24,14 +24,16 @@ export const fetchUserProfileById = createAsyncThunk('directory/fetchUserProfile
 
 // 3. جلب كل الشركات (Providers)
 export const fetchAllProviders = createAsyncThunk('directory/fetchAll', async () => {
-    const response = await api.get('/admin/providers');
-    return response.data.data;
+    // 👑 استخدام الخدمة الموحدة بدلاً من api.get
+    const response = await adminService.getAllProviders();
+    return response.data || response;
 });
 
 // 4. جلب كل الفريلانسرز
 export const fetchAllFreelancers = createAsyncThunk('directory/fetchAllFreelancers', async () => {
-    const response = await api.get('/admin/providers');
-    return response.data.data;
+    // 👑 استخدام الخدمة الموحدة بدلاً من api.get
+    const response = await adminService.getAllProviders();
+    return response.data || response;
 });
 
 // 5. جلب شركة محددة بالـ ID
@@ -71,8 +73,9 @@ export const updateFreelancerStatus = createAsyncThunk('directory/updateFreelanc
 // 🚀 9. جلب QR Code الخاص بمزود الخدمة (للأدمن)
 export const fetchAdminFreelancerQr = createAsyncThunk('directory/fetchAdminFreelancerQr', async (id, thunkAPI) => {
     try {
-        const response = await api.get(`/admin/providers/${id}/qr-code`);
-        return response.data?.qr_url || response.data?.data?.qr_url || null;
+        // 👑 استخدام الخدمة الموحدة بدلاً من api.get
+        const response = await adminService.getProviderQrCode(id);
+        return response?.qr_url || response?.data?.qr_url || null;
     } catch (error) {
         // نمرر الخطأ كالمعتاد لكن سنتجاهله في الـ extraReducers
         return thunkAPI.rejectWithValue(error.response?.data || error.message);
@@ -195,14 +198,13 @@ const directorySlice = createSlice({
             })
             .addCase(fetchFreelancerById.rejected, (state, action) => {
                 state.freelancerLoading = false;
-                state.error = action.payload; // هنا نعرض الخطأ لأن بيانات الفريلانسر أساسية
+                state.error = action.payload;
             })
 
             // 🚀 ── Admin QR Code ──
             .addCase(fetchAdminFreelancerQr.pending, (state) => {
                 state.qrLoading = true;
                 state.adminQrUrl = null;
-                // ⚠️ لا نضع state.error = null هنا كي لا نمسح أخطاء سابقة بالخطأ
             })
             .addCase(fetchAdminFreelancerQr.fulfilled, (state, action) => {
                 state.qrLoading = false;
@@ -211,8 +213,6 @@ const directorySlice = createSlice({
             .addCase(fetchAdminFreelancerQr.rejected, (state) => {
                 state.qrLoading = false;
                 state.adminQrUrl = null;
-                // 👑 السر هنا: لا نكتب state.error = action.payload
-                // نتجاهل الخطأ بصمت لتبقى الصفحة تعمل ويظل مربع الـ QR فارغاً
             });
     },
 });

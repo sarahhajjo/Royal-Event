@@ -18,10 +18,14 @@ import dayjs from 'dayjs';
 import Sidebar from '../components/layout/Sidebar.jsx';
 import Header from '../components/layout/Header.jsx';
 
+// 👑 تحديث الدالة لتدعم متغيرات البيئة (Vite)
 const fixImageUrl = (img) => {
     if (!img) return null;
     if (img.startsWith('http')) return img;
-    const BACKEND_URL = 'http://127.0.0.1:8000';
+
+    // استخدام متغير البيئة أو الرابط المحلي كاحتياط
+    const BACKEND_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
+
     let cleanPath = img.startsWith('/') ? img : `/${img}`;
     if (cleanPath.includes('/uploads/') && !cleanPath.includes('/storage/')) {
         cleanPath = cleanPath.replace('/uploads/', '/storage/uploads/');

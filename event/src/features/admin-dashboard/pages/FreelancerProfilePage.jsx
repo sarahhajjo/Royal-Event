@@ -22,7 +22,11 @@ import { fetchFreelancerById, fetchAdminFreelancerQr } from '../directorySlice.j
 const fixImageUrl = (img) => {
     if (!img) return null;
     if (img.startsWith('http')) return img;
-    const BACKEND_URL = 'http://127.0.0.1:8000';
+
+    // 👑 استخراج الرابط الأساسي بدون كلمة /api
+    const base = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+    const BACKEND_URL = base.replace(/\/api\/?$/, '');
+
     let cleanPath = img.startsWith('/') ? img : `/${img}`;
     if (cleanPath.includes('/uploads/') && !cleanPath.includes('/storage/')) {
         cleanPath = cleanPath.replace('/uploads/', '/storage/uploads/');
@@ -32,7 +36,6 @@ const fixImageUrl = (img) => {
     }
     return `${BACKEND_URL}${cleanPath}`;
 };
-
 export default function FreelancerProfilePage() {
     const { id } = useParams();
     const navigate = useNavigate();

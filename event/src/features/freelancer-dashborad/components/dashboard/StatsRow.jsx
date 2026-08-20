@@ -31,7 +31,7 @@ const StatsRow = ({ stats }) => {
     const statItems = [
         { title: "TOTAL EARNINGS", value: stats?.totalEarnings || "$0", sub: stats?.earningsTrend || "", icon: AccountBalanceWalletIcon },
         { title: "ACTIVE ORDERS", value: stats?.activeOrders || "0", sub: `${stats?.ordersActionNeeded || 0} requiring action today`, icon: ShoppingBagIcon },
-        { title: "COMPLETION", value: `${stats?.completion || 0}%`, sub: "Performance overview", icon: CheckCircleIcon }, // 👑 وضعنا نص فرعي خفيف لتوحيد المساحة
+        { title: "SERVICES", value: `${stats?.services || 0}`, sub: "Active catalog listings", icon: CheckCircleIcon }, // 👈 قراءة stats.services بدلاً من completion
         { title: "RATING", value: stats?.rating || "0", sub: stats?.ratingStatus || "", icon: StarIcon }
     ];
 

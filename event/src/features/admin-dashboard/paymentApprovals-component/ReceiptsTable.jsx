@@ -15,8 +15,7 @@ export default function ReceiptsTable({
                                           pagination,
                                           pageSize,
                                           processingIds,
-                                          onFilter,
-                                          onExport,
+                                          // 👑 تم إزالة onFilter و onExport من هنا
                                           onViewReceipt,
                                           onVerify,
                                           onReject,
@@ -24,7 +23,9 @@ export default function ReceiptsTable({
                                       }) {
     return (
         <Box sx={{ bgcolor: T.cardBg, border: `1px solid ${T.border}`, borderRadius: "12px", overflow: "hidden" }}>
-            <ReceiptsTableToolbar onFilter={onFilter} onExport={onExport} />
+            {/* 👑 تم إزالة تمرير الدوال هنا أيضاً */}
+            <ReceiptsTableToolbar />
+
             <ReceiptsTableHead />
             <ReceiptsTableBody
                 items={items}

@@ -1,5 +1,5 @@
-import React from "react";
-import { Box, Typography } from "@mui/material";
+import React, { useState, useEffect } from "react";
+import { Box, Typography, CircularProgress } from "@mui/material";
 
 import Sidebar from "../components/Sidebar.jsx";
 import TopBar from "../components/TopBar.jsx";
@@ -8,7 +8,48 @@ import PendingApproval from "../overview-components/PendingApproval/PendingAppro
 import RecentActivity from "../overview-components/RecentActivity/RecentActivity.jsx";
 import TopServices from "../overview-components/TopServices/TopServices.jsx";
 
+// 👑 استيراد خدمة الإدمن (تأكدي من صحة المسار حسب مجلدات مشروعك)
+import adminService from "../../../services/adminService/adminService.js";
+
 const DashboardPage = () => {
+    // 👑 1. تعريف حالة البيانات والتحميل
+    const [stats, setStats] = useState({
+        totalUsers: 0,
+        freelancersPercent: 0,
+        companiesPercent: 0
+    });
+    const [isLoadingStats, setIsLoadingStats] = useState(true);
+
+    // 👑 2. جلب البيانات عند تحميل الصفحة
+    useEffect(() => {
+        const fetchStats = async () => {
+            try {
+                // نعتمد على التابع الذي أضفناه في الخطوة السابقة داخل adminService
+                const data = await adminService.getDashboardStats();
+
+                // حساب إجمالي المستخدمين (الشركات والفريلانسرز + المنظمين)
+                const totalProviders = data?.providers?.total || 0;
+                const totalOrganizers = data?.users?.organizers_total || 0;
+
+                // استخراج النسب المئوية وتحويلها لرقم (مثلاً "50%" بتصير 50)
+                const freelancerStr = data?.providers?.breakdown?.freelancer?.percentage || "0%";
+                const companyStr = data?.providers?.breakdown?.company?.percentage || "0%";
+
+                setStats({
+                    totalUsers: totalProviders + totalOrganizers,
+                    freelancersPercent: parseInt(freelancerStr),
+                    companiesPercent: parseInt(companyStr)
+                });
+            } catch (error) {
+                console.error("Failed to fetch dashboard stats:", error);
+            } finally {
+                setIsLoadingStats(false);
+            }
+        };
+
+        fetchStats();
+    }, []);
+
     // تأثيرات النقر
     const interactiveClickEffect = {
         transition: "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
@@ -28,7 +69,7 @@ const DashboardPage = () => {
             sx={{
                 width: "100vw",
                 height: "100vh",
-                bgcolor: "#FAF3E8", // 👈 تم تثبيت لون الخلفية الفاتح هنا ليتطابق مع السايدبار
+                bgcolor: "#FAF3E8",
                 display: "flex",
                 overflow: "hidden",
                 boxSizing: "border-box",
@@ -70,29 +111,16 @@ const DashboardPage = () => {
                             sx={{
                                 fontFamily: "'Playfair Display', serif",
                                 fontSize: "2.4rem",
-                                color: "#1C1712", // 👈 تثبيت لون النص ليكون مرئياً
+                                color: "#1C1712",
                                 mb: 1,
                             }}
                         >
                             Welcome back,{" "}
-                            <Box
-                                component="span"
-                                sx={{
-                                    color: "#8C6A1F", // 👈 تثبيت اللون الذهبي
-                                    fontWeight: 300,
-                                }}
-                            >
+                            <Box component="span" sx={{ color: "#8C6A1F", fontWeight: 300 }}>
                                 Executive Partner
                             </Box>
                         </Typography>
-                        <Typography
-                            variant="body1"
-                            sx={{
-                                color: "#7A6F5E", // 👈 تثبيت اللون الرمادي
-                                fontSize: "14px",
-                                fontWeight: 300,
-                            }}
-                        >
+                        <Typography variant="body1" sx={{ color: "#7A6F5E", fontSize: "14px", fontWeight: 300 }}>
                             Elevating standard event coordination to a fine art. Your
                             portfolio of exclusive reserves is performing at peak
                             efficiency today.
@@ -101,7 +129,14 @@ const DashboardPage = () => {
 
                     {/* Stats Row */}
                     <Box className="animate-fade-in" sx={{ animationDelay: "100ms", width: "100%" }}>
-                        <StatsCards />
+                        {/* 👑 3. تمرير البيانات وحالة التحميل إلى مكون StatsCards */}
+                        {isLoadingStats ? (
+                            <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+                                <CircularProgress sx={{ color: '#8C6A1F' }} />
+                            </Box>
+                        ) : (
+                            <StatsCards stats={stats} />
+                        )}
                     </Box>
 
                     {/* Pending Approval + Recent Activity */}
@@ -115,7 +150,6 @@ const DashboardPage = () => {
                             animationDelay: "200ms",
                         }}
                     >
-                        {/* العمود الأول: Pending + Services */}
                         <Box sx={{ display: "flex", flexDirection: "column", gap: 3.5, flex: 1 }}>
                             <Box sx={{ "& > div": interactiveClickEffect }}>
                                 <PendingApproval />
@@ -126,7 +160,6 @@ const DashboardPage = () => {
                             </Box>
                         </Box>
 
-                        {/* العمود الثاني: Recent Activity */}
                         <Box sx={{ flex: { xs: 1, lg: 0.4 }, "& > div, & .MuiPaper-root": interactiveClickEffect }}>
                             <RecentActivity />
                         </Box>
