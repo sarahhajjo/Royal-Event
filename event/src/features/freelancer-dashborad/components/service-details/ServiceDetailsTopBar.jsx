@@ -1,47 +1,49 @@
 import React from "react";
+import { Box, Typography, Button, IconButton, useTheme } from "@mui/material";
 import { ChevronLeft, Bell } from "lucide-react";
 import StatusPill from "./StatusPill";
 
 export default function ServiceDetailsTopBar({
-  serviceId,
-  status = "pending",
-  statusLabel = "Pending Approval",
-  onBack,
-  onEditService,
-}) {
+                                               serviceId,
+                                               status = "pending",
+                                               statusLabel = "Pending Approval",
+                                               onBack,
+                                               onEditService,
+                                             }) {
+  const theme = useTheme();
+
   return (
-    <div className="flex flex-col gap-3 border-b border-border pb-4 sm:flex-row sm:items-center sm:justify-between">
-      <div className="flex items-center gap-3">
-        <button
-          onClick={onBack}
-          aria-label="الرجوع للخلف"
-          className="flex h-9 w-9 items-center justify-center rounded-lg text-text-secondary transition hover:bg-primary/10 hover:text-text-primary"
-        >
-          <ChevronLeft size={20} />
-        </button>
-        <div>
-          <h1 className="text-lg font-semibold text-text-primary">Service Details</h1>
-        </div>
-      </div>
+      <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, sm: { alignItems: 'center', justifyContent: 'space-between' }, gap: 2, borderBottom: '1px solid', borderColor: theme.palette.divider, pb: 2.5 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <IconButton
+              onClick={onBack}
+              aria-label="الرجوع للخلف"
+              sx={{ color: theme.palette.text.secondary, borderRadius: '10px', '&:hover': { bgcolor: 'action.hover', color: theme.palette.text.primary } }}
+          >
+            <ChevronLeft size={20} />
+          </IconButton>
+          <Typography sx={{ fontSize: '1.1rem', fontWeight: 700, color: theme.palette.text.primary, fontFamily: "'Cinzel', serif" }}>Service Details</Typography>
+        </Box>
 
-      <div className="flex items-center gap-3">
-        <StatusPill label={statusLabel} variant={status} />
-        <span className="text-xs text-text-secondary">Service ID: #{serviceId}</span>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+          <StatusPill label={statusLabel} variant={status} />
+          <Typography sx={{ fontSize: '0.75rem', color: theme.palette.text.secondary }}>Service ID: #{serviceId}</Typography>
 
-        <button
-          aria-label="الإشعارات"
-          className="flex h-9 w-9 items-center justify-center rounded-lg text-text-secondary transition hover:bg-primary/10 hover:text-text-primary"
-        >
-          <Bell size={18} />
-        </button>
+          <IconButton
+              aria-label="الإشعارات"
+              sx={{ color: theme.palette.text.secondary, borderRadius: '10px', '&:hover': { bgcolor: 'action.hover', color: theme.palette.text.primary } }}
+          >
+            <Bell size={18} />
+          </IconButton>
 
-        <button
-          onClick={onEditService}
-          className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-bg-default transition hover:opacity-90"
-        >
-          Edit Service
-        </button>
-      </div>
-    </div>
+          <Button
+              onClick={onEditService}
+              variant="contained"
+              sx={{ borderRadius: '10px', px: 3, py: 0.8, fontSize: '0.8rem', fontWeight: 700, textTransform: 'none' }}
+          >
+            Edit Service
+          </Button>
+        </Box>
+      </Box>
   );
 }

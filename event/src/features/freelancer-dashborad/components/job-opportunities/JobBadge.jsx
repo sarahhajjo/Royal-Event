@@ -1,16 +1,28 @@
 import React from "react";
+import { Box, useTheme } from "@mui/material";
 
 export default function JobBadge({ label, variant = "outline" }) {
-    const styles =
-        variant === "solid"
-            ? "bg-primary text-bg-default border-primary"
-            : "border-primary/40 text-primary";
+    const theme = useTheme();
 
     return (
-        <span
-            className={`rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-wide ${styles}`}
+        <Box
+            sx={{
+                display: "inline-flex",
+                alignItems: "center",
+                borderRadius: "999px",
+                border: "1px solid",
+                borderColor: variant === "solid" ? "primary.main" : "rgba(212, 175, 55, 0.4)",
+                bgcolor: variant === "solid" ? "primary.main" : "transparent",
+                color: variant === "solid" ? theme.palette.background.default : "primary.main",
+                px: 1.5,
+                py: 0.5,
+                fontSize: "0.625rem",
+                fontWeight: 600,
+                textTransform: "uppercase",
+                letterSpacing: "0.08em",
+            }}
         >
-      {label}
-    </span>
+            {label}
+        </Box>
     );
 }

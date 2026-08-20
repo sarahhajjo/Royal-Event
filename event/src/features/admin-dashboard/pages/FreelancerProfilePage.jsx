@@ -8,24 +8,52 @@ import PhoneIphoneOutlinedIcon     from '@mui/icons-material/PhoneIphoneOutlined
 import VerifiedUserOutlinedIcon    from '@mui/icons-material/VerifiedUserOutlined';
 import StarIcon                    from '@mui/icons-material/Star';
 import ArrowBackIcon               from '@mui/icons-material/ArrowBack';
+import QrCodeScannerOutlinedIcon   from '@mui/icons-material/QrCodeScannerOutlined'; // تم الاستيراد
 import dayjs from 'dayjs';
 
 import { T, typography } from '../Theme.jsx';
 import Sidebar from '../components/Sidebar.jsx';
 import TopBar from '../components/TopBar.jsx';
 
-import { fetchFreelancerById } from '../directorySlice.js';
+// تأكد من استيراد دالة جلب الـ QR من الـ Slice الخاص بك
+import { fetchFreelancerById, fetchAdminFreelancerQr } from '../directorySlice.js';
 
+// دالة إصلاح مسار الصورة
+const fixImageUrl = (img) => {
+    if (!img) return null;
+    if (img.startsWith('http')) return img;
+
+    // 👑 استخراج الرابط الأساسي بدون كلمة /api
+    const base = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+    const BACKEND_URL = base.replace(/\/api\/?$/, '');
+
+    let cleanPath = img.startsWith('/') ? img : `/${img}`;
+    if (cleanPath.includes('/uploads/') && !cleanPath.includes('/storage/')) {
+        cleanPath = cleanPath.replace('/uploads/', '/storage/uploads/');
+    }
+    if (!cleanPath.startsWith('/storage/')) {
+        cleanPath = `/storage${cleanPath}`;
+    }
+    return `${BACKEND_URL}${cleanPath}`;
+};
 export default function FreelancerProfilePage() {
     const { id } = useParams();
     const navigate = useNavigate();
     const dispatch = useDispatch();
 
-    const { selectedFreelancer, freelancerLoading, error } = useSelector((state) => state.directory);
+    // جلب بيانات الـ QR من الـ state بالإضافة لبيانات الفريلانسر
+    const {
+        selectedFreelancer,
+        freelancerLoading,
+        error,
+        adminQrUrl,       // الرابط القادم من الـ Thunk الجديد
+        qrLoading         // حالة التحميل الخاصة بالـ QR
+    } = useSelector((state) => state.directory);
 
     useEffect(() => {
         if (id) {
             dispatch(fetchFreelancerById(id));
+            dispatch(fetchAdminFreelancerQr(id)); // استدعاء تابع الـ GET للـ QR
         }
     }, [dispatch, id]);
 
@@ -88,6 +116,9 @@ export default function FreelancerProfilePage() {
     const industryCategories = Array.isArray(profileData.categories) && profileData.categories.length > 0
         ? profileData.categories.join(' • ')
         : 'N/A';
+
+    // الرابط النهائي للـ QR (إما القادم من التابع الجديد أو الموجود مسبقاً في الداتا)
+    const finalQrUrl = adminQrUrl || business.qr_url || profileData.qr_code_url || null;
 
     const card = {
         backgroundColor: T.cardBg,
@@ -207,6 +238,40 @@ export default function FreelancerProfilePage() {
                                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                         <Typography sx={{ fontSize: '0.85rem', color: T.textPrimary, fontWeight: 600 }}>Joined Platform</Typography>
                                         <Typography sx={{ fontSize: '0.8rem', color: T.textMuted }}>{createdAt}</Typography>
+                                    </Box>
+                                </Paper>
+
+                                {/* ── قسم عرض الـ QR Code الخاص بالأدمن ── */}
+                                <Paper elevation={0} sx={card}>
+                                    <CardHeader icon={QrCodeScannerOutlinedIcon} title="Payment QR Code" />
+                                    <Typography sx={{ fontSize: '0.75rem', color: T.textMuted, mb: 2 }}>
+                                        Provider's official payment QR Code (View Only).
+                                    </Typography>
+
+                                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                                        <Box sx={{
+                                            width: 140,
+                                            height: 140,
+                                            border: `2px dashed ${T.border}`,
+                                            borderRadius: 2,
+                                            display: 'flex',
+                                            justifyContent: 'center',
+                                            alignItems: 'center',
+                                            backgroundColor: T.pageBg,
+                                            overflow: 'hidden'
+                                        }}>
+                                            {qrLoading ? (
+                                                <CircularProgress size={30} sx={{ color: T.gold }} />
+                                            ) : finalQrUrl ? (
+                                                <img
+                                                    src={fixImageUrl(finalQrUrl)}
+                                                    alt="Provider QR Code"
+                                                    style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                                                />
+                                            ) : (
+                                                <Typography sx={{ fontSize: '0.7rem', color: T.textMuted }}>No QR Uploaded</Typography>
+                                            )}
+                                        </Box>
                                     </Box>
                                 </Paper>
                             </Stack>

@@ -1,56 +1,85 @@
 import React from "react";
+import { Box, Typography, useTheme } from "@mui/material";
 import { Mail, ArrowRight, Package } from "lucide-react";
 
 export default function JobRightSidebar({ salary, paymentSystem, contactEmail, equipmentProvided }) {
+    const theme = useTheme();
+
+    const sidebarCardSx = {
+        borderRadius: '16px',
+        border: '1px solid',
+        borderColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
+        bgcolor: theme.palette.mode === 'dark' ? 'rgba(15, 15, 20, 0.4)' : 'rgba(255, 255, 255, 0.35)',
+        p: { xs: 3, md: 4 },
+        boxShadow: 'none'
+    };
+
     return (
-        <div className="flex flex-col gap-6">
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3.5 }}>
             {/* Financial & Perks Card */}
-            <div className="rounded-2xl border border-border bg-bg-paper p-6 md:p-8 shadow-xl">
-                <h3 className="mb-6 text-[10px] font-bold tracking-[0.2em] text-text-secondary uppercase">
+            <Box sx={sidebarCardSx}>
+                <Typography sx={{ mb: 3, fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.2em', color: theme.palette.text.secondary, textTransform: 'uppercase' }}>
                     Financial & Perks
-                </h3>
+                </Typography>
 
-                <div className="mb-6">
-                    <p className="text-sm text-text-secondary">Proposed Salary</p>
-                    <div className="mt-1 flex items-baseline gap-2">
-                        <span className="font-serif text-4xl font-bold text-primary">{salary}</span>
-                        {/* تم تثبيت عملة SAR هنا، ويتم جلب نظام الدفع ديناميكياً */}
-                        <span className="text-xs text-text-secondary">SAR {paymentSystem}</span>
-                    </div>
-                </div>
+                <Box sx={{ mb: 3 }}>
+                    <Typography sx={{ fontSize: '0.85rem', color: theme.palette.text.secondary }}>Proposed Salary</Typography>
+                    <Box sx={{ mt: 1, display: 'flex', alignItems: 'baseline', gap: 1.5 }}>
+                        <Typography sx={{ fontFamily: "'Cinzel', serif", fontSize: '2.2rem', fontWeight: 700, color: 'primary.main', lineHeight: 1 }}>
+                            {salary}
+                        </Typography>
+                        <Typography sx={{ fontSize: '0.75rem', color: theme.palette.text.secondary }}>
+                            SAR {paymentSystem}
+                        </Typography>
+                    </Box>
+                </Box>
 
-                <div className="flex flex-col gap-3">
-                    {/* هذا العنصر سيظهر فقط إذا كان الباك إند يرسل قيمة 1 أو true */}
-                    {equipmentProvided && (
-                        <div className="flex items-center gap-3 rounded-lg border border-border/50 bg-bg-default p-4 transition-colors hover:border-primary/30">
-                            <Package size={18} className="text-primary" />
-                            <span className="text-sm font-medium text-text-primary">Company Equipment Provided</span>
-                        </div>
-                    )}
-                </div>
-            </div>
+                {equipmentProvided && (
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, borderRadius: '10px', border: '1px solid', borderColor: theme.palette.divider, bgcolor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.5)', p: 2 }}>
+                        <Package size={18} color={theme.palette.primary.main} />
+                        <Typography sx={{ fontSize: '0.85rem', fontWeight: 500, color: theme.palette.text.primary }}>
+                            Company Equipment Provided
+                        </Typography>
+                    </Box>
+                )}
+            </Box>
 
             {/* Inquiries Card */}
-            <div className="rounded-2xl border border-border bg-bg-paper p-6 md:p-8 shadow-xl">
-                <h3 className="mb-6 text-[10px] font-bold tracking-[0.2em] text-text-secondary uppercase">
+            <Box sx={sidebarCardSx}>
+                <Typography sx={{ mb: 3, fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.2em', color: theme.palette.text.secondary, textTransform: 'uppercase' }}>
                     Inquiries
-                </h3>
+                </Typography>
 
-                <a
+                <Box
+                    component="a"
                     href={`mailto:${contactEmail}`}
-                    className="group flex items-center justify-between rounded-xl border border-border/50 bg-bg-default p-4 transition hover:border-primary/50"
+                    sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        borderRadius: '12px',
+                        border: '1px solid',
+                        borderColor: theme.palette.divider,
+                        bgcolor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.5)',
+                        p: 2.5,
+                        textDecoration: 'none',
+                        transition: 'all 0.3s ease',
+                        '&:hover': { borderColor: 'primary.main', '& .arrow-icon': { transform: 'translateX(4px)' } }
+                    }}
                 >
-                    <div className="flex flex-col gap-1.5">
-                        <Mail size={20} className="text-primary" />
-                        <p className="mt-1 text-xs text-text-secondary">Contact HR</p>
-                        <p className="text-sm font-semibold text-text-primary">{contactEmail}</p>
-                    </div>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                        <Mail size={20} color={theme.palette.primary.main} />
+                        <Typography sx={{ mt: 1, fontSize: '0.75rem', color: theme.palette.text.secondary }}>Contact HR</Typography>
+                        <Typography sx={{ fontSize: '0.85rem', fontWeight: 600, color: theme.palette.text.primary }}>{contactEmail}</Typography>
+                    </Box>
                     <ArrowRight
                         size={20}
-                        className="text-text-secondary transition group-hover:translate-x-1 group-hover:text-primary"
+                        color={theme.palette.text.secondary}
+                        className="arrow-icon"
+                        style={{ transition: 'transform 0.3s ease' }}
                     />
-                </a>
-            </div>
-        </div>
+                </Box>
+            </Box>
+        </Box>
     );
 }

@@ -1,8 +1,8 @@
 import React from 'react';
-import { Box, Typography, Button as MuiButton, CircularProgress, Paper } from '@mui/material';
+import { Box, Typography, Button as MuiButton, CircularProgress, Paper, Avatar } from '@mui/material';
 import HighlightOffIcon from '@mui/icons-material/HighlightOff';
 import VisibilityIcon from '@mui/icons-material/Visibility';
-import { T, typography } from '../Theme.jsx';
+import { T, typography, avatarBaseSx } from '../Theme.jsx';
 
 export default function ApprovalList({ items, status, actionStatusMap, onViewDetails, onApprove, onReject }) {
 
@@ -40,11 +40,9 @@ export default function ApprovalList({ items, status, actionStatusMap, onViewDet
                 const isApproving = actionState === "approving";
                 const isRejecting = actionState === "rejecting";
 
-                // استخلاص النصوص الإنجليزية بأمان تام
                 const titleText = typeof item.title === 'object' ? (item.title?.en || item.title?.ar || 'Untitled') : item.title;
                 const descText = typeof item.description === 'object' ? (item.description?.en || item.description?.ar || '') : item.description;
 
-                // جلب رابط الصورة الأولى المتاحة أو الصورة البديلة
                 const imageSrc = item.imageUrl || (item.images && item.images.length > 0 ? item.images[0].url : "https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&q=80&w=200");
 
                 return (
@@ -68,7 +66,6 @@ export default function ApprovalList({ items, status, actionStatusMap, onViewDet
                             }
                         }}
                     >
-                        {/* الجانب الأيسر: الصورة والمعلومات الأساسية */}
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2.5, width: { xs: '100%', md: '60%' } }}>
                             <Box
                                 component="img"
@@ -123,10 +120,8 @@ export default function ApprovalList({ items, status, actionStatusMap, onViewDet
                             </Box>
                         </Box>
 
-                        {/* الجانب الأيمن: أزرار التحكم والإجراءات */}
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, width: { xs: '100%', md: 'auto' }, justifyContent: { xs: 'flex-end', md: 'flex-start' } }}>
 
-                            {/* زر التفاصيل (يظهر دائماً) */}
                             <MuiButton
                                 onClick={() => onViewDetails(item)}
                                 sx={{
@@ -145,10 +140,8 @@ export default function ApprovalList({ items, status, actionStatusMap, onViewDet
                                 Details
                             </MuiButton>
 
-                            {/* 👑 إخفاء أزرار الرفض والقبول إذا لم تكن الخدمة معلقة، وعرض حالة بديلة */}
                             {item.status === 'pending_approval' ? (
                                 <>
-                                    {/* زر الرفض */}
                                     <MuiButton
                                         onClick={() => onReject(item.id)}
                                         disabled={isRejecting || isApproving}
@@ -168,7 +161,6 @@ export default function ApprovalList({ items, status, actionStatusMap, onViewDet
                                         {isRejecting ? 'Rejecting...' : 'Reject'}
                                     </MuiButton>
 
-                                    {/* زر الموافقة */}
                                     <MuiButton
                                         onClick={() => onApprove(item.id)}
                                         disabled={isRejecting || isApproving}
@@ -190,7 +182,6 @@ export default function ApprovalList({ items, status, actionStatusMap, onViewDet
                                     </MuiButton>
                                 </>
                             ) : (
-                                /* Badge للحالة إذا كانت مقبولة أو مرفوضة */
                                 <Box
                                     sx={{
                                         px: 2,

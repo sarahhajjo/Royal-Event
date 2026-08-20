@@ -1,3 +1,6 @@
+import React from 'react';
+import { Box, Tabs, Tab } from '@mui/material';
+
 const TABS = [
     { key: "active",    label: "Active" },    // الحالة: approved
     { key: "pending",   label: "Pending" },   // الحالة: pending_approval
@@ -5,24 +8,38 @@ const TABS = [
     { key: "cancelled", label: "Cancelled" }, // الحالة: cancelled
     { key: "rejected",  label: "Rejected" },  // الحالة: rejected
 ];
+
 export default function OfferTabs({ activeTab, onChange, counts = {} }) {
     return (
-        <div className="flex items-center gap-8 border-b border-border px-1 mb-8">
-            {TABS.map((tab) => (
-                <button
-                    key={tab.key}
-                    type="button"
-                    onClick={() => onChange(tab.key)}
-                    className={`relative pb-4 text-sm font-medium transition-colors ${
-                        activeTab === tab.key ? "text-primary" : "text-text-secondary hover:text-text-primary"
-                    }`}
-                >
-                    {tab.label} ({counts[tab.key] || 0})
-                    {activeTab === tab.key && (
-                        <span className="absolute inset-x-0 -bottom-px h-0.5 bg-primary animate-fade-in" />
-                    )}
-                </button>
-            ))}
-        </div>
+        <Box sx={{ borderBottom: (theme) => `1px solid ${theme.palette.divider}`, px: 0.5, mb: 4 }}>
+            <Tabs
+                value={activeTab}
+                onChange={(e, newValue) => onChange(newValue)}
+                TabIndicatorProps={{
+                    sx: { bgcolor: (theme) => theme.palette.primary.main, height: 2, borderRadius: '999px' }
+                }}
+                sx={{ minHeight: 'auto' }}
+            >
+                {TABS.map((tab) => (
+                    <Tab
+                        key={tab.key}
+                        value={tab.key}
+                        disableRipple
+                        label={`${tab.label} (${counts[tab.key] || 0})`}
+                        sx={{
+                            textTransform: 'none',
+                            minHeight: 'auto',
+                            fontSize: '0.85rem',
+                            fontWeight: 500,
+                            pb: 2,
+                            mr: 2,
+                            color: (theme) => theme.palette.text.secondary,
+                            '&:hover': { color: (theme) => theme.palette.text.primary },
+                            '&.Mui-selected': { color: (theme) => theme.palette.primary.main }
+                        }}
+                    />
+                ))}
+            </Tabs>
+        </Box>
     );
 }

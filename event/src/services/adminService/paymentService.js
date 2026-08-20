@@ -1,9 +1,11 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://127.0.0.1:8000/api';
+// 👑 قراءة الرابط ديناميكياً
+const baseURL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+const cleanApiBase = `${baseURL.replace(/\/api\/?$/, '')}/api`;
 
 const apiClient = axios.create({
-    baseURL: API_BASE_URL,
+    baseURL: cleanApiBase,
     headers: { 'Accept': 'application/json' },
 });
 
@@ -11,10 +13,11 @@ apiClient.interceptors.request.use((config) => {
     const token = localStorage.getItem('token');
     if (token) config.headers.Authorization = `Bearer ${token}`;
     return config;
+}, (error) => {
+    return Promise.reject(error);
 });
 
 export const paymentService = {
-    // POST /payments/upload-proof — form-data: proof_file (File), booking_id (Text)
     uploadProof: (bookingId, file) => {
         const formData = new FormData();
         formData.append('proof_file', file);

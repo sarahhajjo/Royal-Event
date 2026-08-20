@@ -1,3 +1,6 @@
+import React from 'react';
+import { Box, Tabs, Tab, Typography } from '@mui/material';
+
 const TABS = [
     { key: "active", label: "Active requests" },
     { key: "confirmed", label: "Confirmed" },
@@ -7,25 +10,46 @@ const TABS = [
 
 export default function OrderTabs({ activeTab, onChange, counts = {} }) {
     return (
-        <div className="flex items-center gap-6 border-b border-border px-1">
-            {TABS.map((tab) => {
-                const isActive = tab.key === activeTab;
-                return (
-                    <button
+        <Box sx={{ borderBottom: (theme) => `1px solid ${theme.palette.divider}`, px: 0.5 }}>
+            <Tabs
+                value={activeTab}
+                onChange={(e, newValue) => onChange(newValue)}
+                TabIndicatorProps={{
+                    sx: { bgcolor: (theme) => theme.palette.primary.main, height: 2, borderRadius: '999px' }
+                }}
+                sx={{ minHeight: 'auto' }}
+            >
+                {TABS.map((tab) => (
+                    <Tab
                         key={tab.key}
-                        onClick={() => onChange(tab.key)}
-                        className={`relative pb-3 text-sm transition-colors ${
-                            isActive ? "text-primary" : "text-text-secondary hover:text-text-primary"
-                        }`}
-                    >
-                        {tab.label}
-                        {typeof counts[tab.key] === "number" && (
-                            <span className="ml-1 text-text-secondary">({counts[tab.key]})</span>
-                        )}
-                        {isActive && <span className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-primary" />}
-                    </button>
-                );
-            })}
-        </div>
+                        value={tab.key}
+                        disableRipple
+                        label={
+                            <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 0.5 }}>
+                                <Typography component="span" sx={{ fontSize: '0.85rem' }}>
+                                    {tab.label}
+                                </Typography>
+                                {typeof counts[tab.key] === 'number' && (
+                                    <Typography
+                                        component="span"
+                                        sx={{ fontSize: '0.8rem', color: (theme) => theme.palette.text.secondary }}
+                                    >
+                                        ({counts[tab.key]})
+                                    </Typography>
+                                )}
+                            </Box>
+                        }
+                        sx={{
+                            textTransform: 'none',
+                            minHeight: 'auto',
+                            pb: 1.5,
+                            color: (theme) => theme.palette.text.secondary,
+                            '&:hover': { color: (theme) => theme.palette.text.primary },
+                            '&.Mui-selected': { color: (theme) => theme.palette.primary.main }
+                        }}
+                    />
+                ))}
+            </Tabs>
+        </Box>
     );
 }

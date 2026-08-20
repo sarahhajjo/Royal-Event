@@ -1,26 +1,49 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import freelancerOfferService from "../../../../services/freelancerService/freelancerOfferService.js";
-// 👑 التعديل هنا: استيراد ملف freelancerOfferService
 
-// إنشاء الـ Async Thunk
+// 1. إنشاء الخدمة (Create)
 export const createService = createAsyncThunk(
-    'freelancerOffer/createService', // يمكنك تغيير الاسم ليتناسب مع الملف
+    'freelancerOffer/createService',
     async (serviceData, thunkAPI) => {
         try {
-            // 👑 التعديل هنا: استخدام الخدمة الجديدة
             return await freelancerOfferService.createListing(serviceData);
         } catch (error) {
-            const message =
-                (error.response && error.response.data && error.response.data.message) ||
-                error.message ||
-                error.toString();
+            const message = (error.response?.data?.message) || error.message || error.toString();
+            return thunkAPI.rejectWithValue(message);
+        }
+    }
+);
+
+// 👑 2. تحديث الخدمة (Update) - (جديد)
+export const updateService = createAsyncThunk(
+    'freelancerOffer/updateService',
+    async ({ id, payload }, thunkAPI) => {
+        try {
+            // نمرر الـ ID والبيانات لخدمة التحديث
+            return await freelancerOfferService.updateListing(id, payload);
+        } catch (error) {
+            const message = (error.response?.data?.message) || error.message || error.toString();
+            return thunkAPI.rejectWithValue(message);
+        }
+    }
+);
+
+// 👑 3. حذف الخدمة (Delete) - (جديد)
+export const deleteService = createAsyncThunk(
+    'freelancerOffer/deleteService',
+    async (id, thunkAPI) => {
+        try {
+            await freelancerOfferService.deleteListing(id);
+            return id; // نعيد الـ ID لنتمكن من حذفه من الـ State إذا لزم الأمر
+        } catch (error) {
+            const message = (error.response?.data?.message) || error.message || error.toString();
             return thunkAPI.rejectWithValue(message);
         }
     }
 );
 
 const servicesSlice = createSlice({
-    name: 'freelancerOffer', // تعديل الاسم هنا أيضاً ليتوافق
+    name: 'freelancerOffer',
     initialState: {
         listing: null,
         isError: false,
@@ -38,6 +61,7 @@ const servicesSlice = createSlice({
     },
     extraReducers: (builder) => {
         builder
+            // ------ حالات الإنشاء (Create) ------
             .addCase(createService.pending, (state) => {
                 state.isLoading = true;
             })
@@ -47,6 +71,36 @@ const servicesSlice = createSlice({
                 state.listing = action.payload;
             })
             .addCase(createService.rejected, (state, action) => {
+                state.isLoading = false;
+                state.isError = true;
+                state.message = action.payload;
+            })
+
+            // 👑 ------ حالات التحديث (Update) ------
+            .addCase(updateService.pending, (state) => {
+                state.isLoading = true;
+            })
+            .addCase(updateService.fulfilled, (state, action) => {
+                state.isLoading = false;
+                state.isSuccess = true;
+                state.listing = action.payload; // تحديث بيانات الخدمة في الـ state
+            })
+            .addCase(updateService.rejected, (state, action) => {
+                state.isLoading = false;
+                state.isError = true;
+                state.message = action.payload;
+            })
+
+            // 👑 ------ حالات الحذف (Delete) ------
+            .addCase(deleteService.pending, (state) => {
+                state.isLoading = true;
+            })
+            .addCase(deleteService.fulfilled, (state, action) => {
+                state.isLoading = false;
+                state.isSuccess = true;
+                state.listing = null; // تفريغ الخدمة بعد حذفها
+            })
+            .addCase(deleteService.rejected, (state, action) => {
                 state.isLoading = false;
                 state.isError = true;
                 state.message = action.payload;

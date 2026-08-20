@@ -1,33 +1,38 @@
 import React from "react";
 import {
     Paper, Box, Typography, Button, TextField, Select, MenuItem,
-    FormControl, Checkbox, FormControlLabel, Grid
+    FormControl, Checkbox, FormControlLabel, Grid, useTheme
 } from "@mui/material";
 import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 
-// ── التنسيقات المشتركة ──
-const fieldSx = {
-    "& .MuiOutlinedInput-root": {
-        fontFamily: "'Raleway', sans-serif",
-        fontSize: "0.85rem",
-        color: "text.primary",
-        bgcolor: "rgba(201,168,76,0.02)",
-        "& fieldset": { borderColor: "rgba(201,168,76,0.2)" },
-        "&:hover fieldset": { borderColor: "rgba(201,168,76,0.4)" },
-        "&.Mui-focused fieldset": { borderColor: "primary.main" },
-    },
-};
-
-const labelSx = {
-    fontSize: "0.72rem",
-    color: "text.secondary",
-    fontFamily: "'Raleway', sans-serif",
-    letterSpacing: "0.08em",
-    textTransform: "uppercase",
-    mb: 1,
-};
-
 const CustomizationPricing = ({ data = {}, onChange }) => {
+    const theme = useTheme();
+
+    // 👑 التنسيقات المشتركة المتوافقة ديناميكياً مع الثيم الفاتح والداكن
+    const fieldSx = {
+        "& .MuiOutlinedInput-root": {
+            fontFamily: "'Raleway', sans-serif",
+            fontSize: "0.85rem",
+            color: theme.palette.text.primary,
+            bgcolor: theme.palette.mode === 'dark' ? "rgba(255, 255, 255, 0.02)" : "rgba(255, 255, 255, 0.6)",
+            "& fieldset": { borderColor: theme.palette.mode === 'dark' ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)" },
+            "&:hover fieldset": { borderColor: "primary.main" },
+            "&.Mui-focused fieldset": { borderColor: "primary.main" },
+        },
+        "& .MuiInputBase-input": {
+            color: theme.palette.text.primary,
+        }
+    };
+
+    const labelSx = {
+        fontSize: "0.72rem",
+        color: theme.palette.text.secondary,
+        fontFamily: "'Raleway', sans-serif",
+        letterSpacing: "0.08em",
+        textTransform: "uppercase",
+        mb: 1,
+    };
+
     const handleNormal = (field) => (e) => onChange?.({ ...data, [field]: e.target.value });
     const handleCheckbox = (field) => (e) => onChange?.({ ...data, [field]: e.target.checked });
 
@@ -51,14 +56,27 @@ const CustomizationPricing = ({ data = {}, onChange }) => {
         onChange?.({ ...data, variants: newVariants });
     };
 
-    // 👑 التعديل الأول: نقرأ القيمة بناءً على الـ price_type
     const pricingMode = data.price_type === "hourly" ? "HOURLY RATE" : "FIXED RATE";
 
     return (
-        <Paper elevation={0} sx={{ p: 3, mb: 3 }}>
+        <Paper
+            elevation={0}
+            sx={{
+                p: 4,
+                mb: 3,
+                // 👑 تحويل الـ Paper إلى حاوية زجاجية تتفاعل مع الثيم الفاتح والداكن
+                background: theme.palette.mode === 'dark' ? "rgba(15, 15, 20, 0.65)" : "rgba(250, 248, 245, 0.6)",
+                backdropFilter: "blur(16px)",
+                WebkitBackdropFilter: "blur(16px)",
+                border: "1px solid",
+                borderColor: theme.palette.mode === 'dark' ? "rgba(255, 255, 255, 0.08)" : "rgba(0, 0, 0, 0.06)",
+                borderRadius: "16px",
+                boxShadow: theme.palette.mode === 'dark' ? "0 8px 32px 0 rgba(0, 0, 0, 0.4)" : "0 8px 32px 0 rgba(130, 120, 110, 0.08)",
+            }}
+        >
             <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 3 }}>
                 <LocalOfferIcon sx={{ color: "primary.main", fontSize: "1.2rem" }} />
-                <Typography sx={{ fontFamily: "'Cinzel', serif", fontSize: "0.95rem", color: "text.primary", fontWeight: 600 }}>
+                <Typography sx={{ fontFamily: "'Cinzel', serif", fontSize: "1.1rem", color: theme.palette.text.primary, fontWeight: 600 }}>
                     Booking Details & Pricing
                 </Typography>
             </Box>
@@ -72,15 +90,14 @@ const CustomizationPricing = ({ data = {}, onChange }) => {
                             <Button
                                 key={mode}
                                 onClick={() => {
-                                    // 👑 التعديل الثاني: نحول الاختيار لـ fixed أو hourly ونرسله للـ State
                                     const backendValue = mode === "FIXED RATE" ? "fixed" : "hourly";
                                     onChange?.({ ...data, price_type: backendValue });
                                 }}
                                 sx={{
                                     py: 1.5, border: "1px solid",
-                                    borderColor: pricingMode === mode ? "primary.main" : "rgba(201,168,76,0.2)",
-                                    bgcolor: pricingMode === mode ? "rgba(201,168,76,0.12)" : "transparent",
-                                    color: pricingMode === mode ? "primary.main" : "text.secondary",
+                                    borderColor: pricingMode === mode ? "primary.main" : (theme.palette.mode === 'dark' ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.15)"),
+                                    bgcolor: pricingMode === mode ? "rgba(212,175,55,0.15)" : "transparent",
+                                    color: pricingMode === mode ? "primary.main" : theme.palette.text.secondary,
                                     fontFamily: "'Raleway', sans-serif", fontSize: "0.78rem", fontWeight: 700, letterSpacing: "0.05em",
                                     "&:hover": { borderColor: "primary.main" }
                                 }}
@@ -118,7 +135,7 @@ const CustomizationPricing = ({ data = {}, onChange }) => {
                     </Grid>
                 </Grid>
 
-                <Grid item xs={12} md={5} sx={{ borderLeft: { md: "1px solid rgba(201,168,76,0.15)" }, pl: { md: 4 } }}>
+                <Grid item xs={12} md={5} sx={{ borderLeft: { md: `1px solid ${theme.palette.mode === 'dark' ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)"}` }, pl: { md: 4 } }}>
                     <Typography sx={labelSx}>Cancellation Policy</Typography>
                     <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5, mt: 1 }}>
                         {[
@@ -129,9 +146,9 @@ const CustomizationPricing = ({ data = {}, onChange }) => {
                             <FormControlLabel
                                 key={item.id}
                                 control={
-                                    <Checkbox checked={!!data[item.id]} onChange={handleCheckbox(item.id)} sx={{ color: "rgba(201,168,76,0.4)", "&.Mui-checked": { color: "primary.main" } }} />
+                                    <Checkbox checked={!!data[item.id]} onChange={handleCheckbox(item.id)} sx={{ color: "primary.main", "&.Mui-checked": { color: "primary.main" } }} />
                                 }
-                                label={<Typography sx={{ fontSize: "0.82rem", fontFamily: "'Raleway', sans-serif", color: "text.secondary" }}>{item.label}</Typography>}
+                                label={<Typography sx={{ fontSize: "0.82rem", fontFamily: "'Raleway', sans-serif", color: theme.palette.text.secondary }}>{item.label}</Typography>}
                             />
                         ))}
                     </Box>

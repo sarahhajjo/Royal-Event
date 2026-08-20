@@ -1,15 +1,22 @@
 import React from "react";
+import { Box, Typography, useTheme } from "@mui/material";
 import ServiceVariantItem from "./ServiceVariantItem";
 
 export default function ServiceVariantsCard({ variants = [], materialComposition }) {
+    const theme = useTheme();
+
     return (
-        <div className="rounded-2xl border border-border bg-bg-paper p-5">
-            <h3 className="mb-4 text-sm font-semibold text-text-primary">Service Variants</h3>
-            <div className="flex flex-col gap-3">
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <Typography sx={{ fontSize: '0.95rem', fontWeight: 600, color: theme.palette.text.primary, fontFamily: "'Raleway', sans-serif" }}>
+                Service Variants
+            </Typography>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                 {variants.length === 0 ? (
-                    <p className="rounded-xl border border-dashed border-border p-4 text-center text-xs text-text-secondary">
-                        No variants added yet
-                    </p>
+                    <Box sx={{ p: 4, textAlign: 'center', borderRadius: '12px', border: '1px dashed', borderColor: theme.palette.divider }}>
+                        <Typography sx={{ fontSize: '0.85rem', color: theme.palette.text.secondary, fontFamily: "'Raleway', sans-serif" }}>
+                            No variants added yet
+                        </Typography>
+                    </Box>
                 ) : (
                     variants.map((variant) => (
                         <ServiceVariantItem
@@ -19,7 +26,7 @@ export default function ServiceVariantsCard({ variants = [], materialComposition
                         />
                     ))
                 )}
-            </div>
-        </div>
+            </Box>
+        </Box>
     );
 }

@@ -1,4 +1,5 @@
 import React from "react";
+import { Box, Typography, useTheme } from "@mui/material";
 import { Star, Wrench } from "lucide-react";
 
 export default function ServiceVariantItem({
@@ -8,37 +9,86 @@ export default function ServiceVariantItem({
                                                amount,
                                                currency = "SAR",
                                                badge = "BASE PRICE",
-                                               materialComposition, // نص الأدوات/المواد المطلوبة القادم من الباك، ممكن يكون فاضي أو null
+                                               materialComposition,
                                            }) {
+    const theme = useTheme();
+    const isDark = theme.palette.mode === 'dark';
     const hasSpecificTools = Boolean(materialComposition?.trim());
 
     return (
-        <div className="flex items-center justify-between rounded-xl border border-border bg-bg-default p-4">
-            <div className="flex items-start gap-3">
-        <span className="mt-0.5 flex h-8 w-8 flex-none items-center justify-center rounded-lg bg-primary/10 text-primary">
-          <Star size={16} />
-        </span>
-                <div>
-                    <p className="text-sm font-semibold text-text-primary">
+        <Box
+            sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                borderRadius: '12px',
+                border: '1px solid',
+                borderColor: theme.palette.divider,
+                bgcolor: isDark ? 'rgba(255, 255, 255, 0.02)' : 'rgba(255, 255, 255, 0.5)',
+                p: 2.5,
+                gap: 2
+            }}
+        >
+            <Box sx={{ display: 'flex', alignItems: 'start', gap: 2 }}>
+                <Box
+                    sx={{
+                        mt: 0.5,
+                        display: 'flex',
+                        height: 32,
+                        width: 32,
+                        flex: 'none',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        borderRadius: '8px',
+                        bgcolor: 'rgba(212, 175, 55, 0.15)',
+                        color: 'primary.main'
+                    }}
+                >
+                    <Star size={16} />
+                </Box>
+                <Box>
+                    <Typography sx={{ fontSize: '0.9rem', fontWeight: 600, color: theme.palette.text.primary, fontFamily: "'Raleway', sans-serif" }}>
                         {label}: {name}
-                    </p>
-                    <p className="text-xs text-text-secondary">{description}</p>
+                    </Typography>
+                    <Typography sx={{ fontSize: '0.78rem', color: theme.palette.text.secondary, fontFamily: "'Raleway', sans-serif", mt: 0.3 }}>
+                        {description}
+                    </Typography>
 
                     {hasSpecificTools && (
-                        <span className="mt-2 inline-flex items-center gap-1.5 rounded-md bg-primary/10 px-2 py-1 text-[11px] font-medium text-primary">
-              <Wrench size={11} />
+                        <Box
+                            component="span"
+                            sx={{
+                                mt: 1.5,
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: 1,
+                                borderRadius: '6px',
+                                bgcolor: 'rgba(212, 175, 55, 0.1)',
+                                px: 1.5,
+                                py: 0.5,
+                                fontSize: '0.7rem',
+                                fontWeight: 500,
+                                color: 'primary.main'
+                            }}
+                        >
+                            <Wrench size={12} />
                             {materialComposition}
-            </span>
+                        </Box>
                     )}
-                </div>
-            </div>
+                </Box>
+            </Box>
 
-            <div className="text-right">
-                <p className="text-sm font-bold text-primary">
-                    {amount?.toLocaleString()} <span className="text-xs text-text-secondary">{currency}</span>
-                </p>
-                <p className="text-[10px] uppercase tracking-wide text-text-secondary">{badge}</p>
-            </div>
-        </div>
+            <Box sx={{ textAlign: 'right', flexShrink: 0 }}>
+                <Typography sx={{ fontSize: '1rem', fontWeight: 700, color: 'primary.main', fontFamily: "'Cinzel', serif" }}>
+                    {amount?.toLocaleString()}{" "}
+                    <Typography component="span" sx={{ fontSize: '0.75rem', fontWeight: 600, color: theme.palette.text.secondary, fontFamily: "'Raleway', sans-serif" }}>
+                        {currency}
+                    </Typography>
+                </Typography>
+                <Typography sx={{ fontSize: '0.625rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: theme.palette.text.secondary, fontFamily: "'Raleway', sans-serif", mt: 0.2 }}>
+                    {badge}
+                </Typography>
+            </Box>
+        </Box>
     );
 }

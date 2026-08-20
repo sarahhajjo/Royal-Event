@@ -1,18 +1,20 @@
 import React from "react";
-
+import { Box, Typography, useTheme } from "@mui/material";
 import JobListingCard from "./JobListingCard";
 
 export default function JobListingsSection({ title = "Available Positions", jobs = [], onApply, onViewDetails }) {
+    const theme = useTheme();
+
     return (
-        <div className="flex flex-col gap-5">
-
-
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
             {jobs.length === 0 ? (
-                <p className="rounded-xl border border-dashed border-border p-6 text-center text-sm text-text-secondary">
-                    No matching positions right now
-                </p>
+                <Box sx={{ p: 5, textAlign: 'center', borderRadius: '12px', border: '1px dashed', borderColor: theme.palette.divider }}>
+                    <Typography sx={{ fontSize: '0.9rem', color: theme.palette.text.secondary }}>
+                        No matching positions right now
+                    </Typography>
+                </Box>
             ) : (
-                <div className="flex flex-col gap-5">
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
                     {jobs.map((job) => (
                         <JobListingCard
                             key={job.id}
@@ -22,8 +24,8 @@ export default function JobListingsSection({ title = "Available Positions", jobs
                             onViewDetails={() => onViewDetails?.(job)}
                         />
                     ))}
-                </div>
+                </Box>
             )}
-        </div>
+        </Box>
     );
 }

@@ -2,9 +2,9 @@ import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { Box, Typography, Button, CircularProgress, useTheme } from "@mui/material";
 import { fetchServiceDetails, clearServiceDetails } from "./ServiceDetailsSlice";
-import {pickLocalized} from "../../../../i18n/localize.js";
-
+import { pickLocalized } from "../../../../i18n/localize.js";
 
 const formatDate = (isoString, locale = "en-GB") => {
     if (!isoString) return "";
@@ -18,6 +18,8 @@ export default function ServiceDetailsDrawer({
                                                  onApprove,
                                                  onReject
                                              }) {
+    const theme = useTheme();
+    const isDark = theme.palette.mode === 'dark';
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const { i18n } = useTranslation();
@@ -25,8 +27,6 @@ export default function ServiceDetailsDrawer({
 
     const { serviceData, isLoading, error } = useSelector((state) => state.serviceDetails);
 
-    // 🚀 أضيفي هذا السطر هنا لنرى ما الذي يأتي من الـ API بالظبط في متصفحك
-    console.log("FULL SERVICE DATA FROM REDUX:", serviceData);
     useEffect(() => {
         if (serviceId) {
             dispatch(fetchServiceDetails(serviceId));
@@ -36,32 +36,41 @@ export default function ServiceDetailsDrawer({
         };
     }, [dispatch, serviceId]);
 
+    // 👑 الستايل الزجاجي الموحد للدرج
+    const glassSx = {
+        background: isDark ? "rgba(15, 15, 20, 0.85)" : "rgba(250, 248, 245, 0.95)",
+        backdropFilter: "blur(20px)",
+        WebkitBackdropFilter: "blur(20px)",
+        borderLeft: "1px solid",
+        borderColor: isDark ? "rgba(255, 255, 255, 0.08)" : "rgba(0, 0, 0, 0.06)",
+        boxShadow: "0 8px 32px 0 rgba(0, 0, 0, 0.4)",
+    };
+
     if (isLoading) {
         return (
-            <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/40 backdrop-blur-sm">
-                <div className="text-lg font-semibold bg-white px-8 py-4 rounded-xl shadow-2xl">
-                    Loading details...
-                </div>
-            </div>
+            <Box sx={{ position: 'fixed', inset: 0, zIndex: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}>
+                <Box sx={{ bgcolor: 'background.paper', px: 6, py: 3, borderRadius: 3, display: 'flex', alignItems: 'center', gap: 2, border: '1px solid', borderColor: 'divider' }}>
+                    <CircularProgress size={24} color="primary" />
+                    <Typography sx={{ fontWeight: 600, color: 'text.primary', fontFamily: "'Raleway', sans-serif" }}>Loading details...</Typography>
+                </Box>
+            </Box>
         );
     }
 
     if (error || !serviceData) {
         return (
-            <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/40 backdrop-blur-sm">
-                <div className="bg-white p-8 rounded-xl shadow-2xl text-center flex flex-col gap-5">
-                    <div className="text-xl font-bold text-red-600">{error || "Service not found."}</div>
-                    <button onClick={onClose} className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+            <Box sx={{ position: 'fixed', inset: 0, zIndex: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}>
+                <Box sx={{ bgcolor: 'background.paper', p: 5, borderRadius: 3, textAlign: 'center', display: 'flex', flexDirection: 'column', gap: 3, border: '1px solid', borderColor: 'divider', maxWidth: 400, width: '100%' }}>
+                    <Typography sx={{ fontSize: '1.1rem', fontWeight: 700, color: 'error.main', fontFamily: "'Raleway', sans-serif" }}>{error || "Service not found."}</Typography>
+                    <Button onClick={onClose} variant="outlined" sx={{ borderRadius: '10px', borderColor: 'divider', color: 'text.secondary' }}>
                         Close
-                    </button>
-                </div>
-            </div>
+                    </Button>
+                </Box>
+            </Box>
         );
     }
 
-    // 👑 تجهيز البيانات مع فحص ذكي للشركة أو الفريلانسر
     const primaryVariant = serviceData.variants?.[0];
-
     const providerEntity = serviceData.company || serviceData.freelancer || {};
     const providerType = serviceData.company ? "Company" : serviceData.freelancer ? "Freelancer" : "Provider";
 
@@ -88,119 +97,131 @@ export default function ServiceDetailsDrawer({
     };
 
     return (
-        <div className="fixed inset-0 z-[999] flex justify-end bg-black/40 backdrop-blur-sm transition-opacity">
-            <div className="w-full max-w-2xl bg-[#FAF9F5] h-full shadow-2xl flex flex-col overflow-y-auto animate-slide-in-right">
+        <Box sx={{ position: 'fixed', inset: 0, zIndex: 999, display: 'flex', justifyContent: 'flex-end', bgcolor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(6px)' }}>
+            <Box sx={{ width: '100%', maxWidth: '650px', ...glassSx, height: '100%', display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
 
                 {/* --- Header --- */}
-                <div className="p-6 border-b border-[#E8E6DF] flex flex-col gap-4 relative">
-                    <button
+                <Box sx={{ p: 4, borderBottom: '1px solid', borderColor: theme.palette.divider, display: 'flex', flexDirection: 'column', gap: 2, position: 'relative' }}>
+                    <Button
                         onClick={onClose}
-                        className="absolute top-6 left-6 w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-black transition-colors"
+                        sx={{
+                            position: 'absolute', top: 24, left: 24, minWidth: '36px', width: '36px', height: '36px', borderRadius: '50%',
+                            bgcolor: 'action.hover', color: 'text.secondary', '&:hover': { bgcolor: 'action.selected', color: 'text.primary' }
+                        }}
                     >
                         ✕
-                    </button>
-                    <div className="text-right mt-8">
-                        <h2 className="text-2xl font-serif text-[#333]">{mappedService.title}</h2>
-                        <span className="inline-flex items-center gap-2 mt-2 px-3 py-1 bg-[#F2EFE8] text-[#8C7A54] text-xs font-bold tracking-wider rounded-full border border-[#DEDBCD]">
+                    </Button>
+                    <Box sx={{ textAlign: 'right', mt: 4 }}>
+                        <Typography sx={{ fontFamily: "'Cinzel', serif", fontSize: '1.8rem', fontWeight: 700, color: 'text.primary' }}>{mappedService.title}</Typography>
+                        <Box component="span" sx={{
+                            display: 'inline-flex', alignItems: 'center', gap: 1.5, mt: 1.5, px: 2, py: 0.5,
+                            bgcolor: 'rgba(212, 175, 55, 0.1)', color: 'primary.main', fontSize: '0.7rem', fontWeight: 700,
+                            letterSpacing: '0.1em', borderRadius: '999px', border: '1px solid rgba(212, 175, 55, 0.3)'
+                        }}>
                             STATUS: {mappedService.status.toUpperCase()}
-                            <span className="w-2 h-2 rounded-full bg-[#8C7A54]"></span>
-                        </span>
-                    </div>
-                </div>
+                            <Box component="span" sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: 'primary.main' }} />
+                        </Box>
+                    </Box>
+                </Box>
 
                 {/* --- Content --- */}
-                <div className="p-6 flex-1 flex flex-col gap-8">
+                <Box sx={{ p: 4, flex: 1, display: 'flex', flexDirection: 'column', gap: 4 }}>
 
                     {/* معرض الصور */}
                     {mappedService.images.length > 0 && (
-                        <div className="mb-2">
-                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Service Images</p>
-                            <div className="flex gap-4 overflow-x-auto pb-2 snap-x">
+                        <Box>
+                            <Typography sx={{ fontSize: '0.65rem', fontWeight: 700, color: theme.palette.text.secondary, uppercase: true, letterSpacing: '0.12em', mb: 1.5 }}>Service Images</Typography>
+                            <Box sx={{ display: 'flex', gap: 2, overflowX: 'auto', pb: 1, '&::-webkit-scrollbar': { height: '6px' }, '&::-webkit-scrollbar-thumb': { backgroundColor: theme.palette.divider, borderRadius: '4px' } }}>
                                 {mappedService.images.map((img) => (
-                                    <img
+                                    <Box
                                         key={img.id}
+                                        component="img"
                                         src={img.url}
                                         alt={img.alt || "Service Image"}
-                                        className="w-48 h-32 object-cover rounded-lg shadow-sm border border-gray-200 flex-shrink-0 snap-center"
+                                        sx={{ width: 192, height: 128, objectFit: 'cover', borderRadius: '10px', border: '1px solid', borderColor: theme.palette.divider, flexShrink: 0 }}
                                         onError={(e) => { e.target.src = 'https://placehold.co/400x300?text=No+Image' }}
                                     />
                                 ))}
-                            </div>
-                        </div>
+                            </Box>
+                        </Box>
                     )}
 
-                    {/* معلومات الناشر (شركة أو فريلانسر) قابلة للضغط */}
-                    <div className="bg-white border border-[#E8E6DF] rounded-xl p-5 shadow-sm flex items-center gap-4">
-                        <div className="w-12 h-12 bg-[#F5F3EC] border border-[#E8E6DF] rounded-lg flex items-center justify-center flex-shrink-0 text-xl">
+                    {/* معلومات الناشر */}
+                    <Box sx={{ bgcolor: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.5)', border: '1px solid', borderColor: theme.palette.divider, borderRadius: '12px', p: 3, display: 'flex', alignItems: 'center', gap: 2.5 }}>
+                        <Box sx={{ width: 48, height: 48, bgcolor: 'rgba(212,175,55,0.1)', border: '1px solid rgba(212,175,55,0.3)', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: '1.2rem' }}>
                             🏢
-                        </div>
-                        <div className="flex-1">
-                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">
+                        </Box>
+                        <Box sx={{ flex: 1 }}>
+                            <Typography sx={{ fontSize: '0.65rem', fontWeight: 700, color: theme.palette.text.secondary, letterSpacing: '0.12em', textTransform: 'uppercase', mb: 0.5 }}>
                                 {mappedService.providerInfo.typeLabel}
-                            </p>
+                            </Typography>
 
                             {mappedService.providerInfo.id ? (
-                                <button
+                                <Button
                                     onClick={() => navigate(`/admin-dashboard/companies/${mappedService.providerInfo.id}`)}
-                                    className="text-sm font-bold text-blue-600 hover:text-blue-800 hover:underline transition-colors text-left"
+                                    sx={{ p: 0, minWidth: 0, fontSize: '0.9rem', fontWeight: 700, color: 'primary.main', textTransform: 'none', '&:hover': { textDecoration: 'underline', bgcolor: 'transparent' } }}
                                 >
                                     {mappedService.providerInfo.name}
-                                </button>
+                                </Button>
                             ) : (
-                                <p className="text-sm font-bold text-gray-800">{mappedService.providerInfo.name}</p>
+                                <Typography sx={{ fontSize: '0.9rem', fontWeight: 700, color: theme.palette.text.primary }}>{mappedService.providerInfo.name}</Typography>
                             )}
 
-                            <p className="text-xs text-gray-500 mt-1">📧 {mappedService.providerInfo.email}</p>
-                        </div>
-                    </div>
+                            <Typography sx={{ fontSize: '0.75rem', color: theme.palette.text.secondary, mt: 0.5 }}>📧 {mappedService.providerInfo.email}</Typography>
+                        </Box>
+                    </Box>
 
                     {/* شبكة المعلومات */}
-                    <div className="grid grid-cols-2 gap-y-8 mt-2">
-                        <div>
-                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Category</p>
-                            <p className="font-serif text-[#333] text-lg">{mappedService.category}</p>
-                        </div>
-                        <div>
-                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Rate</p>
-                            <p className="font-serif text-[#333] text-lg">{mappedService.pricing.type} / {mappedService.pricing.amount} {mappedService.pricing.currency}</p>
-                        </div>
-                        <div>
-                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Created At</p>
-                            <p className="font-serif text-[#333] text-lg">{mappedService.deadline} 📅</p>
-                        </div>
-                        <div>
-                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Location</p>
-                            <p className="font-serif text-[#333] text-lg">{mappedService.location} 📍</p>
-                        </div>
-                    </div>
+                    <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 3 }}>
+                        <Box>
+                            <Typography sx={{ fontSize: '0.65rem', fontWeight: 700, color: theme.palette.text.secondary, letterSpacing: '0.12em', textTransform: 'uppercase', mb: 0.5 }}>Category</Typography>
+                            <Typography sx={{ fontFamily: "'Cinzel', serif", color: theme.palette.text.primary, fontSize: '1.1rem', fontWeight: 600 }}>{mappedService.category}</Typography>
+                        </Box>
+                        <Box>
+                            <Typography sx={{ fontSize: '0.65rem', fontWeight: 700, color: theme.palette.text.secondary, letterSpacing: '0.12em', textTransform: 'uppercase', mb: 0.5 }}>Rate</Typography>
+                            <Typography sx={{ fontFamily: "'Cinzel', serif", color: theme.palette.text.primary, fontSize: '1.1rem', fontWeight: 600 }}>{mappedService.pricing.type} / {mappedService.pricing.amount} {mappedService.pricing.currency}</Typography>
+                        </Box>
+                        <Box>
+                            <Typography sx={{ fontSize: '0.65rem', fontWeight: 700, color: theme.palette.text.secondary, letterSpacing: '0.12em', textTransform: 'uppercase', mb: 0.5 }}>Created At</Typography>
+                            <Typography sx={{ fontFamily: "'Cinzel', serif", color: theme.palette.text.primary, fontSize: '1.1rem', fontWeight: 600 }}>{mappedService.deadline} 📅</Typography>
+                        </Box>
+                        <Box>
+                            <Typography sx={{ fontSize: '0.65rem', fontWeight: 700, color: theme.palette.text.secondary, letterSpacing: '0.12em', textTransform: 'uppercase', mb: 0.5 }}>Location</Typography>
+                            <Typography sx={{ fontFamily: "'Cinzel', serif", color: theme.palette.text.primary, fontSize: '1.1rem', fontWeight: 600 }}>{mappedService.location} 📍</Typography>
+                        </Box>
+                    </Box>
 
                     {/* الوصف */}
-                    <div className="mt-4">
-                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Description & Features</p>
-                        <div className="bg-[#F5F3EC] border border-[#E8E6DF] rounded-xl p-6 shadow-inner text-left">
-                            <p className="italic text-[#555] leading-relaxed text-sm">
+                    <Box sx={{ mt: 1 }}>
+                        <Typography sx={{ fontSize: '0.65rem', fontWeight: 700, color: theme.palette.text.secondary, letterSpacing: '0.12em', textTransform: 'uppercase', mb: 1.5 }}>Description & Features</Typography>
+                        <Box sx={{ bgcolor: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.5)', border: '1px solid', borderColor: theme.palette.divider, borderRadius: '12px', p: 3 }}>
+                            <Typography sx={{ fontStyle: 'italic', color: theme.palette.text.secondary, lineHeight: 1.7, fontSize: '0.85rem' }}>
                                 {mappedService.description}
-                            </p>
-                        </div>
-                    </div>
-                </div>
+                            </Typography>
+                        </Box>
+                    </Box>
+                </Box>
 
-                {/* --- أزرار الإدارة الخاصة بالأدمن حصراً --- */}
-                <div className="p-6 bg-white border-t border-[#E8E6DF] flex gap-4 mt-auto">
-                    <button
+                {/* --- أزرار الإدارة للأدمن --- */}
+                <Box sx={{ p: 4, bgcolor: theme.palette.background.paper, borderTop: '1px solid', borderColor: theme.palette.divider, display: 'flex', gap: 2, mt: 'auto' }}>
+                    <Button
                         onClick={onReject}
-                        className="flex-1 py-3 px-4 border border-[#B91C1C] text-[#B91C1C] font-semibold rounded-lg hover:bg-red-50 transition-colors"
+                        variant="outlined"
+                        fullWidth
+                        sx={{ py: 1.2, borderRadius: '10px', borderColor: '#b91c1c', color: '#b91c1c', fontWeight: 600, textTransform: 'none', '&:hover': { bgcolor: 'rgba(185, 28, 28, 0.1)' } }}
                     >
                         Reject
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                         onClick={onApprove}
-                        className="flex-[2] py-3 px-4 bg-[#6E5C19] text-white font-semibold rounded-lg hover:bg-[#584913] shadow-md transition-colors"
+                        variant="contained"
+                        fullWidth
+                        sx={{ py: 1.2, borderRadius: '10px', flex: 2, fontWeight: 700, textTransform: 'none' }}
                     >
                         Approve Submission
-                    </button>
-                </div>
-            </div>
-        </div>
+                    </Button>
+                </Box>
+            </Box>
+        </Box>
     );
 }

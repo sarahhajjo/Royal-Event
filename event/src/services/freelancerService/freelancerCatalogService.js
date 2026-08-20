@@ -1,28 +1,25 @@
-import axios from "axios";
-
-const API_URL = "http://127.0.0.1:8000/api/listings";
+import freelancerApi from './FreelancerApi';
 
 const getMyListings = async () => {
-    // نجلب التوكن من الـ localStorage (أو أي مكان تخزنين فيه التوكن)
-    const token = localStorage.getItem("token");
-    const response = await axios.get(API_URL, {
-        headers: { Authorization: `Bearer ${token}` }
-    });
+    const response = await freelancerApi.get('/listings/provider/my-services');
     return response.data.data || response.data;
 };
+
 const getListingImages = async (listingId) => {
-    const token = localStorage.getItem("token");
-    // المسار المطلوب: http://127.0.0.1:8000/api/listings/{id}/images
-    const response = await axios.get(`${API_URL}/${listingId}/images`, {
-        headers: { Authorization: `Bearer ${token}` }
-    });
-    // نفترض أن الباك إند يعيد مصفوفة الصور مباشرة أو داخل مفتاح data
+    const response = await freelancerApi.get(`/listings/${listingId}/images`);
     return response.data.data || response.data;
+};
+
+// 👑 التابع الجديد لجلب مراجعات المزود حسب الـ ID الخاص به
+const getProviderReviews = async (providerId) => {
+    const response = await freelancerApi.get(`/providers/${providerId}/reviews`);
+    return response.data; // نرجع البيانات كاملة لنتعامل مع الـ Pagination
 };
 
 const freelancerCatalogService = {
     getMyListings,
-    getListingImages // لا تنسي تصدير التابع الجديد هنا
+    getListingImages,
+    getProviderReviews // 👈 قمنا بتصدير التابع الجديد
 };
 
 export default freelancerCatalogService;

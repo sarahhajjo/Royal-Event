@@ -24,93 +24,131 @@ function formatRelativeTime(dateString) {
     return date.toLocaleDateString();
 }
 
-// 👑 تحديث دالة التهيئة لتتطابق مع هيكل الـ Listing العائد من الـ API
-function normalizeListing(raw) {
+// 👑 دالة تطبيع البيانات المعدلة خصيصاً لتتعامل مع حالة الـ pending والـ job بدقة
+const normalizeListing = (item) => {
+    const isJob = item.type === 'job' || item.job_title !== undefined;
+
+    if (isJob) {
+        let rawStatus = item.moderation_status || item.status || "pending";
+
+        return {
+            id: item.id,
+            title: item.job_title || "Untitled Job",
+            type: "job",
+            status: rawStatus === "pending" ? "pending_approval" : rawStatus,
+            category: item.service?.name || item.event_type || "Job Offer",
+            submittedBy: item.provider?.brand_name || item.provider?.name || "—",
+            created_at: item.created_at,
+            raw: item,
+        };
+    }
+
+    // التطبيع الخاص بالخدمات العادية (Listings)
     return {
-        id: raw.id,
-        // التعامل مع العناوين متعددة اللغات أو النص المباشر
-        title: raw.title?.en || raw.title?.ar || raw.title || "Untitled",
-        type: raw.type || "service", // service, hall, physical_product, package
-        badge: (raw.type || "UNKNOWN").replace('_', ' ').toUpperCase(),
-        image: raw.images?.[0]?.url || raw.images?.[0]?.path || null,
-        submittedBy: raw.provider?.name || "—",
-        timeLabel: formatRelativeTime(raw.created_at),
-        status: raw.status ?? "pending_approval",
-        category: raw.category?.name || "—",
-        raw,
+        id: item.id,
+        title: item.title || "Untitled",
+        type: item.type || "service",
+        status: item.status || "pending_approval",
+        category: item.category?.name || "General",
+        submittedBy: item.provider?.brand_name || item.provider?.name || "—",
+        created_at: item.created_at,
+        raw: item,
     };
-}
+};
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Async Thunks
 // ─────────────────────────────────────────────────────────────────────────────
-
 export const fetchApprovals = createAsyncThunk(
     "approvals/fetchApprovals",
     async (_, { getState, rejectWithValue }) => {
         const { activeFilter, page } = getState().approvals;
         try {
-            const data = await adminService.getListings(page);
+            // جلب الليستنغات والوظائف بالتوازي
+            const [listingsData, jobOffersData] = await Promise.all([
+                adminService.getListings(page),
+                adminService.getPendingJobOffers(page).catch(() => [])
+            ]);
 
-            let list = Array.isArray(data) ? data : data.data || [];
+            let listingsList = Array.isArray(listingsData)
+                ? listingsData
+                : listingsData.data?.data || listingsData.data || [];
 
-            // 1. استبعاد الوظائف
-            list = list.filter(item => item.type !== "job");
+            let jobOffersList = Array.isArray(jobOffersData)
+                ? jobOffersData
+                : jobOffersData.data?.data || jobOffersData.data || [];
 
-            // 2. تطبيق فلتر الشركة والفريلانسر
+            // توحيد هيكل الوظائف وضمان قراءة الحالة الصحيحة
+            const normalizedJobs = jobOffersList.map(job => ({
+                ...job,
+                type: "job",
+                status: job.moderation_status || job.status || "pending"
+            }));
+
+            // دمج القائمتين معاً
+            let combinedList = [...listingsList, ...normalizedJobs];
+
+            // 👑 تطبيق الفلاتر بدقة حسب التبويب النشط في واجهة المستخدم
             if (activeFilter === "company") {
-                list = list.filter(item => item.type !== "service");
+                // يعرض كل ما عدا خدمات الفريلانسر والوظائف (مثل Halls وغيرها)
+                combinedList = combinedList.filter(item => item.type !== "service" && item.type !== "job");
             } else if (activeFilter === "freelancer") {
-                list = list.filter(item => item.type === "service");
+                // يعرض خدمات الفريلانسر حصرياً
+                combinedList = combinedList.filter(item => item.type === "service");
+            } else if (activeFilter === "job") {
+                // يعرض الوظائف حصرياً في تبويب الـ Job Offers
+                combinedList = combinedList.filter(item => item.type === "job");
             }
 
-            // 👑 3. الترتيب (إعطاء الأولوية للطلبات المعلقة)
-            list.sort((a, b) => {
-                // إذا كان a معلق و b غير معلق، نضع a في البداية
-                if (a.status === "pending_approval" && b.status !== "pending_approval") return -1;
-
-                // إذا كان b معلق و a غير معلق، نضع b في البداية
-                if (a.status !== "pending_approval" && b.status === "pending_approval") return 1;
-
-                // إذا كان الاثنين نفس الحالة، نرتبهم من الأحدث للأقدم بناءً على تاريخ الإنشاء
-                return new Date(b.created_at) - new Date(a.created_at);
-            });
+            combinedList.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
             return {
-                items: list.map(normalizeListing),
-                currentPage: data.meta?.current_page || page,
-                lastPage: data.meta?.last_page || 1,
-                total: data.meta?.total || list.length,
+                items: combinedList.map(normalizeListing),
+                currentPage: listingsData.meta?.current_page || listingsData.data?.current_page || page,
+                lastPage: listingsData.meta?.last_page || listingsData.data?.last_page || 1,
+                total: combinedList.length,
             };
         } catch (err) {
-            return rejectWithValue(err.response?.data?.message || "فشل تحميل الخدمات");
+            return rejectWithValue(err.response?.data?.message || "فشل تحميل الطلبات");
         }
     }
 );
+
 export const approveRequest = createAsyncThunk(
     "approvals/approveRequest",
-    async (id, { rejectWithValue }) => {
+    async (payload, { rejectWithValue }) => {
         try {
-            // استخدام التابع الخاص بقبول الـ Listing
-            await adminService.approveListing(id);
+            // دعم استلام الكائن كاملاً أو المعرف مباشرة مع النوع
+            const id = typeof payload === 'object' ? payload.id : payload;
+            const type = typeof payload === 'object' ? payload.type : 'service';
+
+            if (type === 'job') {
+                await adminService.approveJobOffer(id);
+            } else {
+                await adminService.approveListing(id);
+            }
             return id;
         } catch (err) {
-            return rejectWithValue(err.response?.data?.message || "فشل قبول الخدمة");
+            return rejectWithValue(err.response?.data?.message || "فشل القبول");
         }
     }
 );
 
 export const rejectRequest = createAsyncThunk(
     "approvals/rejectRequest",
-    async ({ id, reason }, { rejectWithValue }) => {
+    async ({ id, reason, type }, { rejectWithValue }) => {
         if (!reason || !reason.trim()) {
             return rejectWithValue("سبب الرفض مطلوب");
         }
         try {
-            // استخدام التابع الخاص برفض الـ Listing
-            await adminService.rejectListing(id, reason);
+            if (type === 'job') {
+                await adminService.rejectJobOffer(id, reason);
+            } else {
+                await adminService.rejectListing(id, reason);
+            }
             return id;
         } catch (err) {
-            return rejectWithValue(err.response?.data?.message || "فشل رفض الخدمة");
+            return rejectWithValue(err.response?.data?.message || "فشل الرفض");
         }
     }
 );
@@ -123,7 +161,7 @@ const approvalsSlice = createSlice({
     initialState: {
         items: [],
 
-        activeFilter: "all",   // all | service | hall | physical_product | package
+        activeFilter: "all",   // all | company | freelancer | job
         dateFrom: null,
         dateTo: null,
 
@@ -133,7 +171,7 @@ const approvalsSlice = createSlice({
         total: 0,
 
         status: "idle",        // idle | loading | succeeded | failed
-        actionStatus: {},      // { [id]: "approving" | "rejecting" }
+        actionStatus: {},
         error: null,
     },
     reducers: {
@@ -170,15 +208,16 @@ const approvalsSlice = createSlice({
 
             // approve
             .addCase(approveRequest.pending, (state, action) => {
-                state.actionStatus[action.meta.arg] = "approving";
+                const targetId = typeof action.meta.arg === 'object' ? action.meta.arg.id : action.meta.arg;
+                state.actionStatus[targetId] = "approving";
             })
             .addCase(approveRequest.fulfilled, (state, action) => {
-                // إزالة العنصر من القائمة بعد قبوله
                 state.items = state.items.filter((item) => item.id !== action.payload);
                 delete state.actionStatus[action.payload];
             })
             .addCase(approveRequest.rejected, (state, action) => {
-                delete state.actionStatus[action.meta.arg];
+                const targetId = typeof action.meta.arg === 'object' ? action.meta.arg.id : action.meta.arg;
+                delete state.actionStatus[targetId];
                 state.error = action.payload;
             })
 
@@ -187,7 +226,6 @@ const approvalsSlice = createSlice({
                 state.actionStatus[action.meta.arg.id] = "rejecting";
             })
             .addCase(rejectRequest.fulfilled, (state, action) => {
-                // إزالة العنصر من القائمة بعد رفضه
                 state.items = state.items.filter((item) => item.id !== action.payload);
                 delete state.actionStatus[action.payload];
             })
@@ -208,12 +246,12 @@ export const selectApprovalStatus  = (state) => state.approvals.status;
 export const selectActiveFilter    = (state) => state.approvals.activeFilter;
 export const selectActionStatus    = (state) => state.approvals.actionStatus;
 export const selectApprovalError   = (state) => state.approvals.error;
-export const selectApprovalPagination = (state) => ({
-    page: state.approvals.page,
-    lastPage: state.approvals.lastPage,
-    total: state.approvals.total,
-    perPage: state.approvals.perPage,
-});
+
+export const selectApprovalPagination = (state) => state.approvals.page;
+export const selectApprovalLastPage   = (state) => state.approvals.lastPage;
+export const selectApprovalTotal      = (state) => state.approvals.total;
+export const selectApprovalPerPage    = (state) => state.approvals.perPage;
+
 export const selectDateRange = (state) => ({
     dateFrom: state.approvals.dateFrom,
     dateTo: state.approvals.dateTo,

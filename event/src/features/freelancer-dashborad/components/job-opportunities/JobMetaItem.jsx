@@ -1,13 +1,18 @@
 import React from "react";
+import { Box, Typography, useTheme } from "@mui/material";
 
 export default function JobMetaItem({ label, value, highlight = false, suffix }) {
+    const theme = useTheme();
+
     return (
-        <div>
-            <p className="text-[10px] uppercase tracking-wide text-text-secondary">{label}</p>
-            <p className={`text-sm font-semibold ${highlight ? "text-primary" : "text-text-primary"}`}>
+        <Box>
+            <Typography sx={{ fontSize: "0.65rem", textTransform: "uppercase", letterSpacing: "0.08em", color: theme.palette.text.secondary, fontFamily: "'Raleway', sans-serif" }}>
+                {label}
+            </Typography>
+            <Typography sx={{ fontSize: "0.85rem", fontWeight: 600, color: highlight ? "primary.main" : theme.palette.text.primary, fontFamily: "'Raleway', sans-serif", mt: 0.3 }}>
                 {value}
-                {suffix && <span className="ml-1 text-xs font-normal text-text-secondary">{suffix}</span>}
-            </p>
-        </div>
+                {suffix && <Box component="span" sx={{ ml: 0.5, fontSize: "0.75rem", fontWeight: 400, color: theme.palette.text.secondary }}>{suffix}</Box>}
+            </Typography>
+        </Box>
     );
 }
