@@ -1,8 +1,27 @@
 import React from 'react';
-import { Box, Typography, Button as MuiButton, CircularProgress, Paper, Avatar } from '@mui/material';
+import { Box, Typography, Button as MuiButton, CircularProgress, Paper } from '@mui/material';
 import HighlightOffIcon from '@mui/icons-material/HighlightOff';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import { T, typography, avatarBaseSx } from '../Theme.jsx';
+
+// 👑 الدالة السحرية لتصحيح مسار الصور
+const getImageUrl = (path) => {
+    // صورة افتراضية فخمة في حال عدم وجود صورة للخدمة
+    const defaultImage = "https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&q=80&w=200";
+
+    if (!path) return defaultImage;
+    if (path.startsWith('http') || path.startsWith('data:')) return path;
+
+    const mode = import.meta.env.VITE_ENV_MODE || 'ngrok';
+    const apiUrl = mode === 'ngrok'
+        ? (import.meta.env.VITE_API_NGROK || 'https://preflight-refusal-luminous.ngrok-free.dev/api')
+        : (import.meta.env.VITE_API_LOCAL || 'http://127.0.0.1:8000/api');
+
+    const baseUrl = apiUrl.replace(/\/api\/?$/, '');
+    const cleanPath = path.startsWith('/') ? path : `/${path}`;
+
+    return `${baseUrl}${cleanPath}`;
+};
 
 export default function ApprovalList({ items, status, actionStatusMap, onViewDetails, onApprove, onReject }) {
 
@@ -43,7 +62,9 @@ export default function ApprovalList({ items, status, actionStatusMap, onViewDet
                 const titleText = typeof item.title === 'object' ? (item.title?.en || item.title?.ar || 'Untitled') : item.title;
                 const descText = typeof item.description === 'object' ? (item.description?.en || item.description?.ar || '') : item.description;
 
-                const imageSrc = item.imageUrl || (item.images && item.images.length > 0 ? item.images[0].url : "https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&q=80&w=200");
+                // 👑 استخراج المسار وتمريره للدالة السحرية
+                const rawImagePath = item.imageUrl || (item.images && item.images.length > 0 ? (item.images[0].url || item.images[0]) : null);
+                const imageSrc = getImageUrl(rawImagePath);
 
                 return (
                     <Paper
@@ -199,7 +220,6 @@ export default function ApprovalList({ items, status, actionStatusMap, onViewDet
                                     {item.status === 'approved' ? 'Approved ✅' : 'Rejected ❌'}
                                 </Box>
                             )}
-
                         </Box>
                     </Paper>
                 );

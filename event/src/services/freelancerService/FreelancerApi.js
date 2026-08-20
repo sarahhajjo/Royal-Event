@@ -1,18 +1,25 @@
 import axios from 'axios';
 
-// 👑 قراءة الرابط ديناميكياً من ملف الـ .env (مع دعم Ngrok)
-const base = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
-const cleanApiBase = `${base.replace(/\/api\/?$/, '')}/api`;
+// 👑 1. قراءة وضع البيئة مع قيم افتراضية قوية لمنع خطأ undefined
+const mode = import.meta.env.VITE_ENV_MODE || 'ngrok';
+const activeApiUrl = mode === 'ngrok'
+    ? (import.meta.env.VITE_API_NGROK || 'https://preflight-refusal-luminous.ngrok-free.dev/api')
+    : (import.meta.env.VITE_API_LOCAL || 'http://127.0.0.1:8000/api');
+
+// للتأكد من الرابط في الكونسول
+console.log("🚀 Freelancer API URL is:", activeApiUrl);
 
 class FreelancerApi {
     constructor() {
-        this.BASE_URL = cleanApiBase; // 👈 استخدام الرابط الديناميكي هنا
+        this.BASE_URL = activeApiUrl;
 
         this.instance = axios.create({
             baseURL: this.BASE_URL,
             headers: {
                 'Content-Type': 'application/json',
-                'Accept': 'application/json'
+                'Accept': 'application/json',
+                // 🚀 السطر السحري لتخطي شاشة تحذير النيغروك
+                'ngrok-skip-browser-warning': '69420'
             }
         });
 
@@ -28,6 +35,7 @@ class FreelancerApi {
             (res) => res,
             (err) => {
                 if (err.response?.status === 401) {
+                    console.error("Freelancer Token expired or invalid. Logging out...");
                     localStorage.removeItem('token');
                     window.location.href = '/login';
                 }

@@ -1,5 +1,5 @@
 import api from './api';
-import {token} from "stylis"; // 👈 استيراد المعترض المركزي
+// 🚫 تم حذف الاستيراد الخاطئ لمكتبة stylis
 
 const register = async (userData) => {
     const response = await api.post(`/auth/register`, userData);
@@ -16,12 +16,17 @@ const login = async (userData) => {
         const token = response.data.data.access_token;
         localStorage.setItem('token', token);
 
-        // هنا سنطبع التوكن مباشرة من الاستجابة (Response)
+        // 👑 إضافة مهمة جداً: حفظ بيانات المستخدم لكي تظهر في الـ Header واسمك بالـ Sidebar
+        if (response.data.data.user) {
+            localStorage.setItem('user', JSON.stringify(response.data.data.user));
+        }
+
         console.log("تم استلام التوكن بنجاح:", token);
     }
 
     return response.data;
 };
+
 const getCategories = async () => {
     const response = await api.get(`/categories`);
     return response.data;
@@ -50,26 +55,36 @@ const verifyOTP = async (data) => {
 
     if (response.data.data && response.data.data.access_token) {
         localStorage.setItem('token', response.data.data.access_token);
+
+        // حفظ بيانات المستخدم بعد التفعيل
+        if (response.data.data.user) {
+            localStorage.setItem('user', JSON.stringify(response.data.data.user));
+        }
     }
     return response.data;
 };
 
 const verifyEmailOTP = async (data) => {
-    // نغير طريقة الإرسال من params إلى إرسالها كـ Body
-    // ونستخدم URLSearchParams لتتوافق مع طبيعة طلبات الـ API عندك
     const response = await api.post(`/auth/verify-email-otp`, new URLSearchParams(data).toString(), {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
     });
 
     if (response.data.data?.access_token) {
         localStorage.setItem('token', response.data.data.access_token);
+
+        // حفظ بيانات المستخدم بعد التفعيل
+        if (response.data.data.user) {
+            localStorage.setItem('user', JSON.stringify(response.data.data.user));
+        }
     }
     return response.data;
 };
+
 const resendOTP = async (data) => {
     // نبعت البيانات كـ JSON (لأن الباك إند بيستقبلها هيك)
     const response = await api.post(`/otp/resend`, data);
     return response.data;
 };
-const authService = { register, login, getCategories, getDistricts, verifyOTP, setupProfile, setupfreelancerProfile, verifyEmailOTP ,resendOTP};
+
+const authService = { register, login, getCategories, getDistricts, verifyOTP, setupProfile, setupfreelancerProfile, verifyEmailOTP, resendOTP };
 export default authService;

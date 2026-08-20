@@ -353,7 +353,7 @@ export default function MyCalendarDashboard() {
                             <Grid item xs={12} md={4} lg={3.5}>
                                 <Stack spacing={3}>
                                     {/* Month Calendar */}
-                                    <Paper sx={{ ...glassSx, bgcolor: isDark ? 'rgba(15,15,20,0.4)' : 'rgba(255,255,255,0.4)', boxShadow: 'none' }}>
+                                    <Paper sx={{ ...glassSx, bgcolor: isDark ? 'rgba(15,15,20,0.4)' : 'rgba(255,255,255,0.4)', boxShadow: 'none' ,width:300}}>
                                         <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
                                             <Typography sx={{ fontFamily: "'Cinzel', serif", color: 'primary.main', fontWeight: 600, fontSize: '1.05rem' }}>{viewMonth.format('MMMM YYYY')}</Typography>
                                             <Stack direction="row" spacing={0.5}>
@@ -384,7 +384,7 @@ export default function MyCalendarDashboard() {
                                     </Paper>
 
                                     {/* CREATE A SHIFT / BLOCK DATE */}
-                                    <Paper sx={{ ...glassSx, bgcolor: isDark ? 'rgba(15,15,20,0.4)' : 'rgba(255,255,255,0.4)', boxShadow: 'none' }}>
+                                    <Paper sx={{ ...glassSx, bgcolor: isDark ? 'rgba(15,15,20,0.4)' : 'rgba(255,255,255,0.4)', boxShadow: 'none' ,width:300 }}>
                                         <FormControlLabel
                                             control={<Switch checked={isAllDay} onChange={(e) => setIsAllDay(e.target.checked)} sx={{ '& .MuiSwitch-switchBase.Mui-checked': { color: 'primary.main' }, '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { backgroundColor: 'primary.main' } }} />}
                                             label={<Typography sx={{ fontSize: '0.85rem', fontWeight: 600, color: theme.palette.text.primary }}>All Day (No specific shifts)</Typography>}
@@ -442,7 +442,7 @@ export default function MyCalendarDashboard() {
 
                             {/* Right Column: Weekly Schedule (عريض جداً وبمساحة واسعة مريحة جداً lg={8.5}) */}
                             <Grid item xs={12} md={12} lg={10.5}>
-                                <Paper sx={{ ...glassSx, bgcolor: isDark ? 'rgba(15,15,20,0.4)' : 'rgba(255,255,255,0.4)', boxShadow: 'none', height: 720, display: 'flex', flexDirection: 'column', width: '150%', maxWidth: 'none' }}>
+                                <Paper sx={{ ...glassSx, bgcolor: isDark ? 'rgba(15,15,20,0.4)' : 'rgba(255,255,255,0.4)', boxShadow: 'none', height: 720, display: 'flex', flexDirection: 'column', width: 700, maxWidth: 'none' }}>
                                     <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2.5}>
                                         <Typography sx={{ fontFamily: "'Cinzel', serif", color: 'primary.main', fontWeight: 600, fontSize: '1.1rem' }}>{selectedDate.format('MMMM DD - YYYY')}</Typography>
                                         <Stack direction="row" spacing={1} alignItems="center">
@@ -503,14 +503,14 @@ export default function MyCalendarDashboard() {
                         {/* --- BOTTOM ROW (Note + Bookings) --- */}
                         <Grid container spacing={3} sx={{ pb: 3 }}>
                             <Grid item xs={12} md={4} lg={3.5}>
-                                <Paper sx={{ ...glassSx, bgcolor: isDark ? 'rgba(15,15,20,0.4)' : 'rgba(255,255,255,0.4)', boxShadow: 'none', height: '100%', width: '100%' }}>
+                                <Paper sx={{ ...glassSx, bgcolor: isDark ? 'rgba(15,15,20,0.4)' : 'rgba(255,255,255,0.4)', boxShadow: 'none', height: '100%', width: 300 }}>
                                     <Typography sx={{ fontFamily: "'Cinzel', serif", color: 'primary.main', fontWeight: 600, fontSize: '1.1rem', mb: 2 }}>Note</Typography>
                                     <TextField fullWidth multiline rows={4} label="Optional Note" name="note" placeholder="Add a note for this time..." value={note} onChange={(e) => setNote(e.target.value)} InputLabelProps={{ shrink: true }} sx={inputStyles} />
                                 </Paper>
                             </Grid>
 
                             <Grid item xs={12} md={8} lg={8.5}>
-                                <Paper sx={{ ...glassSx, bgcolor: isDark ? 'rgba(15,15,20,0.4)' : 'rgba(255,255,255,0.4)', boxShadow: 'none', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', width: '100%' }}>
+                                <Paper sx={{ ...glassSx, bgcolor: isDark ? 'rgba(15,15,20,0.4)' : 'rgba(255,255,255,0.4)', boxShadow: 'none', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', width: 700 }}>
                                     <Typography sx={{ fontFamily: "'Cinzel', serif", color: 'primary.main', fontWeight: 600, fontSize: '1.1rem', mb: 2 }}>
                                         Daily Bookings ({realToday.format('MMM DD')})
                                     </Typography>
