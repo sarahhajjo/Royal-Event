@@ -62,25 +62,42 @@ export default function Sidebar({ activeItem = "Overview", onCreateEvent }) {
             }}
         >
             {/* Brand */}
-            <Box sx={{ px: 3, pt: 3.5, pb: 2.5 }}>
-                <Typography
+            <Box sx={{ px: 3, pt: 3.5, pb: 2.5, display: "flex", alignItems: "center", gap: 1.5 }}>
+
+                {/* 👑 إضافة اللوغو الدائري هنا */}
+                <Box
+                    component="img"
+                    src="/images/logo.png"
+                    alt="Royal Events Logo"
                     sx={{
-                        color: T.gold,
-                        fontWeight: 900,
-                        fontSize: "0.72rem",
-                        letterSpacing: 4,
-                        textTransform: "uppercase",
-                        mb: 0.5,
+                        width: 48,
+                        height: 48,
+                        objectFit: 'cover',
+                        borderRadius: '50%', // 👈 لجعل الصورة دائرية تماماً
+                        boxShadow: `0px 2px 8px rgba(138, 111, 40, 0.3)` // ظل خفيف متناسق مع اللون الذهبي
                     }}
-                >
-                    ELITE
-                </Typography>
-                <Typography sx={{ color: T.textPrimary, fontWeight: 700, fontSize: "1.1rem", lineHeight: 1.2 }}>
-                    Executive Portal
-                </Typography>
-                <Typography sx={{ color: T.textMuted, fontSize: "0.72rem", mt: 0.3 }}>
-                    Elite Event Management
-                </Typography>
+                />
+
+                <Box>
+                    <Typography
+                        sx={{
+                            color: T.gold,
+                            fontWeight: 900,
+                            fontSize: "0.72rem",
+                            letterSpacing: 4,
+                            textTransform: "uppercase",
+                            mb: 0.5,
+                        }}
+                    >
+                        ELITE
+                    </Typography>
+                    <Typography sx={{ color: T.textPrimary, fontWeight: 700, fontSize: "1.1rem", lineHeight: 1.2 }}>
+                        Executive Portal
+                    </Typography>
+                    <Typography sx={{ color: T.textMuted, fontSize: "0.72rem", mt: 0.3 }}>
+                        Elite Event Management
+                    </Typography>
+                </Box>
             </Box>
 
             <Divider sx={{ borderColor: T.border }} />

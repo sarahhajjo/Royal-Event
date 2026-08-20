@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { AppBar, Toolbar, Typography, IconButton, Box, Avatar, useTheme } from "@mui/material";
 import NotificationsIcon from "@mui/icons-material/NotificationsNone";
 import LightModeIcon from "@mui/icons-material/LightModeOutlined";
@@ -7,18 +7,45 @@ import { useNavigate } from "react-router-dom";
 
 import { ColorModeContext } from "../../../../main";
 
-const Header = ({ title = "Dashboard", user = {} }) => {
+const Header = ({ title = "Dashboard" }) => {
     const theme = useTheme();
     const { mode, toggleColorMode } = useContext(ColorModeContext);
-    const { name = "Ghazal kawas", role = "Service Provider", avatar = "" } = user;
     const navigate = useNavigate();
+
+    // 👑 حالة ديناميكية تأخذ "Sarah Hajjo" كقيمة افتراضية أولية
+    const [currentUser, setCurrentUser] = useState({
+        name: " ",
+        role: "FREELANCER",
+        avatar: ""
+    });
+
+    // 👑 ربط الكود بعملية تسجيل الدخول (Login)
+    useEffect(() => {
+        try {
+            // سحب معلومات المستخدم التي تم تخزينها عند نجاح تسجيل الدخول
+            const loginData = localStorage.getItem("user");
+
+            if (loginData) {
+                const parsedUser = JSON.parse(loginData);
+                setCurrentUser({
+                    // سيعرض الاسم القادم من لارافيل، وإذا كان فارغاً سيعرض Sarah Hajjo
+                    name: parsedUser.name || parsedUser.first_name || "",
+                    // سيعرض الصلاحية القادمة من الباك إند
+                    role: parsedUser.role || parsedUser.user_type || "FREELANCER",
+                    // سيعرض الصورة الشخصية إن وجدت
+                    avatar: parsedUser.avatar || parsedUser.profile_image || ""
+                });
+            }
+        } catch (error) {
+            console.error("Error parsing login data:", error);
+        }
+    }, []);
 
     return (
         <AppBar
             position="sticky"
             elevation={0}
             sx={{
-                // 👑 تعديل اللون ليكون أوف-وايت مريح يتطابق مع السايد بار في اللايت مود
                 bgcolor: theme.palette.mode === 'dark' ? "rgba(15, 15, 20, 0.45) !important" : "rgba(250, 248, 245, 0.65) !important",
                 backdropFilter: "blur(16px)",
                 WebkitBackdropFilter: "blur(16px)",
@@ -59,14 +86,15 @@ const Header = ({ title = "Dashboard", user = {} }) => {
                         }}
                     >
                         <Box sx={{ textAlign: "right", display: { xs: "none", sm: "block" } }}>
+                            {/* 👑 عرض البيانات الديناميكية هنا */}
                             <Typography sx={{ color: theme.palette.text.primary, fontWeight: 700, fontSize: "0.85rem", fontFamily: "'Cinzel', serif" }} noWrap>
-                                {name}
+                                {currentUser.name}
                             </Typography>
                             <Typography sx={{ color: "primary.main", textTransform: "uppercase", fontSize: "0.65rem", letterSpacing: "0.08em" }}>
-                                {role}
+                                {currentUser.role}
                             </Typography>
                         </Box>
-                        <Avatar src={avatar} sx={{ width: 38, height: 38, border: "1px solid", borderColor: "primary.main" }} />
+                        <Avatar src={currentUser.avatar} sx={{ width: 38, height: 38, border: "1px solid", borderColor: "primary.main" }} />
                     </Box>
                 </Box>
             </Toolbar>

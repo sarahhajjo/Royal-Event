@@ -88,7 +88,6 @@ const Sidebar = () => {
                 '& .MuiDrawer-paper': {
                     width: DRAWER_WIDTH,
                     boxSizing: 'border-box',
-                    // 👑 تعديل اللون ليكون أوف-وايت مريح في اللايت مود
                     bgcolor: theme.palette.mode === 'dark' ? "rgba(15, 15, 20, 0.5) !important" : "rgba(250, 248, 245, 0.65) !important",
                     backdropFilter: "blur(16px)",
                     WebkitBackdropFilter: "blur(16px)",
@@ -103,7 +102,19 @@ const Sidebar = () => {
                 },
             }}
         >
-            <Box sx={{ p: 3.5 }}>
+            <Box sx={{ p: 3.5, display: "flex", alignItems: "center", gap: 1.5 }}>
+                <Box
+                    component="img"
+                    src="/images/logo.png"
+                    alt="Royal Events Logo"
+                    sx={{
+                        width: 48,
+                        height: 48,
+                        objectFit: 'cover', // 👈 تضمن أن الصورة تملأ الدائرة
+                        borderRadius: '50%', // 👈 هنا السر لجعلها دائرية 100%
+                        boxShadow: theme.palette.mode === 'dark' ? '0px 2px 8px rgba(0,0,0,0.5)' : '0px 2px 6px rgba(140,106,31,0.2)' // 👈 ظل خفيف ليعطيها بروز جميل
+                    }}
+                />
                 <Typography sx={{ fontSize: "1.2rem", fontFamily: "'Cinzel', serif", color: theme.palette.text.primary, fontWeight: 700, letterSpacing: '0.05em' }}>
                     Royal Events
                 </Typography>
