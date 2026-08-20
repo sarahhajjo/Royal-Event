@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-// 👑 1. قراءة وضع البيئة مع قيم افتراضية قوية لمنع خطأ undefined
-const mode = import.meta.env.VITE_ENV_MODE || 'ngrok';
+// 👑 1. قراءة وضع البيئة (جعلنا الافتراضي local ليكون آمناً عند التطوير)
+const mode = import.meta.env.VITE_ENV_MODE || 'local';
 const activeApiUrl = mode === 'ngrok'
     ? (import.meta.env.VITE_API_NGROK || 'https://preflight-refusal-luminous.ngrok-free.dev/api')
     : (import.meta.env.VITE_API_LOCAL || 'http://127.0.0.1:8000/api');
@@ -35,9 +35,12 @@ class FreelancerApi {
             (res) => res,
             (err) => {
                 if (err.response?.status === 401) {
-                    console.error("Freelancer Token expired or invalid. Logging out...");
-                    localStorage.removeItem('token');
-                    window.location.href = '/login';
+                    // 💡 التعديل السحري: نمنع التحديث إذا كان الخطأ قادماً من صفحة الـ login
+                    if (!err.config.url.includes('/login')) {
+                        console.error("Freelancer Token expired or invalid. Logging out...");
+                        localStorage.removeItem('token');
+                        window.location.href = '/login';
+                    }
                 }
                 return Promise.reject(err);
             }

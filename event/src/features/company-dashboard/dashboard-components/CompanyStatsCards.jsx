@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react'; // 💡 إضافة useEffect و useState
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Paper from '@mui/material/Paper';
 import { useTheme, alpha } from '@mui/material/styles';
-import { useSelector } from 'react-redux';
+import axios from 'axios'; // 💡 استيراد مكتبة axios لعمل الطلب
 
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import LayersIcon from '@mui/icons-material/Layers';
@@ -30,36 +30,57 @@ function CompanyStatsCards({ statsData }) {
     const theme = useTheme();
     const isDark = theme.palette.mode === 'dark';
 
-    const user = useSelector((state) => state.auth?.user);
-    const walletBalance = user?.wallet_balance || 0;
+    // 🚀 1. هنا سنخزن الرصيد الحي القادم من الباك إند
+    const [liveWalletBalance, setLiveWalletBalance] = useState(0);
+
+    const mode = import.meta.env.VITE_ENV_MODE || 'local';
+    const apiUrl = mode === 'ngrok'
+        ? import.meta.env.VITE_API_NGROK
+        : import.meta.env.VITE_API_LOCAL;
+
+    // 💡 2. استخراج الرابط الأساسي (بدون /api) لكي نستخدمه في التوجيه عند الضغط على الكرت
+    const baseUrl = apiUrl?.replace(/\/api\/?$/, '') || 'http://127.0.0.1:8000';
+
+    // 🚀 2. التأثير السحري: يقوم بطلب الـ API تماماً مثل البوستمان عند فتح الصفحة
+    useEffect(() => {
+        const fetchWalletBalance = async () => {
+            try {
+                const token = localStorage.getItem('token');
+                if (!token) return; // الخروج إذا لم يكن هناك توكن
+
+                // استدعاء رابط البوستمان
+                // 💡 استخدام apiUrl مباشرة للطلب
+                const response = await axios.get(`${apiUrl}/provider/wallet`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/json',
+                        'ngrok-skip-browser-warning': 'true'
+                    }
+                });
+
+                // تحديث الشاشة بالرقم القادم من الداتا بيز
+                if (response.data?.status === 'success' && response.data?.data) {
+                    setLiveWalletBalance(response.data.data.wallet_balance || 0);
+                }
+            } catch (error) {
+                console.error("Failed to fetch live wallet balance:", error);
+            }
+        };
+
+        fetchWalletBalance();
+    }, [baseUrl]);
 
     const defaultStats = statsData || [
-        { id: 1, title: 'My Wallet', value: `${Number(walletBalance).toLocaleString()} SYP`, info: 'Available Balance', icon: 'wallet' },
+        // 🚀 3. عرض الرصيد الحي (liveWalletBalance) بدلاً من بيانات الـ Redux
+        { id: 1, title: 'My Wallet', value: `${Number(liveWalletBalance).toLocaleString()} SYP`, info: 'Available Balance', icon: 'wallet' },
         { id: 2, title: 'Total Revenue', value: '$1.24M', info: '+12% this month', icon: 'revenue' },
         { id: 3, title: 'Active Listings', value: '42', info: 'Premium venues', icon: 'listings' },
         { id: 4, title: 'Pending Requests', value: '18', info: 'Needs review', icon: 'pending', alert: true },
     ];
 
-    // 💡 جلب الرابط الأساسي ديناميكياً من ملف .env
-    const getWalletUrl = () => {
-        const mode = import.meta.env.VITE_ENV_MODE;
-        const apiUrl = mode === 'ngrok'
-            ? import.meta.env.VITE_API_NGROK
-            : import.meta.env.VITE_API_LOCAL;
-
-        // إزالة '/api' من النهاية للحصول على الرابط الأساسي للموقع (إذا كان رابط المحفظة خارج الـ api)
-        const baseUrl = apiUrl?.replace(/\/api$/, '') || 'http://127.0.0.1:8000';
-
-        // مسار المحفظة (يمكنك تعديل /wallet حسب المسار الصحيح لديك)
-        return `${baseUrl}/wallet`;
-    };
-
     const handleCardClick = (stat) => {
-        // تنفيذ التوجيه فقط إذا كان الكرت هو كرت المحفظة
         if (stat.icon === 'wallet') {
-            const walletUrl = getWalletUrl();
-            window.location.href = walletUrl;
-            // 💡 ملاحظة: استخدمي window.open(walletUrl, '_blank') إذا أردتِ فتحه في نافذة جديدة
+            window.location.href = `${baseUrl}/wallet`;
         }
     };
 
@@ -69,18 +90,18 @@ function CompanyStatsCards({ statsData }) {
                 <Paper
                     key={stat.id}
                     elevation={0}
-                    onClick={() => handleCardClick(stat)} // 💡 إضافة حدث الضغط هنا
+                    onClick={() => handleCardClick(stat)}
                     sx={{
                         p: 2.6, minHeight: 126,
                         background: isDark ? DARK_CARD_BACKGROUND : LIGHT_CARD,
                         border: isDark ? DARK_CARD_BORDER : `1px solid ${LIGHT_BORDER}`,
                         borderRadius: '18px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 1.6,
                         transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-                        cursor: stat.icon === 'wallet' ? 'pointer' : 'default', // 💡 تغيير شكل الماوس للمحفظة فقط
+                        cursor: stat.icon === 'wallet' ? 'pointer' : 'default',
                         backdropFilter: 'blur(16px)',
                         boxShadow: isDark ? DARK_CARD_SHADOW : `0 18px 40px ${alpha(GOLD, 0.1)}`,
                         '&:hover': {
-                            transform: stat.icon === 'wallet' ? 'translateY(-4px)' : 'none', // 💡 تفعيل الحركة للمحفظة فقط
+                            transform: stat.icon === 'wallet' ? 'translateY(-4px)' : 'none',
                             boxShadow: stat.icon === 'wallet' ? (isDark ? DARK_CARD_HOVER_SHADOW : `0 20px 44px ${alpha(GOLD, 0.2)}`) : 'none',
                             borderColor: stat.icon === 'wallet' ? (isDark ? alpha(GOLD, 0.3) : GOLD) : (isDark ? DARK_CARD_BORDER : `1px solid ${LIGHT_BORDER}`)
                         },

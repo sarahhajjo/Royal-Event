@@ -1,4 +1,4 @@
-import React, { useState,useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import InputField from '../../../components/InputField';
 import Button from '../../../components/Button';
 import Box from '@mui/material/Box';
@@ -11,18 +11,18 @@ import Checkbox from '@mui/material/Checkbox';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import { useTheme } from '@mui/material/styles';
 
-import { useDispatch, useSelector } from 'react-redux'; // استيراد الـ hooks
-import { fetchCategories, setupfreelancerProfile } from '../authSlice';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchCategories } from '../authSlice';
 
 function FreelancerProfileForm({ onBack, onSubmit }) {
     const theme = useTheme();
     const isDark = theme.palette.mode === 'dark';
     const dispatch = useDispatch();
     const categories = useSelector((state) => state.auth.categories);
-    useEffect(() => {
-        dispatch(fetchCategories()); // جلب البيانات عند تحميل المكون
-    }, [dispatch]);
 
+    useEffect(() => {
+        dispatch(fetchCategories());
+    }, [dispatch]);
 
     const [profileData, setProfileData] = useState({
         brandName: '', specialty: '', experience: '0', idNumber: '', portfolio: '', agreeToTerms: false
@@ -31,16 +31,14 @@ function FreelancerProfileForm({ onBack, onSubmit }) {
     const handleChange = (field, value) => {
         setProfileData(prev => ({ ...prev, [field]: value }));
     };
+
     const handleSubmit = (e) => {
         e.preventDefault();
 
-        // التحقق من الموافقة على الشروط
         if (!profileData.agreeToTerms) {
-            // يفضل وضع Alert أو رسالة خطأ هنا مستقبلاً
             return;
         }
 
-        // تجهيز البيانات
         const payload = {
             brand_name: profileData.brandName,
             provider_type: 'freelancer',
@@ -50,10 +48,9 @@ function FreelancerProfileForm({ onBack, onSubmit }) {
             portfolio: profileData.portfolio || null
         };
 
-        // 💡 السحر هنا: استدعاء الدالة الممررة من صفحة الـ Register
-        // هذه الدالة ستقوم بالـ dispatch والانتقال للداشبورد تلقائياً
         onSubmit(payload);
     };
+
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3.5, width: '100%' }} className="animate-fade-in">
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, textAlign: 'left', width: '100%' }}>
@@ -82,7 +79,8 @@ function FreelancerProfileForm({ onBack, onSubmit }) {
                 <Box sx={{ width: 32, height: 2, backgroundColor: isDark ? '#c5a059' : '#b38c45', borderRadius: '4px' }} />
             </Box>
 
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 3, alignItems: 'flex-end' }}>
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 3, alignItems: 'flex-end' }}>
                     <InputField label="Brand/Stage Name" placeholder="e.g. Noir Studio" value={profileData.brandName} onChange={(e) => handleChange('brandName', e.target.value)} />
 
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, width: '100%' }}>
@@ -94,6 +92,11 @@ function FreelancerProfileForm({ onBack, onSubmit }) {
                                 value={profileData.specialty}
                                 displayEmpty
                                 onChange={(e) => handleChange('specialty', e.target.value)}
+                                // 💡 التعديل هنا: إضافة renderValue لضمان ظهور النص الصحيح عند اختياره
+                                renderValue={(selected) => {
+                                    if (!selected) return <em>Select specialty</em>;
+                                    return categories.find(c => c.id === selected)?.name?.en;
+                                }}
                                 sx={{
                                     color: isDark ? '#eee0da' : '#2B211E',
                                     fontSize: '15px',
@@ -116,10 +119,11 @@ function FreelancerProfileForm({ onBack, onSubmit }) {
                                     }
                                 }}
                             >
-                                <MenuItem value="" disabled>Select specialty</MenuItem>
+                                <MenuItem value="" disabled><em>Select specialty</em></MenuItem>
                                 {categories.map((cat) => (
+                                    // 💡 التعديل هنا: استخدام cat.name?.en بدلاً من cat.name_en
                                     <MenuItem key={cat.id} value={cat.id}>
-                                        {cat.name_en}
+                                        {cat.name?.en}
                                     </MenuItem>
                                 ))}
                             </Select>
@@ -133,6 +137,7 @@ function FreelancerProfileForm({ onBack, onSubmit }) {
                 </Box>
 
                 <InputField label="Portfolio Link (Optional)" placeholder="https://..." value={profileData.portfolio} onChange={(e) => handleChange('portfolio', e.target.value)} />
+
                 <FormControlLabel
                     control={<Checkbox checked={profileData.agreeToTerms} onChange={(e) => handleChange('agreeToTerms', e.target.checked)} />}
                     label="I agree to the Royal Events Membership Terms."

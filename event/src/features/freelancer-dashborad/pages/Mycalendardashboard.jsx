@@ -203,9 +203,11 @@ export default function MyCalendarDashboard() {
                 setShiftError('This shift overlaps with an existing one.');
                 return;
             }
+
+            // 💡 أضفنا الثواني "00" هنا لأن العديد من قواعد البيانات وتنسيقات Laravel ترفض الوقت بدون ثواني
             const newShift = {
-                start: draftStart.format('HH:mm'),
-                end: draftEnd.format('HH:mm'),
+                start: draftStart.format('HH:mm'), // 👈 مسحنا الثواني من هنا
+                end: draftEnd.format('HH:mm'),     // 👈 ومسحناها من هنا
                 startLabel: draftStart.format('hh:mm A'),
                 endLabel: draftEnd.format('hh:mm A')
             };
@@ -231,7 +233,7 @@ export default function MyCalendarDashboard() {
             date: selectedDate.format('YYYY-MM-DD'),
             isAllDay: isAllDay,
             shifts: shiftRanges,
-            note: note
+            note: note.trim() // 💡 لتنظيف الملاحظة من المسافات الفارغة
         };
 
         try {
@@ -255,7 +257,6 @@ export default function MyCalendarDashboard() {
         dayjs(b.blocked_date).isSame(realToday, 'day')
     );
 
-    // 👑 الستايل الزجاجي الموحد والمتكيف مع الثيم وصورة القلعة
     const glassSx = {
         background: isDark ? "rgba(15, 15, 20, 0.65)" : "rgba(250, 248, 245, 0.55)",
         backdropFilter: "blur(16px)",
@@ -347,7 +348,6 @@ export default function MyCalendarDashboard() {
                         {successMessage && <Alert severity="success" sx={{ mb: 1, bgcolor: 'rgba(76, 175, 80, 0.1)', color: '#81c784', border: '1px solid rgba(76, 175, 80, 0.3)' }}>{successMessage}</Alert>}
                         {error && <Alert severity="error" sx={{ mb: 1, bgcolor: 'rgba(211, 47, 47, 0.1)', color: '#ffb4ab', border: '1px solid rgba(211, 47, 47, 0.3)' }}>{error}</Alert>}
 
-                        {/* 👑 تعديل الـ Grid ليصبح القسم الأيمن (الجدول الأسبوعي) عريضاً وفخماً جداً (lg={8.5}) بينما اليسار (lg={3.5}) */}
                         <Grid container spacing={3}>
                             {/* Left Column */}
                             <Grid item xs={12} md={4} lg={3.5}>
@@ -440,7 +440,7 @@ export default function MyCalendarDashboard() {
                                 </Stack>
                             </Grid>
 
-                            {/* Right Column: Weekly Schedule (عريض جداً وبمساحة واسعة مريحة جداً lg={8.5}) */}
+                            {/* Right Column: Weekly Schedule */}
                             <Grid item xs={12} md={12} lg={10.5}>
                                 <Paper sx={{ ...glassSx, bgcolor: isDark ? 'rgba(15,15,20,0.4)' : 'rgba(255,255,255,0.4)', boxShadow: 'none', height: 720, display: 'flex', flexDirection: 'column', width: 700, maxWidth: 'none' }}>
                                     <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2.5}>
@@ -500,7 +500,7 @@ export default function MyCalendarDashboard() {
                             </Grid>
                         </Grid>
 
-                        {/* --- BOTTOM ROW (Note + Bookings) --- */}
+                        {/* --- BOTTOM ROW --- */}
                         <Grid container spacing={3} sx={{ pb: 3 }}>
                             <Grid item xs={12} md={4} lg={3.5}>
                                 <Paper sx={{ ...glassSx, bgcolor: isDark ? 'rgba(15,15,20,0.4)' : 'rgba(255,255,255,0.4)', boxShadow: 'none', height: '100%', width: 300 }}>

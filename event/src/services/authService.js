@@ -4,11 +4,9 @@ const register = async (userData) => {
     const response = await api.post(`/auth/register`, userData);
     return response.data;
 };
-
 const login = async (userData) => {
-    const response = await api.post(`/auth/login`, new URLSearchParams(userData).toString(), {
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
-    });
+    // 💡 التعديل هنا: إرسال userData مباشرة كـ JSON بدون URLSearchParams
+    const response = await api.post(`/auth/login`, userData);
 
     if (response.data.data && response.data.data.access_token) {
         const token = response.data.data.access_token;

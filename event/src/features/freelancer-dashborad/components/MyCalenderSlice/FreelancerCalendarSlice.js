@@ -1,5 +1,4 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-// 💡 تأكدي من مسار الاستيراد لملف السيرفيس الجديد الخاص بالفريلانسر
 import { fetchBlockedDatesService, blockDateService, deleteBlockedDateService } from '../../../../services/freelancerService/FreelancerCalendarService.js';
 
 export const fetchBlockedDates = createAsyncThunk(
@@ -19,27 +18,35 @@ export const blockDate = createAsyncThunk(
     async (payload, { rejectWithValue }) => {
         try {
             if (payload.isAllDay || payload.shifts.length === 0) {
+                // 💡 نمرر الأسماء بصيغ متعددة للاحتياط في حال لم يتم تعديل الباك إند
                 const data = {
                     dates: [payload.date],
-                    note: payload.note,
+                    date: payload.date,
+                    blocked_date: payload.date,
+                    note: payload.note || null,
                     start_time: null,
                     end_time: null
                 };
                 const res = await blockDateService(data);
-                return res;
+                // التعامل المرن مع الردود (سواء رجعت كائن أو مصفوفة)
+                return res.data ? (Array.isArray(res.data) ? res.data : [res.data]) : (Array.isArray(res) ? res : [res]);
             } else {
                 const promises = payload.shifts.map(shift => {
+                    // 💡 هنا أيضاً زيادة أمان لأسماء المتغيرات
                     const data = {
                         dates: [payload.date],
-                        note: payload.note,
-                        start_time: shift.start,
-                        end_time: shift.end
+                        date: payload.date,
+                        blocked_date: payload.date,
+                        note: payload.note || null,
+                        start_time: shift.start || null,
+                        end_time: shift.end || null
                     };
                     return blockDateService(data);
                 });
 
                 const results = await Promise.all(promises);
-                return results.flat();
+                // تجميع المصفوفات إذا كان الباك إند يعيدها بداخل .data
+                return results.flatMap(res => res.data ? res.data : res);
             }
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || 'Failed to block date');
@@ -88,7 +95,9 @@ const freelancerCalendarSlice = createSlice({
             .addCase(blockDate.fulfilled, (state, action) => {
                 state.loading = false;
                 state.successMessage = 'Time blocked successfully!';
-                state.blockedDates = [...state.blockedDates, ...action.payload];
+                // تأمين دمج المصفوفات بشكل سليم
+                const newDates = Array.isArray(action.payload) ? action.payload : [action.payload];
+                state.blockedDates = [...state.blockedDates, ...newDates];
             })
             .addCase(blockDate.rejected, (state, action) => {
                 state.loading = false;

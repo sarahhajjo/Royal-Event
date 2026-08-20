@@ -24,8 +24,6 @@ const LoginPage = () => {
         if (localError) setLocalError('');
     };
 
-    // داخل LoginPage.jsx - دالة handleSubmit
-    // داخل LoginPage.jsx - دالة handleSubmit
     const handleSubmit = (e) => {
         e.preventDefault();
         setLocalError('');
@@ -35,25 +33,27 @@ const LoginPage = () => {
             return;
         }
 
-        dispatch(loginUser(formData)).then((result) => {
+        // 💡 التعديل السحري هنا: تحويل identity إلى email قبل الإرسال
+        const payload = {
+            identity: formData.identity,
+            password: formData.password
+        };
+        dispatch(loginUser(payload)).then((result) => {
             if (result.meta.requestStatus === 'fulfilled') {
                 const user = result.payload.data.user;
-                const role = user.roles[0]?.name; // استخراج الدور من المصفوفة
+                const role = user.roles[0]?.name;
 
                 if (role === 'admin' || user.email === 'admin@aura.com') {
                     navigate('/admin-dashboard');
                 }
                 else if (role === 'provider') {
-                    // التحقق من نوع المزود كما هو وارد في بيانات الـ API
                     if (user.provider_type === 'freelancer') {
                         navigate('/freelancer-dashboard');
                     } else {
-                        // الافتراضي للشركات
                         navigate('/company-dashboard');
                     }
                 }
                 else {
-                    // في حال وجود دور آخر غير معرف، نرسله للرئيسية أو صفحة فارغة
                     navigate('/');
                 }
             }

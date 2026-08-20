@@ -36,9 +36,12 @@ api.interceptors.response.use(
     (response) => response,
     (error) => {
         if (error.response && error.response.status === 401) {
-            console.error("Token expired or invalid. Logging out...");
-            localStorage.removeItem('token');
-            window.location.href = '/login';
+            // 💡 التعديل السحري: نُنفذ تسجيل الخروج فقط إذا لم يكن الطلب من صفحة الـ login!
+            if (!error.config.url.includes('/login')) {
+                console.error("Token expired or invalid. Logging out...");
+                localStorage.removeItem('token');
+                window.location.href = '/login';
+            }
         }
         return Promise.reject(error);
     }
