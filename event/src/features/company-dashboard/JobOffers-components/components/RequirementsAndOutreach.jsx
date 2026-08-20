@@ -10,7 +10,12 @@ import {
     selectRequirements,
 } from '../CreateJobOfferSlice';
 import WorkOutlinedIcon from '@mui/icons-material/WorkOutlined';
-// ── Component ─────────────────────────────────────────────────────────────────
+
+// 💡 استيراد الألوان
+import {
+    GOLD, BROWN_TEXT, MUTED_TEXT, LIGHT_CARD, LIGHT_INPUT,
+    LIGHT_BORDER, DARK_CARD_BACKGROUND, DARK_CARD_BORDER, DARK_SURFACE_BG
+} from '../../../../utils/colorConstants';
 
 export default function RequirementsAndOutreach() {
     const dispatch = useDispatch();
@@ -18,39 +23,34 @@ export default function RequirementsAndOutreach() {
     const isDark   = theme.palette.mode === 'dark';
     const { jobRequirements, contactInfo } = useSelector(selectRequirements);
 
-    // ── Shared Styles ─────────────────────────────────────────────────────────
-
     const labelSx = {
-        fontSize: '12px',
-        fontWeight: 600,
-        color: theme.palette.primary.main,
-        mb: 0.8,
-        display: 'block'
+        fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase',
+        color: isDark ? 'rgba(255,255,255,0.6)' : MUTED_TEXT, mb: 0.8, display: 'block', letterSpacing: '0.05em'
     };
 
-    // التنسيق الأساسي بدون تثبيت الارتفاع (ليناسب صندوق النص الكبير)
     const baseInputSx = {
-        backgroundColor: isDark ? 'rgba(0, 0, 0, 0.25)' : 'rgba(255, 255, 255, 0.5)',
+        backgroundColor: isDark ? DARK_SURFACE_BG : LIGHT_INPUT,
         borderRadius: '6px',
         width: '100%',
+        backdropFilter: 'blur(4px)',
         '& .MuiOutlinedInput-root': {
             '& fieldset': {
-                borderColor: isDark ? '#3a2e22' : 'rgba(179, 140, 69, 0.3)',
+                borderColor: isDark ? 'rgba(255,255,255,0.08)' : LIGHT_BORDER,
             },
             '&:hover fieldset': {
-                borderColor: isDark ? '#c5a059' : '#b38c45',
+                borderColor: GOLD,
             },
             '&.Mui-focused fieldset': {
-                borderColor: isDark ? '#c5a059' : '#b38c45',
+                borderColor: GOLD,
             },
         },
         '& .MuiInputBase-input': {
             fontSize: '13px',
-            color: theme.palette.text.primary,
+            color: isDark ? '#ffffff' : '#1A120D',
             padding: '10px 14px',
         },
         '& .MuiSvgIcon-root': {
-            color: theme.palette.text.secondary,
+            color: isDark ? 'rgba(255,255,255,0.5)' : MUTED_TEXT,
             fontSize: '20px'
         }
     };
@@ -59,22 +59,20 @@ export default function RequirementsAndOutreach() {
         <Paper
             elevation={0}
             sx={{
-                p:            3,
-                mb:           3,
-                borderRadius: 2,
-                border:       `1px solid ${isDark ? '#261d19' : 'rgba(179, 140, 69, 0.3)'}`,
-                backgroundColor: theme.palette.background.paper,
+                p: 3, mb: 3, borderRadius: 3,
+                bgcolor: isDark ? DARK_CARD_BACKGROUND : LIGHT_CARD,
+                border: isDark ? DARK_CARD_BORDER : `1px solid ${LIGHT_BORDER}`,
+                backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
             }}
         >
-            {/* Section Title */}
-            {/* Section Title */}
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.2 }}>
-                <WorkOutlinedIcon sx={{ color: isDark ? '#9a8f80' : '#7A6F5E', fontSize: '1.6rem' }} />                <Typography
+                <WorkOutlinedIcon sx={{ color: isDark ? GOLD : BROWN_TEXT, fontSize: '1.6rem' }} />
+                <Typography
                     sx={{
                         fontFamily: "'Playfair Display', serif",
                         fontSize:   '1.4rem',
-                        fontWeight: 500,
-                        color:      theme.palette.text.primary,
+                        fontWeight: 600,
+                        color:      isDark ? '#ffffff' : '#1A120D',
                         letterSpacing: '0.02em',
                     }}
                 >
@@ -82,11 +80,9 @@ export default function RequirementsAndOutreach() {
                 </Typography>
             </Box>
 
-            <Divider sx={{ mt: 1.5, mb: 2.5, borderColor: isDark ? '#261d19' : 'rgba(179, 140, 69, 0.2)' }} />
+            <Divider sx={{ mt: 1.5, mb: 2.5, borderColor: isDark ? 'rgba(255,255,255,0.08)' : LIGHT_BORDER }} />
 
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-
-                {/* 💡 Row 1: Job Requirements Textarea */}
                 <Box sx={{ width: '100%' }}>
                     <Typography sx={labelSx}>Job Requirements & Scope</Typography>
                     <TextField
@@ -98,7 +94,6 @@ export default function RequirementsAndOutreach() {
                         fullWidth
                         sx={{
                             ...baseInputSx,
-                            // تعديل الحشوة الداخلية لتناسب الأسطر المتعددة
                             '& .MuiOutlinedInput-root': {
                                 ...baseInputSx['& .MuiOutlinedInput-root'],
                                 padding: '0px',
@@ -110,12 +105,11 @@ export default function RequirementsAndOutreach() {
                         inputProps={{ maxLength: 3000 }}
                         helperText={`${jobRequirements.length} / 3000`}
                         FormHelperTextProps={{
-                            sx: { textAlign: 'right', color: theme.palette.text.secondary, mr: 0, mt: 0.5, fontSize: '11px' },
+                            sx: { textAlign: 'right', color: isDark ? 'rgba(255,255,255,0.4)' : MUTED_TEXT, mr: 0, mt: 0.5, fontSize: '11px', fontWeight: 600 },
                         }}
                     />
                 </Box>
 
-                {/* 💡 Row 2: Contact Info */}
                 <Box sx={{ width: '100%' }}>
                     <Typography sx={labelSx}>Contact Info (Direct HR Link)</Typography>
                     <TextField
@@ -126,7 +120,6 @@ export default function RequirementsAndOutreach() {
                         fullWidth
                         sx={{
                             ...baseInputSx,
-                            // تثبيت الارتفاع للحقل المفرد فقط
                             '& .MuiOutlinedInput-root': {
                                 ...baseInputSx['& .MuiOutlinedInput-root'],
                                 height: '42px',
@@ -136,7 +129,7 @@ export default function RequirementsAndOutreach() {
                             startAdornment: (
                                 <InputAdornment position="start">
                                     <EmailOutlinedIcon
-                                        sx={{ fontSize: 18, color: theme.palette.text.secondary, ml: 1 }}
+                                        sx={{ fontSize: 18, color: isDark ? 'rgba(255,255,255,0.5)' : MUTED_TEXT, ml: 1 }}
                                     />
                                 </InputAdornment>
                             ),

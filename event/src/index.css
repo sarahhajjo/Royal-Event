@@ -1,5 +1,16 @@
 @import "tailwindcss";
 
+html,
+body,
+#root {
+    height: 100%;
+    margin: 0;
+}
+
+body {
+    background: #18120f;
+}
+
 @theme {
     /* الألوان الأساسية التي سنستخدمها في كلاسات Tailwind */
     --color-bg-default: var(--royal-bg);

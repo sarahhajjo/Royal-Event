@@ -2,7 +2,7 @@ import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
     Box, Button, Typography, CircularProgress,
-    Alert, Snackbar, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions // 💡 استيراد مكونات النافذة
+    Alert, Snackbar, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 
@@ -15,6 +15,12 @@ import {
     selectJobOfferStatus,
     clearJobOfferMessages,
 } from './CreateJobOfferSlice';
+
+// 💡 استيراد الألوان
+import {
+    GOLD, BROWN_TEXT, MUTED_TEXT, TITLE_TEXT_LIGHT,
+    LIGHT_CARD, LIGHT_BORDER, DARK_CARD_BACKGROUND, DARK_CARD_BORDER
+} from '../../../utils/colorConstants';
 
 export default function CreateJobOfferPage() {
     const dispatch  = useDispatch();
@@ -50,26 +56,26 @@ export default function CreateJobOfferPage() {
                 <Box sx={{ mb: 4, textAlign: 'left' }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
                         <Box
-                            component="svg"
-                            viewBox="0 0 24 24"
                             sx={{
-                                width: { xs: '28px', sm: '36px' },
-                                height: { xs: '28px', sm: '36px' },
-                                fill: 'none',
-                                stroke: isDark ? '#c5a059' : '#b38c45',
-                                strokeWidth: 1.2,
+                                width: 14,
+                                height: 14,
+                                // 💡 بني بالفاتح، وذهبي بالداكن
+                                border: `2px solid ${isDark ? theme.palette.primary.main : BROWN_TEXT}`,
+                                transform: 'rotate(45deg)',
+                                boxShadow: `0 0 10px ${isDark ? theme.palette.primary.main + '40' : 'rgba(74, 59, 50, 0.2)'}`,
+                                flexShrink: 0
                             }}
-                        >
-                            <path d="M12 2.5L21.5 12L12 21.5L2.5 12Z" />
-                        </Box>
+                        />
 
                         <Typography
+                            variant="h3"
                             sx={{
                                 fontFamily: "'Playfair Display', serif",
-                                fontSize:   { xs: '2rem', sm: '2.5rem' },
-                                fontWeight: 500,
-                                color:      isDark ? '#c5a059' : '#b38c45',
-                                lineHeight: 1.2,
+                                fontSize: '2.5rem',
+                                // 💡 بني بالفاتح، وذهبي بالداكن
+                                color: isDark ? theme.palette.primary.main : BROWN_TEXT,
+                                fontWeight: 50,
+                                m: 0
                             }}
                         >
                             Create New Job Offer
@@ -78,8 +84,8 @@ export default function CreateJobOfferPage() {
                     <Typography
                         variant="body2"
                         sx={{
-                            color: isDark ? '#9a8f80' : '#7A6F5E',
-                            fontWeight: 300,
+                            color: isDark ? 'rgba(255,255,255,0.6)' : MUTED_TEXT,
+                            fontWeight: isDark ? 300 : 500,
                             letterSpacing: '0.02em',
                         }}
                     >
@@ -99,15 +105,15 @@ export default function CreateJobOfferPage() {
                         onClick={handleSaveDraft}
                         disabled={isLoading}
                         sx={{
-                            borderColor: isDark ? '#5a4a30' : 'rgba(179, 140, 69, 0.4)',
-                            color:       isDark ? '#ffffff' : '#2B211E',
+                            borderColor: isDark ? 'rgba(255,255,255,0.2)' : LIGHT_BORDER,
+                            color:       isDark ? '#ffffff' : BROWN_TEXT,
                             '&:hover': {
-                                borderColor:     isDark ? '#c5a059' : '#b38c45',
-                                backgroundColor: isDark ? 'rgba(197, 160, 89, 0.05)' : 'rgba(179, 140, 69, 0.05)',
+                                borderColor:     GOLD,
+                                backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(74, 59, 50, 0.05)',
                             },
                             px: 4, py: 1.2,
                             borderRadius: 1,
-                            fontWeight: 500,
+                            fontWeight: 600,
                             textTransform: 'none',
                             fontFamily: 'Inter',
                             letterSpacing: '0.03em'
@@ -122,14 +128,14 @@ export default function CreateJobOfferPage() {
                         disabled={isLoading}
                         startIcon={isLoading ? <CircularProgress size={16} sx={{ color: '#18120f' }} /> : null}
                         sx={{
-                            backgroundColor: isDark ? '#c5a059' : '#b38c45',
+                            backgroundColor: GOLD,
                             color:           '#131110',
                             '&:hover': {
-                                backgroundColor: isDark ? '#d4ae6a' : '#c9a055',
+                                backgroundColor: '#d4b06a',
                             },
                             px: 4, py: 1.2,
                             borderRadius: 1,
-                            fontWeight: 600,
+                            fontWeight: 700,
                             textTransform: 'none',
                             fontFamily: 'Inter',
                             letterSpacing: '0.03em'
@@ -140,14 +146,15 @@ export default function CreateJobOfferPage() {
                 </Box>
             </Box>
 
-            {/* 💡 نافذة الأخطاء الأنيقة بالمنتصف */}
+            {/* 💡 نافذة الأخطاء بتأثير الزجاج */}
             <Dialog
                 open={Boolean(error)}
                 onClose={handleCloseSnack}
                 PaperProps={{
                     sx: {
-                        bgcolor: isDark ? '#1c1512' : '#EFE4C9',
-                        border: `1px solid ${isDark ? 'rgba(197,160,89,0.18)' : 'rgba(179, 140, 69, 0.3)'}`,
+                        bgcolor: isDark ? DARK_CARD_BACKGROUND : LIGHT_CARD,
+                        border: isDark ? DARK_CARD_BORDER : `1px solid ${LIGHT_BORDER}`,
+                        backdropFilter: 'blur(12px)',
                         borderRadius: '12px',
                         minWidth: '350px',
                         textAlign: 'center',
@@ -159,7 +166,7 @@ export default function CreateJobOfferPage() {
                     Notice
                 </DialogTitle>
                 <DialogContent>
-                    <DialogContentText sx={{ color: theme.palette.text.primary, fontSize: '1.05rem', mt: 1, fontWeight: 500, whiteSpace: 'pre-line' }}>
+                    <DialogContentText sx={{ color: isDark ? '#ffffff' : '#1A120D', fontSize: '1.05rem', mt: 1, fontWeight: 600, whiteSpace: 'pre-line' }}>
                         {error}
                     </DialogContentText>
                 </DialogContent>
@@ -168,10 +175,10 @@ export default function CreateJobOfferPage() {
                         onClick={handleCloseSnack}
                         variant="contained"
                         sx={{
-                            bgcolor: theme.palette.primary.main,
-                            color: theme.palette.background.default,
+                            bgcolor: GOLD,
+                            color: '#131110',
                             textTransform: 'none',
-                            fontWeight: 600,
+                            fontWeight: 700,
                             px: 4,
                             '&:hover': { bgcolor: '#b38c45' }
                         }}

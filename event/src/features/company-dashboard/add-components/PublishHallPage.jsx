@@ -9,6 +9,11 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchInitialData, publishHall, updateHall } from "./addition_slices/addhallSlice.js";
 import dayjs from 'dayjs';
 
+import {
+    GOLD, BROWN_TEXT, LIGHT_CARD, LIGHT_BORDER,
+    DARK_CARD_BACKGROUND, DARK_CARD_BORDER, DARK_CARD_SHADOW, DARK_CARD_HOVER_SHADOW
+} from '../../../utils/colorConstants';
+
 const PublishHallPage = ({ editData = null, onBack }) => {
     const theme = useTheme();
     const isDark = theme.palette.mode === 'dark';
@@ -47,7 +52,6 @@ const PublishHallPage = ({ editData = null, onBack }) => {
                 const lastDate = dayjs(sortedAvails[sortedAvails.length - 1].available_date);
 
                 startDate = firstDate;
-                // 💡 تثبيت وضع النطاق دائماً لتجنب ارتباك مكوّن التواريخ
                 endDate = lastDate;
                 selectionMode = 'range';
 
@@ -138,8 +142,6 @@ const PublishHallPage = ({ editData = null, onBack }) => {
         }
 
         datesToProcess.forEach((dStr, index) => {
-            // 💡 التعديل الجوهري هنا: استخراج الـ ID القديم بناءً على الترتيب وليس مطابقة النص
-            // هذا يُجبر لارافيل على تحديث التاريخ القديم بدلاً من إضافة واحد جديد وتجاهل القديم
             const existingAvail = hallData.originalAvailabilities?.[index];
 
             const availObj = {
@@ -158,7 +160,7 @@ const PublishHallPage = ({ editData = null, onBack }) => {
         const payload = {
             title: { en: hallData.name || "Hall", ar: hallData.name || "صالة" },
             description: { en: hallData.description || "", ar: hallData.description || "" },
-            listing_type: "service", // 💡 تم الإرجاع إلى service
+            listing_type: "service",
             secondary_contact_number: hallData.secondary_contact_number || null,
             cancel_before_acceptance: hallData.cancel_before_acceptance,
             cancel_after_acceptance: hallData.cancel_after_acceptance,
@@ -197,9 +199,7 @@ const PublishHallPage = ({ editData = null, onBack }) => {
             }
         } catch (error) {
             console.error("Update/Publish failed:", error);
-
             let errorMsg = "حدث خطأ غير متوقع أثناء الحفظ.";
-
             if (error.response && error.response.data && error.response.data.errors) {
                 errorMsg = Object.values(error.response.data.errors).flat().join('\n');
             } else if (error.response && error.response.data && error.response.data.message) {
@@ -209,7 +209,6 @@ const PublishHallPage = ({ editData = null, onBack }) => {
             } else if (typeof error === 'string') {
                 errorMsg = error;
             }
-
             alert(`السيرفر رفض التعديل للأسباب التالية:\n\n${errorMsg}`);
         }
     };
@@ -217,10 +216,10 @@ const PublishHallPage = ({ editData = null, onBack }) => {
     return (
         <Box sx={{ width: '100%', px: 0, mt: isEditMode ? 0 : -4 }}>
             <Box sx={{ mb: 4, textAlign: 'left', ml: isEditMode ? 0 : '-3%' }}>
-                <Typography variant="caption" sx={{ color: isDark ? '#9a8f80' : '#7A6F5E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
-                    Catalog &nbsp;•&nbsp; <Box component="span" sx={{ color: isDark ? '#c5a059' : '#b38c45' }}>{isEditMode ? 'Edit Hall' : 'Add New Hall'}</Box>
+                <Typography variant="caption" sx={{ color: isDark ? 'rgba(255,255,255,0.6)' : '#7A6F5E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+                    Catalog &nbsp;•&nbsp; <Box component="span" sx={{ color: GOLD }}>{isEditMode ? 'Edit Hall' : 'Add New Hall'}</Box>
                 </Typography>
-                <Typography variant="h3" sx={{ fontFamily: "'Playfair Display', serif", fontSize: '2.5rem', color: isDark ? '#ffffff' : '#2B211E', mt: 1, mb: 1, fontWeight: 500 }}>
+                <Typography variant="h3" sx={{ fontFamily: "'Playfair Display', serif", fontSize: '2.5rem', color: isDark ? '#ffffff' : BROWN_TEXT, mt: 1, mb: 1, fontWeight: 500 }}>
                     {isEditMode ? 'Edit Hall Details' : 'Publish New Hall'}
                 </Typography>
             </Box>
@@ -229,13 +228,20 @@ const PublishHallPage = ({ editData = null, onBack }) => {
                 <Box sx={{ display: 'flex', gap: 4, alignItems: 'stretch', mb: 3 }}>
                     <Box sx={{ flex: 2, ml: isEditMode ? 0 : '-3%' }}>
                         <HallFormSection data={hallData} setData={setHallData} editMode={isEditMode} originalData={originalData} />
-                        <Paper sx={{ p: 4, backgroundColor: theme.palette.background.paper, border: `1px solid ${theme.palette.divider}`, borderRadius: '8px' }}>
-                            <MediaUploader
-                                data={hallData}
-                                setData={setHallData}
-                                editMode={isEditMode}
-                                originalData={originalData}
-                            />
+                        <Paper sx={{
+                            p: 4,
+                            background: isDark ? DARK_CARD_BACKGROUND : LIGHT_CARD,
+                            border: isDark ? DARK_CARD_BORDER : `1px solid ${LIGHT_BORDER}`,
+                            borderRadius: '18px',
+                            backdropFilter: 'blur(16px)',
+                            boxShadow: isDark ? DARK_CARD_SHADOW : '0 18px 40px rgba(130, 100, 40, 0.10)',
+                            transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                            '&:hover': {
+                                boxShadow: isDark ? DARK_CARD_HOVER_SHADOW : '0 20px 44px rgba(130, 100, 40, 0.2)',
+                                borderColor: isDark ? 'rgba(197, 160, 89, 0.22)' : 'rgba(197, 160, 89, 0.7)'
+                            }
+                        }}>
+                            <MediaUploader data={hallData} setData={setHallData} editMode={isEditMode} originalData={originalData} />
                         </Paper>
                     </Box>
                     <Box sx={{ flex: 1.5, width: 50 }}>
@@ -245,9 +251,9 @@ const PublishHallPage = ({ editData = null, onBack }) => {
                 <Box sx={{ ml: isEditMode ? 0 : '-3%' }}>
                     <BookingDetailsBox data={hallData} setData={setHallData} editMode={isEditMode} originalData={originalData} />
                     <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-start', mt: 3 }}>
-                        <Button text={isEditMode ? "UPDATE HALL" : "PUBLISH HALL"} onClick={handlePublish} disabled={isLoading} sx={{ backgroundColor: '#c5a059', color: '#000', py: 1.5, px: 6, fontWeight: 'bold', minWidth: '250px' }} />
+                        <Button text={isEditMode ? "UPDATE HALL" : "PUBLISH HALL"} onClick={handlePublish} disabled={isLoading} sx={{ backgroundColor: GOLD, color: '#131110', py: 1.5, px: 6, fontWeight: 'bold', minWidth: '250px' }} />
                         {isEditMode && (
-                            <Button text="CANCEL" onClick={onBack} sx={{ backgroundColor: 'transparent', border: '1px solid #c5a059', color: isDark ? '#fff' : '#000', py: 1.5, px: 6, fontWeight: 'bold' }} />
+                            <Button text="CANCEL" onClick={onBack} sx={{ backgroundColor: 'transparent', border: `1px solid ${GOLD}`, color: isDark ? '#fff' : '#000', py: 1.5, px: 6, fontWeight: 'bold' }} />
                         )}
                     </Box>
                 </Box>

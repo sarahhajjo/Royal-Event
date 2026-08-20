@@ -1,38 +1,34 @@
-import axios from 'axios';
-
-const GET_API_URL = 'http://127.0.0.1:8000/api/provider/bookings';
-const ACTION_API_URL = 'http://127.0.0.1:8000/api/bookings';
+import api from '../api'; // 💡 الاعتماد على api المركزي
 
 const RequestService = {
     getAll: async () => {
-        const token = localStorage.getItem('token');
-        return axios.get(GET_API_URL, {
-            headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' }
-        });
+        return api.get(`/provider/bookings`);
     },
 
     getById: async (id) => {
-        const token = localStorage.getItem('token');
-        return axios.get(`${GET_API_URL}/${id}`, {
-            headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' }
-        });
+        return api.get(`/provider/bookings/${id}`);
     },
 
-    // 💡 تم إضافة reason وإرساله كـ cancellation_reason
     updateStatus: async (id, status, reason = null) => {
-        const token = localStorage.getItem('token');
-
         let endpointAction = status;
         if (status === 'waiting' || status === 'accepted') endpointAction = 'accept';
         if (status === 'rejected') endpointAction = 'reject';
         if (status === 'completed') endpointAction = 'complete';
         if (status === 'cancelled') endpointAction = 'cancel';
 
-        // تجهيز البيانات لإرسالها
         const payload = reason ? { cancellation_reason: reason } : {};
 
-        return axios.put(`${ACTION_API_URL}/${id}/${endpointAction}`, payload, {
-            headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' }
+        return api.put(`/bookings/${id}/${endpointAction}`, payload);
+    },
+
+    getListingDetails: async (listingId) => {
+        return api.get(`/listings/${listingId}`);
+    },
+
+    getPaymentReceipt: async (paymentId) => {
+        // 💡 استخدام api المركزي لضمان مرور رأسية التوكن والـ ngrok، مع تحديد نوع الرد كـ blob
+        return api.get(`/admin/payments/${paymentId}/view`, {
+            responseType: 'blob'
         });
     },
 };

@@ -4,6 +4,9 @@ import InputAdornment from '@mui/material/InputAdornment';
 import Box from '@mui/material/Box';
 import { useTheme } from '@mui/material/styles';
 
+// 💡 استدعاء الألوان الموحدة
+import { GOLD, BROWN_TEXT, MUTED_TEXT, LIGHT_BORDER, DARK_CARD_BORDER } from '../utils/colorConstants';
+
 function InputField({ label, type = 'text', placeholder, value, onChange, children }) {
     const theme = useTheme();
     const isDark = theme.palette.mode === 'dark';
@@ -16,7 +19,7 @@ function InputField({ label, type = 'text', placeholder, value, onChange, childr
                     sx={{
                         fontSize: '11px',
                         fontWeight: 400,
-                        color: isDark ? '#c5a059' : '#b38c45',
+                        color: GOLD, // 💡 توحيد لون الـ Label
                         textTransform: 'uppercase',
                         letterSpacing: '0.25em'
                     }}
@@ -41,7 +44,7 @@ function InputField({ label, type = 'text', placeholder, value, onChange, childr
                         ) : null,
                         disableUnderline: false,
                         sx: {
-                            color: isDark ? '#eee0da' : '#2B211E',
+                            color: isDark ? '#ffffff' : BROWN_TEXT, // 💡 توحيد لون النص
                             backgroundColor: 'transparent',
                             pt: 0.4,
                             pb: 0.4,
@@ -49,14 +52,15 @@ function InputField({ label, type = 'text', placeholder, value, onChange, childr
                             fontFamily: "'Inter', sans-serif",
                             transition: 'all 0.3s ease',
                             '& input': { py: 0.2, height: '20px', lineHeight: '20px' },
-                            '&:before': { borderBottom: isDark ? '1px solid rgba(78, 70, 57, 0.45) !important' : '1px solid rgba(122, 111, 94, 0.45) !important' },
-                            '&:after': { borderBottom: isDark ? '2px solid #c5a059' : '2px solid #b38c45' },
+                            // 💡 توحيد لون الخط السفلي قبل وبعد التحديد
+                            '&:before': { borderBottom: isDark ? `${DARK_CARD_BORDER} !important` : `1px solid ${LIGHT_BORDER} !important` },
+                            '&:after': { borderBottom: `2px solid ${GOLD}` },
                             '& input:-webkit-autofill': {
-                                WebkitBoxShadow: isDark ? '0 0 0 100px #18120f inset !important' : '0 0 0 100px #FAF0D5 inset !important',
-                                WebkitTextFillColor: isDark ? '#eee0da !important' : '#2B211E !important',
+                                WebkitBoxShadow: isDark ? '0 0 0 100px #1a1520 inset !important' : '0 0 0 100px #fdf7ed inset !important',
+                                WebkitTextFillColor: isDark ? '#ffffff !important' : `${BROWN_TEXT} !important`,
                             },
                             '& input::placeholder': {
-                                color: isDark ? '#5a5043' : '#7A6F5E',
+                                color: isDark ? 'rgba(255,255,255,0.4)' : MUTED_TEXT, // 💡 توحيد لون الـ Placeholder
                                 opacity: 0.7,
                                 fontSize: '14px'
                             }

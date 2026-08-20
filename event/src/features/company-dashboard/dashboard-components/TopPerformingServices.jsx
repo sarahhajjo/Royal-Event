@@ -2,8 +2,15 @@ import React from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Paper from '@mui/material/Paper';
-import { useTheme } from '@mui/material/styles';
+import { useTheme, alpha } from '@mui/material/styles';
 import StarIcon from '@mui/icons-material/Star';
+
+// 💡 استيراد الألوان الموحدة
+import {
+    GOLD, BROWN_TEXT, MUTED_TEXT,
+    LIGHT_CARD, LIGHT_BORDER, LIGHT_INPUT,
+    DARK_CARD_BACKGROUND, DARK_CARD_BORDER, DARK_SURFACE_BG, DARK_SURFACE_BORDER, DARK_CARD_SHADOW
+} from '../../../utils/colorConstants';
 
 function TopPerformingServices({ servicesData }) {
     const theme = useTheme();
@@ -17,40 +24,35 @@ function TopPerformingServices({ servicesData }) {
     return (
         <Paper elevation={0} sx={{
             p: 3,
-            backgroundColor: isDark ? '#140e0c' : '#EFE4C9', // ☀️ قلب خلفية خدمات الأداء للعاج الملكي المشرق
-            border: isDark ? '1px solid rgba(78, 70, 57, 0.15)' : '1px solid rgba(179, 140, 69, 0.2)',
-            borderRadius: '16px',
-            width: '100%',
-            transition: 'background-color 0.3s ease'
+            background: isDark ? DARK_CARD_BACKGROUND : LIGHT_CARD,
+            border: isDark ? DARK_CARD_BORDER : `1px solid ${LIGHT_BORDER}`,
+            borderRadius: '18px', width: '100%', transition: 'background-color 0.3s ease', backdropFilter: 'blur(16px)',
+            boxShadow: isDark ? DARK_CARD_SHADOW : `0 18px 40px ${alpha(GOLD, 0.15)}`
         }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2.5 }}>
-                <Typography sx={{ color: isDark ? '#eee0da' : '#2B211E', fontSize: '18px', fontFamily: "'Playfair Display', serif" }}>
+                <Typography sx={{ color: isDark ? '#ffffff' : BROWN_TEXT, fontSize: '18px', fontFamily: "'Playfair Display', serif", letterSpacing: '-0.01em', fontWeight: 700 }}>
                     Top Performing Services
                 </Typography>
-                <Typography sx={{ color: isDark ? '#c5a059' : '#b38c45', fontSize: '12px', cursor: 'pointer', fontFamily: "'Inter', sans-serif", fontWeight: 500 }}>
+                <Typography sx={{ color: GOLD, fontSize: '12px', cursor: 'pointer', fontFamily: "'Inter', sans-serif", fontWeight: 800, letterSpacing: '0.04em' }}>
                     VIEW ALL →
                 </Typography>
             </Box>
 
-            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)' }, gap: 2.5 }}>
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))' }, gap: 2.2 }}>
                 {defaultServices.map((service) => (
                     <Box key={service.id} sx={{
-                        display: 'flex',
-                        gap: 2,
-                        p: 1.5,
-                        backgroundColor: isDark ? '#1c1512' : '#FAF0D5', // ☀️ قلب الصناديق الفردية للون البيج الرملي
-                        border: isDark ? '1px solid rgba(78, 70, 57, 0.1)' : '1px solid rgba(179, 140, 69, 0.12)',
-                        borderRadius: '12px',
-                        alignItems: 'center',
-                        textAlign: 'left'
+                        display: 'flex', flexDirection: 'column', gap: 1.4, p: 1.2,
+                        backgroundColor: isDark ? DARK_SURFACE_BG : LIGHT_INPUT,
+                        border: isDark ? DARK_SURFACE_BORDER : `1px solid ${alpha(LIGHT_BORDER, 0.6)}`,
+                        borderRadius: '16px', alignItems: 'stretch', textAlign: 'left', overflow: 'hidden'
                     }}>
-                        <Box component="img" src={service.img} sx={{ width: 64, height: 64, borderRadius: '8px', objectFit: 'cover' }} />
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.3 }}>
-                            <Typography sx={{ color: isDark ? '#eee0da' : '#2B211E', fontSize: '14px', fontWeight: 500, fontFamily: "'Inter', sans-serif" }}>{service.title}</Typography>
-                            <Typography sx={{ color: isDark ? '#8a7f70' : '#7A6F5E', fontSize: '12px', fontFamily: "'Inter', sans-serif" }}>{service.sub}</Typography>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.4 }}>
-                                <StarIcon sx={{ color: isDark ? '#c5a059' : '#b38c45', fontSize: '13px' }} />
-                                <Typography sx={{ color: isDark ? '#c5a059' : '#b38c45', fontSize: '11px', fontWeight: 500, fontFamily: "'Inter', sans-serif" }}>{service.rating}</Typography>
+                        <Box component="img" src={service.img} sx={{ width: '100%', height: 132, borderRadius: '12px', objectFit: 'cover' }} />
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.35, px: 0.4, pb: 0.3 }}>
+                            <Typography sx={{ color: isDark ? '#ffffff' : BROWN_TEXT, fontSize: '14px', fontWeight: 700, fontFamily: "'Inter', sans-serif" }}>{service.title}</Typography>
+                            <Typography sx={{ color: isDark ? 'rgba(255,255,255,0.6)' : MUTED_TEXT, fontSize: '12px', fontFamily: "'Inter', sans-serif", fontWeight: 600 }}>{service.sub}</Typography>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5 }}>
+                                <StarIcon sx={{ color: GOLD, fontSize: '13px' }} />
+                                <Typography sx={{ color: GOLD, fontSize: '11px', fontWeight: 800, fontFamily: "'Inter', sans-serif" }}>{service.rating}</Typography>
                             </Box>
                         </Box>
                     </Box>

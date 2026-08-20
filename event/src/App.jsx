@@ -43,8 +43,7 @@ function App() {
                 <Route path="/" element={<LoginPage/>}/>
                 <Route path="/signup" element={<RegisterPage/>}/>
                 <Route path="/dashboard" element={<AddProductPage/>}/>
-                <Route path="/company-dashboard" element={<CompanyDashboardPage/>}/>
-                <Route path="/company-dashboard/publish-hall" element={<PublishHallPage/>}/>
+                <Route path="/company-dashboard/*" element={<CompanyDashboardPage />} />
 
                 {/* مسارات لوحة تحكم الأدمن */}
                 <Route path="/admin-dashboard" element={<DashboardPage/>}/>

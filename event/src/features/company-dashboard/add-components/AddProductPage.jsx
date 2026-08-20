@@ -8,18 +8,14 @@ import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import CustomInputField from './addition-product-components/CustomInputField.jsx';
 import VariantCard from './addition-product-components/VariantCard.jsx';
 import Button from '../../../components/Button.jsx';
+import { fixImageUrl } from '../../../utils/imageUrlHelper';
 
-const fixImageUrl = (img) => {
-    if (!img) return "https://via.placeholder.com/400x300?text=No+Image";
-    const url = typeof img === 'object' ? (img.url || img.path || img.temp_path) : img;
-    if (!url || typeof url !== 'string') return "https://via.placeholder.com/400x300?text=No+Image";
-    if (url.startsWith('http')) return url;
-    const BACKEND_URL = 'http://127.0.0.1:8000';
-    let cleanPath = url.startsWith('/') ? url : `/${url}`;
-    if (cleanPath.includes('/uploads/') && !cleanPath.includes('/storage/')) cleanPath = cleanPath.replace('/uploads/', '/storage/uploads/');
-    if (!cleanPath.startsWith('/storage/')) cleanPath = `/storage${cleanPath}`;
-    return `${BACKEND_URL}${cleanPath}`;
-};
+import {
+    GOLD, BROWN_TEXT, MUTED_TEXT,
+    LIGHT_CARD, LIGHT_INPUT, LIGHT_BORDER,
+    DARK_CARD_BACKGROUND, DARK_CARD_BORDER, DARK_CARD_SHADOW,
+    DARK_CARD_HOVER_SHADOW, DARK_SURFACE_BG
+} from '../../../utils/colorConstants';
 
 export default function AddProductPage({ editData = null, onBack }) {
     const theme = useTheme();
@@ -121,7 +117,6 @@ export default function AddProductPage({ editData = null, onBack }) {
                 setOriginalVariants(mappedVariants);
                 setVariantCount(mappedVariants.length);
 
-                // 💡 التعديل هنا: فحص ذكي لاسم اللون لمعرفة ما إذا كان له لون حقيقي أم أنه افتراضي
                 const firstColor = mappedVariants[0]?.color || '';
                 const isDefaultOnly = mappedVariants.length === 1 &&
                     (firstColor === 'Default' || firstColor === 'default' || firstColor === 'افتراضي' || firstColor === '');
@@ -207,7 +202,6 @@ export default function AddProductPage({ editData = null, onBack }) {
             })
         };
 
-        // 💡 التعديل هنا: إضافة الحالة (status) للـ payload قبل التحقق من وضع التعديل أو الإضافة
         payload.status = status;
         payload.moderation_status = status;
 
@@ -227,15 +221,14 @@ export default function AddProductPage({ editData = null, onBack }) {
         }
     };
 
-    // 💡 دالة معالجة التغيير للإدخال اليدوي للرقم
     const handleCountChange = (value) => {
-        const numStr = value.replace(/[^0-9]/g, ''); // منع الحروف
+        const numStr = value.replace(/[^0-9]/g, '');
         if (numStr === '') {
             setVariantCount('');
             return;
         }
 
-        const safeNum = Math.min(parseInt(numStr, 10), 30); // حماية من الأرقام الكبيرة جداً
+        const safeNum = Math.min(parseInt(numStr, 10), 30);
         setVariantCount(safeNum);
 
         if(safeNum > 0) {
@@ -256,23 +249,70 @@ export default function AddProductPage({ editData = null, onBack }) {
     const handleVariantUpdate = (index, field, value) => setVariants((prev) => { const n = [...prev]; n[index] = { ...n[index], [field]: value }; return n; });
     const handleUpdateFullObject = (index, updatedVariant) => setVariants((prev) => { const n = [...prev]; n[index] = updatedVariant; return n; });
 
+    const glassCardSx = {
+        background: isDark ? DARK_CARD_BACKGROUND : LIGHT_CARD,
+        border: isDark ? DARK_CARD_BORDER : `1px solid ${LIGHT_BORDER}`,
+        borderRadius: '18px',
+        backdropFilter: 'blur(16px)',
+        boxShadow: isDark ? DARK_CARD_SHADOW : '0 18px 40px rgba(130, 100, 40, 0.10)'
+    };
+
+    // 💡 الحل الجذري لتلوين القوائم المنسدلة: استخدام !important لإلغاء ألوان MUI الافتراضية
+    // 💡 الحل الجذري للقوائم المنسدلة (Select) لفرض التأثير الزجاجي وإلغاء خلفية MUI الصلبة
+    // 💡 الحل الجذري للقوائم المنسدلة: جعل الـ MenuList شفافاً بالكامل
+    const glassMenuProps = {
+        PaperProps: {
+            sx: {
+                bgcolor: 'transparent !important',
+                background: isDark ? `${DARK_CARD_BACKGROUND} !important` : `${LIGHT_CARD} !important`,
+                border: isDark ? DARK_CARD_BORDER : `1px solid ${LIGHT_BORDER}`,
+                color: isDark ? '#ffffff' : BROWN_TEXT,
+                backdropFilter: 'blur(24px) !important',
+                WebkitBackdropFilter: 'blur(24px) !important', // لدعم متصفح سفاري
+                backgroundImage: 'none !important',
+                boxShadow: isDark ? DARK_CARD_SHADOW : '0 18px 40px rgba(130, 100, 40, 0.15)',
+            }
+        },
+        MenuListProps: {
+            sx: {
+                // 💡 هذا السطر هو الذي سيحل مشكلة اللون الصلب!
+                backgroundColor: 'transparent !important',
+                p: 1, // مسافة داخلية صغيرة لترتيب العناصر
+                '& .MuiMenuItem-root': {
+                    borderRadius: '6px', // جعل حواف الخيارات دائرية وأنيقة
+                    mb: 0.5,
+                    transition: 'all 0.2s ease',
+                    '&.Mui-selected': {
+                        backgroundColor: isDark ? 'rgba(197, 160, 89, 0.25) !important' : 'rgba(197, 160, 89, 0.15) !important',
+                        fontWeight: 'bold',
+                        color: GOLD
+                    },
+                    '&:hover': {
+                        backgroundColor: isDark ? 'rgba(197, 160, 89, 0.15)' : 'rgba(197, 160, 89, 0.1)',
+                        transform: 'translateX(4px)' // تأثير حركة خفيف عند التمرير
+                    }
+                }
+            }
+        }
+    };
+
     return (
         <Box sx={{ width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}>
             <Box sx={{ mb: 4, textAlign: 'left' }}>
-                <Typography variant="caption" sx={{ color: isDark ? '#9a8f80' : '#7A6F5E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
-                    Catalog &nbsp;•&nbsp; <Box component="span" sx={{ color: isDark ? '#c5a059' : '#b38c45' }}>{isEditMode ? 'Edit Product' : 'Add New Product'}</Box>
+                <Typography variant="caption" sx={{ color: isDark ? 'rgba(255,255,255,0.58)' : MUTED_TEXT, letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 700 }}>
+                    Catalog &nbsp;•&nbsp; <Box component="span" sx={{ color: GOLD }}>{isEditMode ? 'Edit Product' : 'Add New Product'}</Box>
                 </Typography>
-                <Typography variant="h3" sx={{ fontFamily: "'Playfair Display', serif", fontSize: '2.5rem', color: isDark ? '#ffffff' : '#2B211E', mt: 1, mb: 1, fontWeight: 500 }}>
+                <Typography variant="h3" sx={{ fontFamily: "'Playfair Display', serif", fontSize: '2.5rem', color: isDark ? '#ffffff' : BROWN_TEXT, mt: 1, mb: 1, fontWeight: 500 }}>
                     {isEditMode ? 'Edit Product' : 'Add New Product'}
                 </Typography>
             </Box>
 
             <Grid container spacing={4} sx={{ mb: 4 }}>
                 <Grid item xs={12} md={6}>
-                    <Paper sx={{ p: 4, backgroundColor: isDark ? '#1c1512' : '#EFE4C9', border: isDark ? '1px solid #261d19' : '1px solid rgba(179, 140, 69, 0.2)', borderRadius: '6px', height: '100%', width: 490 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 3, borderBottom: isDark ? '1px solid rgba(154, 143, 128, 0.1)' : '1px solid rgba(179, 140, 69, 0.2)', pb: 1.5 }}>
-                            <Typography sx={{ color: isDark ? '#c5a059' : '#b38c45', fontSize: '16px' }}>🗂️</Typography>
-                            <Typography variant="subtitle1" sx={{ color: isDark ? '#ffffff' : '#2B211E', fontWeight: 'bold' }}>Core Details</Typography>
+                    <Paper sx={{ p: 4, ...glassCardSx, height: '100%', width: 490 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 3, borderBottom: isDark ? DARK_CARD_BORDER : `1px solid ${LIGHT_BORDER}`, pb: 1.5 }}>
+                            <Typography sx={{ color: GOLD, fontSize: '16px' }}>🗂️</Typography>
+                            <Typography variant="subtitle1" sx={{ color: isDark ? '#ffffff' : BROWN_TEXT, fontWeight: 700, letterSpacing: '0.03em' }}>Core Details</Typography>
                         </Box>
                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                             <CustomInputField
@@ -292,20 +332,18 @@ export default function AddProductPage({ editData = null, onBack }) {
                 </Grid>
 
                 <Grid item xs={12} md={6}>
-                    <Paper sx={{ p: 4, backgroundColor: isDark ? '#1c1512' : '#EFE4C9', border: isDark ? '1px solid #261d19' : '1px solid rgba(179, 140, 69, 0.2)', borderRadius: '6px', height: '100%' }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 3, borderBottom: isDark ? '1px solid rgba(154, 143, 128, 0.1)' : '1px solid rgba(179, 140, 69, 0.2)', pb: 1.5 }}>
-                            <Typography sx={{ color: isDark ? '#c5a059' : '#b38c45', fontSize: '16px' }}>📦</Typography>
-                            <Typography variant="subtitle1" sx={{ color: isDark ? '#ffffff' : '#2B211E', fontWeight: 'bold' }}>Logistics & Details</Typography>
+                    <Paper sx={{ p: 4, ...glassCardSx, height: '100%' ,width:545 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 3, borderBottom: isDark ? DARK_CARD_BORDER : `1px solid ${LIGHT_BORDER}`, pb: 1.5 }}>
+                            <Typography sx={{ color: GOLD, fontSize: '16px' }}>📦</Typography>
+                            <Typography variant="subtitle1" sx={{ color: isDark ? '#ffffff' : BROWN_TEXT, fontWeight: 700, letterSpacing: '0.03em' }}>Logistics & Details</Typography>
                         </Box>
                         <Grid container spacing={3}>
                             <Grid item xs={12} sm={6}>
                                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                                    {/* ----------------- Category Dropdown ----------------- */}
                                     <Box>
-                                        <Typography variant="caption" sx={{ color: isDark ? '#9a8f80' : '#7A6F5E', fontWeight: 'bold', textTransform: 'uppercase', mb: 1, display: 'block' }}>Category</Typography>
-                                        <TextField select fullWidth value={coreDetails.categoryId || ''} onChange={(e) => handleCoreChange('categoryId', e.target.value)} variant="outlined" sx={{ backgroundColor: isDark ? 'rgba(0, 0, 0, 0.4)' : 'rgba(255, 255, 255, 0.6)', borderRadius: 1, width: '240px', '& .MuiOutlinedInput-root': { height: '44px', color: isDark ? '#ffffff' : '#2B211E', border: isEditMode && coreDetails.categoryId !== originalData?.categoryId ? '1px solid #FFC107' : (isEditMode ? '1px solid #4CAF50' : 'none'), '& fieldset': { borderColor: isDark ? '#261d19' : 'rgba(179, 140, 69, 0.2)' }, '&:hover fieldset': { borderColor: isDark ? '#c5a059' : '#b38c45' }, } }} SelectProps={{ MenuProps: { PaperProps: { sx: { bgcolor: isDark ? '#261d19' : '#fff' } } } }}>
+                                        <Typography variant="caption" sx={{ color: isDark ? 'rgba(255,255,255,0.58)' : MUTED_TEXT, fontWeight: 700, textTransform: 'uppercase', mb: 1, display: 'block', letterSpacing: '0.08em' }}>Category</Typography>
+                                        <TextField select fullWidth value={coreDetails.categoryId || ''} onChange={(e) => handleCoreChange('categoryId', e.target.value)} variant="outlined" sx={{ backgroundColor: isDark ? DARK_SURFACE_BG : LIGHT_INPUT, borderRadius: 3, width: '240px', '& .MuiOutlinedInput-root': { height: '44px', color: isDark ? '#ffffff' : BROWN_TEXT, border: isDark ? DARK_CARD_BORDER : `1px solid ${LIGHT_BORDER}`, '& fieldset': { borderColor: 'transparent' }, '&:hover fieldset': { borderColor: 'transparent' }, '&.Mui-focused fieldset': { borderColor: 'transparent' } } }} SelectProps={{ MenuProps: glassMenuProps }}>
                                             {categories.map((cat) => {
-                                                // 💡 استخراج الاسم بشكل آمن
                                                 const catName = typeof cat.name === 'object' ? (cat.name?.en || cat.name?.ar) : cat.name;
                                                 return (
                                                     <MenuItem key={cat.id} value={cat.id}>
@@ -316,12 +354,10 @@ export default function AddProductPage({ editData = null, onBack }) {
                                         </TextField>
                                     </Box>
 
-                                    {/* ----------------- District Dropdown ----------------- */}
                                     <Box>
-                                        <Typography variant="caption" sx={{ color: isDark ? '#9a8f80' : '#7A6F5E', fontWeight: 'bold', textTransform: 'uppercase', mb: 1, display: 'block' }}>District</Typography>
-                                        <TextField select fullWidth value={coreDetails.districtId || ''} onChange={(e) => handleCoreChange('districtId', e.target.value)} variant="outlined" sx={{ backgroundColor: isDark ? 'rgba(0, 0, 0, 0.4)' : 'rgba(255, 255, 255, 0.6)', borderRadius: 1, width: '240px', '& .MuiOutlinedInput-root': { height: '44px', color: isDark ? '#ffffff' : '#2B211E', border: isEditMode && coreDetails.districtId !== originalData?.districtId ? '1px solid #FFC107' : (isEditMode ? '1px solid #4CAF50' : 'none'), '& fieldset': { borderColor: isDark ? '#261d19' : 'rgba(179, 140, 69, 0.2)' }, '&:hover fieldset': { borderColor: isDark ? '#c5a059' : '#b38c45' }, } }} SelectProps={{ MenuProps: { PaperProps: { sx: { bgcolor: isDark ? '#261d19' : '#fff' } } } }}>
+                                        <Typography variant="caption" sx={{ color: isDark ? 'rgba(255,255,255,0.58)' : MUTED_TEXT, fontWeight: 700, textTransform: 'uppercase', mb: 1, display: 'block', letterSpacing: '0.08em' }}>District</Typography>
+                                        <TextField select fullWidth value={coreDetails.districtId || ''} onChange={(e) => handleCoreChange('districtId', e.target.value)} variant="outlined" sx={{ backgroundColor: isDark ? DARK_SURFACE_BG : LIGHT_INPUT, borderRadius: 3, width: '240px', '& .MuiOutlinedInput-root': { height: '44px', color: isDark ? '#ffffff' : BROWN_TEXT, border: isDark ? DARK_CARD_BORDER : `1px solid ${LIGHT_BORDER}`, '& fieldset': { borderColor: 'transparent' }, '&:hover fieldset': { borderColor: 'transparent' }, '&.Mui-focused fieldset': { borderColor: 'transparent' } } }} SelectProps={{ MenuProps: glassMenuProps }}>
                                             {districts.map((dist) => {
-                                                // 💡 استخراج الاسم بشكل آمن
                                                 const distName = typeof dist.name === 'object' ? (dist.name?.en || dist.name?.ar) : dist.name;
                                                 return (
                                                     <MenuItem key={dist.id} value={dist.id}>
@@ -343,10 +379,10 @@ export default function AddProductPage({ editData = null, onBack }) {
                                     </Box>
 
                                     <Box sx={{ mt: 0.5 }}>
-                                        <Typography sx={{ color: isDark ? '#c5a059' : '#b38c45', fontWeight: 'bold', mb: 1, fontSize: '0.75rem' }}>CANCELLATION POLICY</Typography>
+                                        <Typography sx={{ color: GOLD, fontWeight: 700, mb: 1, fontSize: '0.75rem', letterSpacing: '0.08em' }}>CANCELLATION POLICY</Typography>
                                         <Box sx={{ display: 'flex', flexDirection: 'column' }}>
                                             {[ { label: 'Cancel before acceptance', key: 'beforeAccept' }, { label: 'Cancel after acceptance', key: 'afterAccept' }, { label: 'Cancel before payment', key: 'beforePayment' } ].map((policy) => (
-                                                <FormControlLabel key={policy.key} control={<Checkbox size="small" checked={policies[policy.key]} onChange={(e) => setPolicies(prev => ({ ...prev, [policy.key]: e.target.checked }))} sx={{ color: isDark ? '#c5a059' : '#b38c45', '&.Mui-checked': { color: isDark ? '#c5a059' : '#b38c45' } }} />} label={<Typography variant="body2" sx={{ fontSize: '0.85rem' }}>{policy.label}</Typography>} />
+                                                <FormControlLabel key={policy.key} control={<Checkbox size="small" checked={policies[policy.key]} onChange={(e) => setPolicies(prev => ({ ...prev, [policy.key]: e.target.checked }))} sx={{ color: GOLD, '&.Mui-checked': { color: GOLD } }} />} label={<Typography variant="body2" sx={{ fontSize: '0.85rem', color: isDark ? '#ffffff' : BROWN_TEXT, fontFamily: "'Inter', sans-serif" }}>{policy.label}</Typography>} />
                                             ))}
                                         </Box>
                                     </Box>
@@ -357,34 +393,32 @@ export default function AddProductPage({ editData = null, onBack }) {
                 </Grid>
             </Grid>
 
-            {/* Variant Options Section */}
-            <Paper sx={{ p: 4, backgroundColor: isDark ? '#1c1512' : '#EFE4C9', border: isDark ? '1px solid #261d19' : '1px solid rgba(179, 140, 69, 0.2)', borderRadius: '6px', mb: 5, textAlign: 'left' }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 4, borderBottom: isDark ? '1px solid rgba(154, 143, 128, 0.1)' : '1px solid rgba(179, 140, 69, 0.2)', pb: 1.5 }}>
-                    <Typography sx={{ color: isDark ? '#c5a059' : '#b38c45', fontSize: '16px' }}>🎨</Typography>
-                    <Typography variant="subtitle1" sx={{ color: isDark ? '#ffffff' : '#2B211E', fontWeight: 'bold' }}>Variant Options</Typography>
+            <Paper sx={{ p: 4, ...glassCardSx, mb: 5, textAlign: 'left' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 4, borderBottom: isDark ? DARK_CARD_BORDER : `1px solid ${LIGHT_BORDER}`, pb: 1.5 }}>
+                    <Typography sx={{ color: GOLD, fontSize: '16px' }}>🎨</Typography>
+                    <Typography variant="subtitle1" sx={{ color: isDark ? '#ffffff' : BROWN_TEXT, fontWeight: 700, letterSpacing: '0.03em' }}>Variant Options</Typography>
                 </Box>
 
-                {/* 💡 القسم الجديد المدمج هنا كما في الصورة */}
                 <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'flex-start', sm: 'center' }, gap: 4, mb: 5 }}>
                     <Box>
-                        <Typography variant="caption" sx={{ color: isDark ? '#9a8f80' : '#7A6F5E', fontWeight: 'bold', textTransform: 'uppercase', mb: 1.5, display: 'block' }}>
+                        <Typography variant="caption" sx={{ color: isDark ? 'rgba(255,255,255,0.58)' : MUTED_TEXT, fontWeight: 700, textTransform: 'uppercase', mb: 1.5, display: 'block', letterSpacing: '0.08em' }}>
                             ADD VARIANTS WITH DIFFERENT COLORS?
                         </Typography>
                         <Box sx={{ display: 'flex', gap: 1.5 }}>
-                            <Box onClick={() => handleVariantToggle('yes')} sx={{ px: 3, py: 1, borderRadius: 1, cursor: 'pointer', bgcolor: hasVariants === 'yes' ? (isDark ? 'rgba(197, 160, 89, 0.2)' : '#FCEFB4') : (isDark ? 'rgba(0,0,0,0.2)' : '#FDFBF7'), border: hasVariants === 'yes' ? `1px solid ${isDark ? '#c5a059' : '#F4D35E'}` : `1px solid ${theme.palette.divider}`, display: 'flex', alignItems: 'center', gap: 1, transition: 'all 0.2s' }}>
-                                <Radio size="small" checked={hasVariants === 'yes'} sx={{ p: 0, color: isDark ? '#c5a059' : '#b38c45', '&.Mui-checked': { color: isDark ? '#c5a059' : '#b38c45' } }} />
-                                <Typography sx={{ fontSize: '14px', color: isDark ? '#fff' : '#2B211E', fontWeight: hasVariants === 'yes' ? 'bold' : 'normal' }}>Yes</Typography>
+                            <Box onClick={() => handleVariantToggle('yes')} sx={{ px: 3, py: 1, borderRadius: 3, cursor: 'pointer', background: hasVariants === 'yes' ? 'rgba(197,160,89,0.12)' : (isDark ? DARK_SURFACE_BG : LIGHT_INPUT), border: hasVariants === 'yes' ? '1px solid rgba(197,160,89,0.35)' : (isDark ? DARK_CARD_BORDER : `1px solid ${LIGHT_BORDER}`), display: 'flex', alignItems: 'center', gap: 1, transition: 'all 0.2s' }}>
+                                <Radio size="small" checked={hasVariants === 'yes'} sx={{ p: 0, color: GOLD, '&.Mui-checked': { color: GOLD } }} />
+                                <Typography sx={{ fontSize: '14px', color: isDark ? '#ffffff' : BROWN_TEXT, fontWeight: hasVariants === 'yes' ? 700 : 500, fontFamily: "'Inter', sans-serif" }}>Yes</Typography>
                             </Box>
-                            <Box onClick={() => handleVariantToggle('no')} sx={{ px: 3, py: 1, borderRadius: 1, cursor: 'pointer', bgcolor: hasVariants === 'no' ? (isDark ? 'rgba(197, 160, 89, 0.2)' : '#FCEFB4') : (isDark ? 'rgba(0,0,0,0.2)' : '#FDFBF7'), border: hasVariants === 'no' ? `1px solid ${isDark ? '#c5a059' : '#F4D35E'}` : `1px solid ${theme.palette.divider}`, display: 'flex', alignItems: 'center', gap: 1, transition: 'all 0.2s' }}>
-                                <Radio size="small" checked={hasVariants === 'no'} sx={{ p: 0, color: isDark ? '#c5a059' : '#b38c45', '&.Mui-checked': { color: isDark ? '#c5a059' : '#b38c45' } }} />
-                                <Typography sx={{ fontSize: '14px', color: isDark ? '#fff' : '#2B211E', fontWeight: hasVariants === 'no' ? 'bold' : 'normal' }}>No</Typography>
+                            <Box onClick={() => handleVariantToggle('no')} sx={{ px: 3, py: 1, borderRadius: 3, cursor: 'pointer', background: hasVariants === 'no' ? 'rgba(197,160,89,0.12)' : (isDark ? DARK_SURFACE_BG : LIGHT_INPUT), border: hasVariants === 'no' ? '1px solid rgba(197,160,89,0.35)' : (isDark ? DARK_CARD_BORDER : `1px solid ${LIGHT_BORDER}`), display: 'flex', alignItems: 'center', gap: 1, transition: 'all 0.2s' }}>
+                                <Radio size="small" checked={hasVariants === 'no'} sx={{ p: 0, color: GOLD, '&.Mui-checked': { color: GOLD } }} />
+                                <Typography sx={{ fontSize: '14px', color: isDark ? '#ffffff' : BROWN_TEXT, fontWeight: hasVariants === 'no' ? 700 : 500, fontFamily: "'Inter', sans-serif" }}>No</Typography>
                             </Box>
                         </Box>
                     </Box>
 
                     {hasVariants === 'yes' && (
                         <Box>
-                            <Typography variant="caption" sx={{ color: isDark ? '#9a8f80' : '#7A6F5E', fontWeight: 'bold', textTransform: 'uppercase', mb: 1.5, display: 'block' }}>
+                            <Typography variant="caption" sx={{ color: isDark ? 'rgba(255,255,255,0.58)' : MUTED_TEXT, fontWeight: 700, textTransform: 'uppercase', mb: 1.5, display: 'block', letterSpacing: '0.08em' }}>
                                 HOW MANY COLORS?
                             </Typography>
                             <TextField
@@ -396,11 +430,11 @@ export default function AddProductPage({ editData = null, onBack }) {
                                     width: '150px',
                                     '& .MuiOutlinedInput-root': {
                                         height: '42px',
-                                        backgroundColor: isDark ? 'rgba(0, 0, 0, 0.4)' : '#FDFBF7',
-                                        color: isDark ? '#eee0da' : '#2B211E',
+                                        backgroundColor: isDark ? DARK_SURFACE_BG : LIGHT_INPUT,
+                                        color: isDark ? '#ffffff' : BROWN_TEXT,
                                         '& fieldset': { borderColor: 'transparent' },
-                                        '&:hover fieldset': { borderColor: isDark ? '#c5a059' : '#b38c45' },
-                                        '&.Mui-focused fieldset': { borderColor: isDark ? '#c5a059' : '#b38c45' },
+                                        '&:hover fieldset': { borderColor: 'transparent' },
+                                        '&.Mui-focused fieldset': { borderColor: 'transparent' },
                                     }
                                 }}
                             />
@@ -425,28 +459,27 @@ export default function AddProductPage({ editData = null, onBack }) {
                 </Box>
             </Paper>
 
-            <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-start', borderTop: isDark ? '1px solid #261d19' : '1px solid rgba(179, 140, 69, 0.2)', pt: 4, pb: 4 }}>
+            <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-start', borderTop: isDark ? DARK_CARD_BORDER : `1px solid ${LIGHT_BORDER}`, pt: 4, pb: 4 }}>
                 <Box sx={{ width: '240px' }} onClick={() => handlePublishClick('pending_approval')}>
                     <Button text={isEditMode ? "UPDATE PRODUCT" : "PUBLISH PRODUCT"} icon={<ArrowForwardIcon fontSize="small" />} />
                 </Box>
                 {!isEditMode && (
-                    <Box component="button" onClick={() => executePublish('draft')} sx={{ fontFamily: 'Inter', px: 4, py: '12px', backgroundColor: 'transparent', border: isDark ? '1px solid #261d19' : '1px solid rgba(179, 140, 69, 0.4)', color: isDark ? '#ffffff' : '#2B211E', borderRadius: '4px', cursor: 'pointer', transition: 'all 0.3s' }}>
+                    <Box component="button" onClick={() => executePublish('draft')} sx={{ fontFamily: 'Inter', px: 4, py: '12px', background: isDark ? DARK_SURFACE_BG : LIGHT_INPUT, border: isDark ? DARK_CARD_BORDER : `1px solid ${LIGHT_BORDER}`, color: isDark ? '#ffffff' : BROWN_TEXT, borderRadius: '10px', cursor: 'pointer', transition: 'all 0.3s' }}>
                         SAVE AS DRAFT
                     </Box>
                 )}
             </Box>
 
-            {/* نافذة التأكيد قبل التعديل */}
             <Dialog
                 open={openConfirmDialog}
                 onClose={() => setOpenConfirmDialog(false)}
-                PaperProps={{ sx: { bgcolor: isDark ? '#1c1512' : '#EFE4C9', border: isDark ? '1px solid #c5a059' : '1px solid #b38c45' } }}
+                PaperProps={{ sx: { ...glassCardSx, bgcolor: 'transparent', backgroundImage: 'none' } }}
             >
-                <DialogTitle sx={{ color: isDark ? '#c5a059' : '#b38c45', fontWeight: 'bold' }}>
+                <DialogTitle sx={{ color: GOLD, fontWeight: 700 }}>
                     Confirm Modifications
                 </DialogTitle>
                 <DialogContent>
-                    <DialogContentText sx={{ color: isDark ? '#eee0da' : '#2B211E' }}>
+                    <DialogContentText sx={{ color: isDark ? '#ffffff' : BROWN_TEXT }}>
                         Are you sure you want to save these changes?
                         <br/><br/>
                         <b>Note:</b> Submitting these modifications will set the product status back to "Pending Approval" until an administrator reviews it.

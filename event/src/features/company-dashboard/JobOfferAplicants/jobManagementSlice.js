@@ -1,5 +1,9 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { fetchJobApplicantsService, toggleJobActiveService } from '../../../services/companyService/jobService.js'; // تأكدي من مسارك
+import {
+    fetchJobApplicantsService,
+    toggleJobActiveService,
+    fetchFreelancerBlockedDatesService // 💡 استيراد دالة التقويم
+} from '../../../services/companyService/jobService.js'; // تأكدي من مسارك
 
 export const fetchJobsWithApplications = createAsyncThunk(
     'jobManagement/fetchAll',
@@ -12,34 +16,51 @@ export const fetchJobsWithApplications = createAsyncThunk(
         }
     }
 );
+
 export const toggleJobStatus = createAsyncThunk(
     'jobManagement/toggleStatus',
     async (jobId, { rejectWithValue }) => {
         try {
             const response = await toggleJobActiveService(jobId);
-            return response.data; // الباك إند يرجع تفاصيل الوظيفة المحدثة في data
+            return response.data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || 'Failed to toggle status');
         }
     }
 );
+
+// 💡 Thunk جديد لجلب التواريخ المحجوزة للفريلانسر المحدد
+export const fetchFreelancerBlockedDates = createAsyncThunk(
+    'jobManagement/fetchBlockedDates',
+    async (freelancerId, { rejectWithValue }) => {
+        try {
+            const response = await fetchFreelancerBlockedDatesService(freelancerId);
+            return response.data; // سيرجع مصفوفة الأيام من الباك إند
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || 'Failed to fetch blocked dates');
+        }
+    }
+);
+
 const jobManagementSlice = createSlice({
     name: 'jobManagement',
     initialState: {
         jobs: [],
         loading: false,
         error: null,
-
-        // 💡 إضافة الفريلانسر المحدد هنا
         selectedFreelancer: null,
+
+        // 💡 مخزن بيانات التقويم
+        blockedDates: [],
+        blockedDatesLoading: false,
     },
     reducers: {
-        // 💡 إضافة الـ Reducers الخاصة بالـ Profile
         setSelectedFreelancer: (state, action) => {
             state.selectedFreelancer = action.payload;
         },
         clearSelectedFreelancer: (state) => {
             state.selectedFreelancer = null;
+            state.blockedDates = []; // 💡 تصفير التواريخ عند إغلاق البروفايل
         }
     },
     extraReducers: (builder) => {
@@ -55,18 +76,27 @@ const jobManagementSlice = createSlice({
                 state.loading = false;
                 state.error = action.payload;
             })
-    .addCase(toggleJobStatus.fulfilled, (state, action) => {
-            // البحث عن الوظيفة التي تم تعديلها وتحديث حالتها في الواجهة
-            const updatedJob = action.payload;
-            const index = state.jobs.findIndex(job => job.id === updatedJob.id);
-            if (index !== -1) {
-                state.jobs[index].is_active = updatedJob.is_active;
-            }
-        });
+            .addCase(toggleJobStatus.fulfilled, (state, action) => {
+                const updatedJob = action.payload;
+                const index = state.jobs.findIndex(job => job.id === updatedJob.id);
+                if (index !== -1) {
+                    state.jobs[index].is_active = updatedJob.is_active;
+                }
+            })
+            // 💡 الحالات الخاصة بجلب التقويم
+            .addCase(fetchFreelancerBlockedDates.pending, (state) => {
+                state.blockedDatesLoading = true;
+            })
+            .addCase(fetchFreelancerBlockedDates.fulfilled, (state, action) => {
+                state.blockedDatesLoading = false;
+                state.blockedDates = action.payload || [];
+            })
+            .addCase(fetchFreelancerBlockedDates.rejected, (state) => {
+                state.blockedDatesLoading = false;
+            });
     }
 });
 
-// 💡 لا تنسي تصدير الأكشنز الجديدة
 export const { setSelectedFreelancer, clearSelectedFreelancer } = jobManagementSlice.actions;
 
 export default jobManagementSlice.reducer;

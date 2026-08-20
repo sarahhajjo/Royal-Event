@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Box, Typography, Tabs, Tab, Button, Stack, Paper, CircularProgress, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions } from "@mui/material";
 import InventoryOutlinedIcon from "@mui/icons-material/InventoryOutlined";
-import { useTheme } from "@mui/material/styles";
+import { useTheme, alpha } from "@mui/material/styles";
 import { useDispatch, useSelector } from 'react-redux';
 import dayjs from 'dayjs';
 
@@ -13,25 +13,21 @@ import Halldetailpage from "./details-hall/Halldetailpage";
 import Productdetailpage from "./details-hall/Productdetailpage";
 import Arrangmentdetailpage from "./details-hall/Arrangmentdetailpage";
 import { fetchMyProducts, fetchMyServices, fetchMyArrangements, deleteItemThunk } from "./myCatalogSlice";
+import { fixImageUrl } from "../../../utils/imageUrlHelper";
+
+// 💡 استيراد الألوان الموحدة
+import {
+    GOLD, BROWN_TEXT, MUTED_TEXT,
+    LIGHT_CARD, LIGHT_BORDER, LIGHT_INPUT,
+    DARK_CARD_BACKGROUND, DARK_CARD_BORDER, DARK_SURFACE_BG
+} from "../../../utils/colorConstants";
 
 const PAGE_TABS = ["Pending", "Approved", "Rejected"];
-
-// 💡 تم تحديث رابط الصورة البديلة لكي لا تظهر الأيقونة المكسورة
-const fixImageUrl = (img) => {
-    const url = typeof img === 'object' && img !== null ? (img.url || img.path || img.temp_path) : img;
-    if (!url || typeof url !== 'string') return "https://placehold.co/400x300/1c1512/c5a059?text=No+Image";
-    if (url.startsWith('http')) return url;
-    const BACKEND_URL = 'http://127.0.0.1:8000';
-    let cleanPath = url.startsWith('/') ? url : `/${url}`;
-    if (cleanPath.includes('/uploads/') && !cleanPath.includes('/storage/')) cleanPath = cleanPath.replace('/uploads/', '/storage/uploads/');
-    if (!cleanPath.startsWith('/storage/')) cleanPath = `/storage${cleanPath}`;
-    return `${BACKEND_URL}${cleanPath}`;
-};
 
 function ProductsToggle({ value, onChange }) {
     const theme = useTheme();
     const isDark = theme.palette.mode === 'dark';
-    const borderColor = isDark ? 'rgba(78, 70, 57, 0.3)' : 'rgba(179, 140, 69, 0.3)';
+    const borderColor = isDark ? 'rgba(255, 255, 255, 0.1)' : LIGHT_BORDER;
 
     return (
         <Stack direction="row" spacing={0} sx={{ border: `1px solid ${borderColor}`, borderRadius: "8px", overflow: "hidden" }}>
@@ -42,9 +38,9 @@ function ProductsToggle({ value, onChange }) {
                     onClick={() => onChange(label.toLowerCase())}
                     sx={{
                         px: 2, py: 0.6, borderRadius: 0, fontSize: "0.75rem", fontWeight: 600, textTransform: "none",
-                        bgcolor: value === label.toLowerCase() ? theme.palette.primary.main : "transparent",
-                        color: value === label.toLowerCase() ? theme.palette.background.default : theme.palette.text.secondary,
-                        "&:hover": { bgcolor: value === label.toLowerCase() ? theme.palette.primary.main : (isDark ? 'rgba(197, 160, 89, 0.05)' : 'rgba(179, 140, 69, 0.05)') },
+                        bgcolor: value === label.toLowerCase() ? GOLD : "transparent",
+                        color: value === label.toLowerCase() ? '#131110' : (isDark ? 'rgba(255,255,255,0.6)' : MUTED_TEXT),
+                        "&:hover": { bgcolor: value === label.toLowerCase() ? GOLD : alpha(GOLD, 0.1) },
                     }}
                 >
                     {label}
@@ -57,23 +53,27 @@ function ProductsToggle({ value, onChange }) {
 function EmptyState({ message, hint }) {
     const theme = useTheme();
     const isDark = theme.palette.mode === 'dark';
-    const borderColor = isDark ? 'rgba(78, 70, 57, 0.2)' : 'rgba(179, 140, 69, 0.2)';
 
     return (
-        <Paper elevation={0} sx={{ bgcolor: theme.palette.background.paper, border: `1px solid ${borderColor}`, borderRadius: "12px", py: 5, textAlign: "center" }}>
-            <InventoryOutlinedIcon sx={{ fontSize: 36, color: theme.palette.text.secondary, mb: 1.5 }} />
-            <Typography sx={{ color: theme.palette.text.primary, fontWeight: 600, mb: 0.5 }}>{message}</Typography>
-            <Typography sx={{ color: theme.palette.text.secondary, fontSize: "0.8rem" }}>{hint}</Typography>
+        <Paper elevation={0} sx={{
+            background: isDark ? DARK_SURFACE_BG : LIGHT_INPUT,
+            border: isDark ? DARK_CARD_BORDER : `1px dashed ${LIGHT_BORDER}`,
+            borderRadius: "12px", py: 5, textAlign: "center"
+        }}>
+            <InventoryOutlinedIcon sx={{ fontSize: 36, color: GOLD, mb: 1.5 }} />
+            <Typography sx={{ color: isDark ? '#ffffff' : BROWN_TEXT, fontWeight: 600, mb: 0.5 }}>{message}</Typography>
+            <Typography sx={{ color: isDark ? 'rgba(255,255,255,0.5)' : MUTED_TEXT, fontSize: "0.8rem" }}>{hint}</Typography>
         </Paper>
     );
 }
 
 function SubSectionLabel({ icon, label }) {
     const theme = useTheme();
+    const isDark = theme.palette.mode === 'dark';
     return (
         <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1.5 }}>
-            <Box sx={{ color: theme.palette.text.secondary, display: "flex", alignItems: "center" }}>{icon}</Box>
-            <Typography sx={{ color: theme.palette.text.secondary, fontSize: "0.82rem", fontWeight: 600 }}>{label}</Typography>
+            <Box sx={{ color: isDark ? 'rgba(255,255,255,0.7)' : BROWN_TEXT, display: "flex", alignItems: "center" }}>{icon}</Box>
+            <Typography sx={{ color: isDark ? 'rgba(255,255,255,0.7)' : BROWN_TEXT, fontSize: "0.82rem", fontWeight: 700 }}>{label}</Typography>
         </Box>
     );
 }
@@ -91,7 +91,7 @@ export default function MyCatalogPage({
                                           onEditProduct = null,
                                           onEditHall = null,
                                           onEditArrangement = null,
-                                          externalHighlightedBookingId, // 💡 البروب الجديد استقبلناه هنا
+                                          externalHighlightedBookingId,
                                       }) {
     const [pageTab, setPageTab] = useState(1);
     const [productTab, setProductTab] = useState("published");
@@ -101,7 +101,6 @@ export default function MyCatalogPage({
 
     const theme = useTheme();
     const isDark = theme.palette.mode === 'dark';
-    const borderColor = isDark ? 'rgba(78, 70, 57, 0.2)' : 'rgba(179, 140, 69, 0.2)';
 
     const dispatch = useDispatch();
 
@@ -146,7 +145,6 @@ export default function MyCatalogPage({
         }
     };
 
-    // 💡 2. تمرير `highlightedBookingId` للصفحات هنا
     if (externalHallId !== null) return <Halldetailpage hallId={externalHallId} onBack={onClearHall} onEdit={onEditHall} highlightedBookingId={externalHighlightedBookingId} />;
     if (externalProductId !== null) return <Productdetailpage productId={externalProductId} onBack={onClearProduct} onEdit={onEditProduct} highlightedBookingId={externalHighlightedBookingId} />;
     if (externalArrangementId !== null) return <Arrangmentdetailpage arrangementId={externalArrangementId} onBack={onClearArrangement} onEdit={onEditArrangement} highlightedBookingId={externalHighlightedBookingId} />;
@@ -211,29 +209,62 @@ export default function MyCatalogPage({
     return (
         <Box sx={{ width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}>
             <Box sx={{ width: '100%', ml: '-3%', mt: '-4%' }}>
+
+                {/* ── 💡 الترويسة ── */}
                 <Box sx={{ mb: 4, textAlign: 'left' }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mt: 1, mb: 1 }}>
-                        <Box sx={{ width: 14, height: 14, border: `2px solid ${theme.palette.primary.main}`, transform: 'rotate(45deg)', boxShadow: `0 0 10px ${theme.palette.primary.main}40`, flexShrink: 0 }} />
-                        <Typography variant="h3" sx={{ fontFamily: "'Playfair Display', serif", fontSize: '2.5rem', color: theme.palette.primary.main, fontWeight: 500, m: 0 }}>
+                        <Box
+                            sx={{
+                                width: 14,
+                                height: 14,
+                                border: `2px solid ${isDark ? GOLD : BROWN_TEXT}`,
+                                transform: 'rotate(45deg)',
+                                boxShadow: `0 0 10px ${isDark ? alpha(GOLD, 0.4) : alpha(BROWN_TEXT, 0.2)}`,
+                                flexShrink: 0
+                            }}
+                        />
+                        <Typography
+                            variant="h3"
+                            sx={{
+                                fontFamily: "'Playfair Display', serif",
+                                fontSize: '2.5rem',
+                                color: isDark ? GOLD : BROWN_TEXT,
+                                fontWeight: 50,
+                                m: 0
+                            }}
+                        >
                             My Catalog
                         </Typography>
                     </Box>
-                    <Typography variant="body2" sx={{ color: theme.palette.text.secondary, fontWeight: 300 }}>
+                    <Typography variant="body2" sx={{ color: isDark ? 'rgba(255,255,255,0.7)' : MUTED_TEXT, fontWeight: 500, letterSpacing: '0.02em' }}>
                         Manage and organize all your available offers on the Aurelian Reserve platform
                     </Typography>
                 </Box>
 
-                <Box sx={{ borderBottom: `1px solid ${borderColor}`, mb: 4 }}>
-                    <Tabs value={pageTab} onChange={(_, v) => setPageTab(v)} variant="fullWidth" sx={{ minHeight: 44, "& .MuiTabs-indicator": { bgcolor: theme.palette.primary.main, height: 2 } }}>
+                {/* ── 💡 التبويبات ── */}
+                <Box sx={{ borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : LIGHT_BORDER}`, mb: 4 }}>
+                    <Tabs value={pageTab} onChange={(_, v) => setPageTab(v)} variant="fullWidth" sx={{ minHeight: 44, "& .MuiTabs-indicator": { bgcolor: isDark ? GOLD : BROWN_TEXT, height: 2 } }}>
                         {PAGE_TABS.map((label) => (
-                            <Tab key={label} label={label} sx={{ color: theme.palette.text.secondary, fontSize: "0.8rem", fontWeight: 600, textTransform: "none", minHeight: 44, px: 2, "&.Mui-selected": { color: theme.palette.primary.main } }} />
+                            <Tab
+                                key={label}
+                                label={label}
+                                sx={{
+                                    color: isDark ? 'rgba(255,255,255,0.6)' : MUTED_TEXT,
+                                    fontSize: "0.8rem",
+                                    fontWeight: 600,
+                                    textTransform: "none",
+                                    minHeight: 44,
+                                    px: 2,
+                                    "&.Mui-selected": { color: isDark ? `${GOLD} !important` : `${BROWN_TEXT} !important`, fontWeight: 800 }
+                                }}
+                            />
                         ))}
                     </Tabs>
                 </Box>
 
                 {loading ? (
                     <Box sx={{ display: 'flex', justifyContent: 'center', p: 5 }}>
-                        <CircularProgress color="primary" />
+                        <CircularProgress sx={{ color: GOLD }} />
                     </Box>
                 ) : (
                     <>
@@ -320,30 +351,33 @@ export default function MyCatalogPage({
                 )}
             </Box>
 
+            {/* ── 💡 نافذة الحذف ── */}
             <Dialog
                 open={deleteDialog.open}
                 onClose={() => setDeleteDialog({ open: false, id: null, type: null })}
                 PaperProps={{
                     sx: {
-                        bgcolor: isDark ? '#1c1512' : '#EFE4C9',
-                        border: `1px solid ${borderColor}`,
-                        borderRadius: '12px',
-                        minWidth: '350px'
+                        background: isDark ? DARK_CARD_BACKGROUND : LIGHT_CARD,
+                        backdropFilter: 'blur(16px)',
+                        border: isDark ? DARK_CARD_BORDER : `1px solid ${LIGHT_BORDER}`,
+                        borderRadius: '16px',
+                        minWidth: '350px',
+                        backgroundImage: 'none'
                     }
                 }}
             >
-                <DialogTitle sx={{ color: theme.palette.primary.main, fontWeight: 'bold', fontFamily: "'Playfair Display', serif" }}>
+                <DialogTitle sx={{ color: '#ef5350', fontWeight: 'bold', fontFamily: "'Playfair Display', serif" }}>
                     Confirm Deletion
                 </DialogTitle>
                 <DialogContent>
-                    <DialogContentText sx={{ color: theme.palette.text.primary, fontSize: '0.95rem' }}>
+                    <DialogContentText sx={{ color: isDark ? 'rgba(255,255,255,0.8)' : BROWN_TEXT, fontSize: '0.95rem' }}>
                         Are you sure you want to permanently delete this item? This action cannot be undone and it will be removed from your catalog completely.
                     </DialogContentText>
                 </DialogContent>
                 <DialogActions sx={{ p: 2, pt: 0 }}>
                     <Button
                         onClick={() => setDeleteDialog({ open: false, id: null, type: null })}
-                        sx={{ color: theme.palette.text.secondary, textTransform: 'none', fontWeight: 600 }}
+                        sx={{ color: isDark ? 'rgba(255,255,255,0.6)' : MUTED_TEXT, textTransform: 'none', fontWeight: 600 }}
                     >
                         Cancel
                     </Button>
@@ -351,12 +385,13 @@ export default function MyCatalogPage({
                         onClick={confirmDelete}
                         variant="contained"
                         sx={{
-                            bgcolor: '#c0392b',
+                            bgcolor: '#ef5350',
                             color: '#fff',
                             textTransform: 'none',
                             fontWeight: 600,
                             borderRadius: '6px',
-                            '&:hover': { bgcolor: '#a93226' }
+                            boxShadow: 'none',
+                            '&:hover': { bgcolor: '#d32f2f', boxShadow: 'none' }
                         }}
                     >
                         Confirm Delete
@@ -364,25 +399,28 @@ export default function MyCatalogPage({
                 </DialogActions>
             </Dialog>
 
+            {/* ── 💡 نافذة الخطأ ── */}
             <Dialog
                 open={errorDialog.open}
                 onClose={() => setErrorDialog({ open: false, message: '' })}
                 PaperProps={{
                     sx: {
-                        bgcolor: isDark ? '#1c1512' : '#EFE4C9',
-                        border: `1px solid ${borderColor}`,
-                        borderRadius: '12px',
+                        background: isDark ? DARK_CARD_BACKGROUND : LIGHT_CARD,
+                        backdropFilter: 'blur(16px)',
+                        border: isDark ? DARK_CARD_BORDER : `1px solid ${LIGHT_BORDER}`,
+                        borderRadius: '16px',
                         minWidth: '350px',
                         textAlign: 'center',
-                        p: 1
+                        p: 1,
+                        backgroundImage: 'none'
                     }
                 }}
             >
-                <DialogTitle sx={{ color: '#c0392b', fontWeight: 'bold', fontFamily: "'Playfair Display', serif", fontSize: '1.5rem' }}>
+                <DialogTitle sx={{ color: '#ef5350', fontWeight: 'bold', fontFamily: "'Playfair Display', serif", fontSize: '1.5rem' }}>
                     Notice
                 </DialogTitle>
                 <DialogContent>
-                    <DialogContentText sx={{ color: theme.palette.text.primary, fontSize: '1.05rem', mt: 1, fontWeight: 500 }}>
+                    <DialogContentText sx={{ color: isDark ? 'rgba(255,255,255,0.8)' : BROWN_TEXT, fontSize: '1.05rem', mt: 1, fontWeight: 500 }}>
                         {errorDialog.message}
                     </DialogContentText>
                 </DialogContent>
@@ -391,13 +429,14 @@ export default function MyCatalogPage({
                         onClick={() => setErrorDialog({ open: false, message: '' })}
                         variant="contained"
                         sx={{
-                            bgcolor: theme.palette.primary.main,
-                            color: theme.palette.background.default,
+                            bgcolor: GOLD,
+                            color: '#131110',
                             textTransform: 'none',
-                            fontWeight: 600,
+                            fontWeight: 700,
                             borderRadius: '6px',
                             px: 4,
-                            '&:hover': { bgcolor: isDark ? '#c5a059' : '#b38c45' }
+                            boxShadow: 'none',
+                            '&:hover': { bgcolor: '#b38c45', boxShadow: 'none' }
                         }}
                     >
                         OK

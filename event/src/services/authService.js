@@ -1,5 +1,4 @@
-import api from './api';
-import {token} from "stylis"; // 👈 استيراد المعترض المركزي
+import api from './api'; // 💡 استخدام المعترض المركزي
 
 const register = async (userData) => {
     const response = await api.post(`/auth/register`, userData);
@@ -11,17 +10,15 @@ const login = async (userData) => {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
     });
 
-    // التحقق من وصول البيانات
     if (response.data.data && response.data.data.access_token) {
         const token = response.data.data.access_token;
         localStorage.setItem('token', token);
-
-        // هنا سنطبع التوكن مباشرة من الاستجابة (Response)
         console.log("تم استلام التوكن بنجاح:", token);
     }
 
     return response.data;
 };
+
 const getCategories = async () => {
     const response = await api.get(`/categories`);
     return response.data;
@@ -33,7 +30,6 @@ const getDistricts = async () => {
 };
 
 const setupProfile = async (profileData) => {
-    // التوكن والهيدرز تضاف تلقائياً من ملف api.js
     const response = await api.post('/provider/complete-profile', profileData);
     return response;
 };
@@ -55,8 +51,6 @@ const verifyOTP = async (data) => {
 };
 
 const verifyEmailOTP = async (data) => {
-    // نغير طريقة الإرسال من params إلى إرسالها كـ Body
-    // ونستخدم URLSearchParams لتتوافق مع طبيعة طلبات الـ API عندك
     const response = await api.post(`/auth/verify-email-otp`, new URLSearchParams(data).toString(), {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
     });
@@ -66,10 +60,12 @@ const verifyEmailOTP = async (data) => {
     }
     return response.data;
 };
+
 const resendOTP = async (data) => {
-    // نبعت البيانات كـ JSON (لأن الباك إند بيستقبلها هيك)
     const response = await api.post(`/otp/resend`, data);
     return response.data;
 };
-const authService = { register, login, getCategories, getDistricts, verifyOTP, setupProfile, setupfreelancerProfile, verifyEmailOTP ,resendOTP};
+
+const authService = { register, login, getCategories, getDistricts, verifyOTP, setupProfile, setupfreelancerProfile, verifyEmailOTP, resendOTP };
+
 export default authService;

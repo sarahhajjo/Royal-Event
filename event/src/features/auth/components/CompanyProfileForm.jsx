@@ -87,18 +87,18 @@ function CompanyProfileForm({ onBack, onSubmit ,accountType }) {
                 <InputField label="Tax Number" id="tax_number" name="tax_number" placeholder="123456789" value={companyData.tax_number} onChange={(e) => handleChange('tax_number', e.target.value)} />
 
                 {/* Service Categories (Dynamic) */}
+                {/* Service Categories (Dynamic) */}
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.6, width: '100%' }}>
                     <Box component="label" sx={{ fontFamily: "'Inter', sans-serif", fontSize: '11px', color: isDark ? '#c5a059' : '#b38c45', textTransform: 'uppercase' }}>Service Categories</Box>
                     <FormControl variant="standard" fullWidth>
                         <Select
-                            multiple // للسماح باختيار أكثر من فئة كما في Postman
+                            multiple
                             value={companyData.categories}
                             onChange={(e) => handleChange('categories', e.target.value)}
-                            renderValue={(selected) => selected.map(id => categories.find(c => c.id === id)?.name_en).join(', ')}
-                            // ...
+                            renderValue={(selected) => selected.map(id => categories.find(c => c.id === id)?.name?.en).join(', ')}
                         >
                             {categories.map((cat) => (
-                                <MenuItem key={cat.id} value={cat.id}>{cat.name_en}</MenuItem>
+                                <MenuItem key={cat.id} value={cat.id}>{cat.name?.en}</MenuItem>
                             ))}
                         </Select>
                     </FormControl>
@@ -114,8 +114,9 @@ function CompanyProfileForm({ onBack, onSubmit ,accountType }) {
                             sx={{ color: isDark ? '#eee0da' : '#2B211E' }}
                         >
                             {districts.map((d) => (
+                                // 💡 التعديل هنا: استخدام d.name مباشرة لأن الباك إند يرسلها كنص عادي
                                 <MenuItem key={d.id} value={d.id}>
-                                    {d.name_en}
+                                    {d.name}
                                 </MenuItem>
                             ))}
                         </Select>

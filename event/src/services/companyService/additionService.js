@@ -68,7 +68,14 @@ const getCompanyFreelancers = async () => {
     // 💡 بما أن لارافيل يستخدم paginate، الداتا الفعلية تكون داخل data.data
     return response.data?.data?.data || response.data?.data || [];
 };
-
+const getFreelancerBlockedDates = async (id) => {
+    try {
+        const response = await api.get(`/freelancers/${id}/blocked-dates`);
+        return response.data?.data || [];
+    } catch (error) {
+        return [];
+    }
+};
 const additionService = {
     getCategories,
     getDistricts,
@@ -81,7 +88,8 @@ const additionService = {
     createArrangement,
     updateArrangement, // 👈 تم تصدير الدالة هنا
     updateListing,
-    getCompanyFreelancers
-};
+    getCompanyFreelancers,
+
+    getFreelancerBlockedDates};
 
 export default additionService;

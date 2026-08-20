@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { Box, Button, CircularProgress } from '@mui/material';
-import { useTheme } from '@mui/material/styles';
+import { useTheme, alpha } from '@mui/material/styles';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { useDispatch, useSelector } from 'react-redux';
 
@@ -13,36 +13,13 @@ import ServicesProviders from './details-arrangment/ServicesProviders';
 import ArrangementProducts from './details-arrangment/ArrangementProducts';
 
 import { fetchProviderBookings, fetchCompanyFreelancers } from '../myCatalogSlice';
+import { fixImageUrl } from '../../../../utils/imageUrlHelper';
 
-const fixImageUrl = (img, type = 'hero') => {
-    const fallback = type === 'square'
-        ? "https://placehold.co/400x400/1c1512/c5a059?text=No+Image"
-        : "https://placehold.co/1200x600/1c1512/c5a059?text=No+Image";
+// استيراد صورة الخلفية المطلوبة
+import dashboardBg from '../../../../assets/sidebar-bg.jpg';
 
-    if (!img) return fallback;
-
-    let url = '';
-    if (typeof img === 'string') {
-        url = img;
-    } else if (typeof img === 'object') {
-        url = img.url || img.full_url || img.original_url || img.path || img.temp_path || '';
-    }
-
-    if (!url || typeof url !== 'string') return fallback;
-    if (url.startsWith('http')) return url;
-
-    const BACKEND_URL = 'http://127.0.0.1:8000';
-    let cleanPath = url.startsWith('/') ? url : `/${url}`;
-
-    if (cleanPath.includes('/uploads/') && !cleanPath.includes('/storage/')) {
-        cleanPath = cleanPath.replace('/uploads/', '/storage/uploads/');
-    }
-    if (!cleanPath.startsWith('/storage/')) {
-        cleanPath = `/storage${cleanPath}`;
-    }
-
-    return `${BACKEND_URL}${cleanPath}`;
-};
+// استيراد الألوان الفاخرة
+import { GOLD, BROWN_TEXT } from '../../../../utils/colorConstants';
 
 const resolveText = (entity) => {
     if (!entity) return null;
@@ -54,9 +31,9 @@ const resolveText = (entity) => {
     return null;
 };
 
-// 💡 استقبال highlightedBookingId في الـ Props
 export default function ArrangmentDetailPage({ arrangementId, onBack, onEdit, highlightedBookingId }) {
     const theme = useTheme();
+    const isDark = theme.palette.mode === 'dark';
     const dispatch = useDispatch();
 
     const { arrangements, bookings = [], companyFreelancers = [] } = useSelector((state) => state.myCatalog || {});
@@ -68,7 +45,6 @@ export default function ArrangmentDetailPage({ arrangementId, onBack, onEdit, hi
         dispatch(fetchCompanyFreelancers());
     }, [dispatch]);
 
-    // 💡 حركة السكرول التلقائي لقسم الحجوزات عند فتح الصفحة بطلب محدد
     useEffect(() => {
         if (highlightedBookingId) {
             const timer = setTimeout(() => {
@@ -85,8 +61,10 @@ export default function ArrangmentDetailPage({ arrangementId, onBack, onEdit, hi
 
     if (!rawData) {
         return (
-            <Box sx={{display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh'}}>
-                <CircularProgress color="primary"/>
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', position: 'relative' }}>
+                <Box sx={{ position: 'absolute', inset: 0, backgroundImage: `url(${dashboardBg})`, backgroundSize: 'cover', filter: 'blur(20px)', zIndex: -2 }} />
+                <Box sx={{ position: 'absolute', inset: 0, bgcolor: isDark ? 'rgba(16, 22, 31, 0.85)' : 'rgba(253, 247, 237, 0.8)', zIndex: -1 }} />
+                <CircularProgress sx={{ color: GOLD }} />
             </Box>
         );
     }
@@ -184,8 +162,57 @@ export default function ArrangmentDetailPage({ arrangementId, onBack, onEdit, hi
     };
 
     return (
-        <Box sx={{width: '100%', minHeight: '100%', backgroundColor: theme.palette.background.default, pb: 6}}>
-            <Box sx={{position: 'relative', width: '100%'}}>
+        <Box sx={{ width: '100%', minHeight: '100vh', position: 'relative', pb: 6 }}>
+
+            {/* ── 1. الصورة الخلفية الأساسية للموقع مع "غباش" عالي ── */}
+            <Box
+                sx={{
+                    position: 'fixed',
+                    top: 0, left: 0, right: 0, bottom: 0,
+                    backgroundImage: `url(${dashboardBg})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    filter: 'blur(22px)',
+                    transform: 'scale(1.1)',
+                    zIndex: -2,
+                }}
+            />
+
+            {/* ── 2. طبقة تغميق/تفتيح لضمان وضوح النصوص والكروت الزجاجية ── */}
+            <Box
+                sx={{
+                    position: 'fixed',
+                    top: 0, left: 0, right: 0, bottom: 0,
+                    backgroundColor: isDark ? 'rgba(16, 22, 31, 0.75)' : 'rgba(253, 247, 237, 0.7)',
+                    zIndex: -1,
+                }}
+            />
+
+            {/* 💡 3. زر العودة أصبح خارج صندوق الصورة (في الأعلى بمحاذاة باقي الصفحة) ── */}
+            <Box sx={{ width: "100%", maxWidth: "1050px", mx: "auto", px: { xs: 2, md: 4 }, pt: 3, pb: 2, display: 'flex', justifyContent: 'flex-start' }}>
+                <Button
+                    onClick={onBack}
+                    startIcon={<ArrowBackIcon sx={{ fontSize: '1rem !important' }}/>}
+                    sx={{
+                        backgroundColor: isDark ? 'rgba(0,0,0,0.3)' : 'rgba(255,255,255,0.6)',
+                        backdropFilter: 'blur(8px)',
+                        color: isDark ? '#fff' : BROWN_TEXT,
+                        border: `1px solid ${isDark ? 'rgba(255,255,255,0.15)' : alpha(BROWN_TEXT, 0.2)}`,
+                        fontSize: '0.78rem', fontWeight: 700,
+                        textTransform: 'none', px: 2, py: 0.8, borderRadius: 2,
+                        transition: 'all 0.3s ease',
+                        '&:hover': {
+                            backgroundColor: isDark ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.9)',
+                            borderColor: GOLD
+                        }
+                    }}
+                >
+                    Back to Catalog
+                </Button>
+            </Box>
+
+            {/* ── 4. صورة الـ Hero (بدون الزر) ── */}
+            <Box sx={{ position: 'relative', width: '100%' }}>
                 <Herosection data={{
                     badge: mappedArrangement.badge,
                     name: mappedArrangement.name,
@@ -193,24 +220,15 @@ export default function ArrangmentDetailPage({ arrangementId, onBack, onEdit, hi
                     images: mappedArrangement.images,
                     onEdit: handleEdit
                 }}/>
-                <Button onClick={onBack} startIcon={<ArrowBackIcon sx={{fontSize: '1rem !important'}}/>} sx={{
-                    position: 'absolute', top: 20, left: 24, zIndex: 10,
-                    backgroundColor: theme.palette.mode === 'dark' ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.5)',
-                    backdropFilter: 'blur(8px)', color: theme.palette.mode === 'dark' ? '#fff' : '#2B211E',
-                    border: '1px solid rgba(255,255,255,0.2)', fontSize: '0.78rem', fontWeight: 600,
-                    textTransform: 'none', px: 2, py: 0.8, borderRadius: 2,
-                    '&:hover': {backgroundColor: theme.palette.mode === 'dark' ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.8)'}
-                }}>
-                    Back to Catalog
-                </Button>
             </Box>
 
-            <Box sx={{mt: 3, width: "100%", maxWidth: "1050px", mx: "auto", px: {xs: 2, md: 4}}}>
-                <Box sx={{ display: 'flex', flexDirection: {xs: 'column', md: 'row'}, gap: 3, mb: 3, alignItems: 'stretch' }}>
-                    <Box sx={{flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column'}}>
+            {/* ── 5. باقي المحتوى ── */}
+            <Box sx={{ mt: 3, width: "100%", maxWidth: "1050px", mx: "auto", px: { xs: 2, md: 4 } }}>
+                <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 3, mb: 3, alignItems: 'stretch' }}>
+                    <Box sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
                         <Generalinfo data={mappedArrangement.generalInfo}/>
                     </Box>
-                    <Box sx={{flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column'}}>
+                    <Box sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
                         <Policiespricing data={mappedArrangement.policies}/>
                     </Box>
                 </Box>
@@ -226,7 +244,6 @@ export default function ArrangmentDetailPage({ arrangementId, onBack, onEdit, hi
                     onBookSlot={(slot) => console.log('Book slot clicked', slot)}
                 />
 
-                {/* 💡 غلاف مع ID لتوجيه السكرول بدقة */}
                 <Box id="booking-pipeline-section" sx={{ mt: 4 }}>
                     <Bookingpipeline
                         entityId={arrangementId}

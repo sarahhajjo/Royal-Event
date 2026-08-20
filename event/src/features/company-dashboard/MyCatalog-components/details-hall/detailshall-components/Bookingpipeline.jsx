@@ -1,20 +1,26 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Paper, Avatar, Button, Tab, Tabs, Chip } from '@mui/material';
-import { useTheme } from '@mui/material/styles';
+import { Box, Typography, Paper, Avatar, IconButton } from '@mui/material';
+import { useTheme, alpha } from '@mui/material/styles';
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
 import axios from 'axios';
 
+// 💡 استيراد الألوان الموحدة (يرجى التأكد من مسار الملف لديكِ)
+import {
+    GOLD, BROWN_TEXT, MUTED_TEXT,
+    LIGHT_CARD, LIGHT_BORDER,
+    DARK_CARD_BACKGROUND, DARK_CARD_BORDER, DARK_CARD_SHADOW
+} from '../../../../../utils/colorConstants';
+
 const STATUS_FILTERS = [
-    { key: 'waiting',  label: 'Waiting List', color: '#c5a059' },
-    { key: 'approved', label: 'Approved',     color: '#5fa06b' },
-    { key: 'rejected', label: 'Rejected',     color: '#b05050' },
+    { key: 'waiting',  label: 'Waiting List', color: GOLD },
+    { key: 'approved', label: 'Approved',     color: '#4CAF50' }, // أخضر متناسق
+    { key: 'rejected', label: 'Rejected',     color: '#ef5350' }, // أحمر متناسق
 ];
 
-function BookingRow({ booking, onAccept, onReject, isHighlighted }) {
-    const theme  = useTheme();
-    const isDark = theme.palette.mode === 'dark';
-    const border = isDark ? '#2e2318' : '#ddd0b0';
+// 💡 كرت الحجز المصغّر
+function BookingCard({ booking, onAccept, onReject, isHighlighted, borderStyle, isDark }) {
+    const status = STATUS_FILTERS.find(s => s.key === booking.status);
 
     return (
         <Box
@@ -22,62 +28,124 @@ function BookingRow({ booking, onAccept, onReject, isHighlighted }) {
             sx={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: 1.5,
-                py: 1.5,
-                px: 2,
-                borderBottom: `1px solid ${border}`,
+                gap: 1,
+                py: 1.1,
+                px: 1.4,
+                borderBottom: borderStyle,
                 '&:last-child': { borderBottom: 'none' },
                 transition: 'background 0.15s',
-                '&:hover': { backgroundColor: isDark ? 'rgba(197,160,89,0.04)' : 'rgba(197,160,89,0.06)' },
+                '&:hover': { backgroundColor: isDark ? 'rgba(197,160,89,0.06)' : 'rgba(197,160,89,0.08)' },
 
-                // 💡 تأثير الإضاءة والوميض الذهبي في حال كان هو الحجز المطلوب
                 ...(isHighlighted && {
                     animation: 'highlightBlink 2.5s ease-in-out',
-                    backgroundColor: isDark ? 'rgba(197, 160, 89, 0.15)' : 'rgba(197, 160, 89, 0.2)',
-                    borderLeft: `4px solid ${theme.palette.primary.main}`,
+                    backgroundColor: alpha(GOLD, 0.15),
+                    borderRight: `3px solid ${GOLD}`,
                     '@keyframes highlightBlink': {
-                        '0%': { backgroundColor: 'rgba(197, 160, 89, 0.6)', transform: 'scale(1.01)' },
-                        '50%': { backgroundColor: 'rgba(197, 160, 89, 0.25)', transform: 'scale(1)' },
-                        '100%': { backgroundColor: isDark ? 'rgba(197, 160, 89, 0.15)' : 'rgba(197, 160, 89, 0.2)' }
+                        '0%': { backgroundColor: alpha(GOLD, 0.4), transform: 'scale(1.01)' },
+                        '50%': { backgroundColor: alpha(GOLD, 0.2), transform: 'scale(1)' },
+                        '100%': { backgroundColor: alpha(GOLD, 0.15) }
                     }
                 })
             }}
         >
-            <Avatar sx={{ width: 36, height: 36, backgroundColor: isDark ? '#2e2318' : '#e8dcc0', color: theme.palette.primary.main, fontSize: '0.8rem', fontWeight: 700, flexShrink: 0 }}>
+            <Avatar sx={{ width: 28, height: 28, backgroundColor: alpha(GOLD, 0.15), color: GOLD, fontSize: '0.7rem', fontWeight: 700, flexShrink: 0, border: `1px solid ${alpha(GOLD, 0.3)}` }}>
                 {booking.name.charAt(0)}
             </Avatar>
 
             <Box sx={{ flex: 1, minWidth: 0 }}>
-                <Typography noWrap sx={{ fontSize: '0.82rem', fontWeight: 600, color: theme.palette.text.primary }}>
+                <Typography noWrap sx={{ fontSize: '0.74rem', fontWeight: 600, color: isDark ? '#ffffff' : BROWN_TEXT }}>
                     {booking.name}
                 </Typography>
-                <Typography noWrap sx={{ fontSize: '0.7rem', color: theme.palette.text.secondary }}>
+                <Typography noWrap sx={{ fontSize: '0.62rem', color: isDark ? 'rgba(255,255,255,0.7)' : MUTED_TEXT }}>
                     {booking.company}
+                </Typography>
+                <Typography noWrap sx={{ fontSize: '0.6rem', color: isDark ? 'rgba(255,255,255,0.5)' : MUTED_TEXT, opacity: 0.8 }}>
+                    {booking.date} {booking.time ? `– ${booking.time}` : ''}
                 </Typography>
             </Box>
 
-            <Typography sx={{ fontSize: '0.72rem', color: theme.palette.text.secondary, whiteSpace: 'nowrap', mr: 1 }}>
-                {booking.date} {booking.time ? `– ${booking.time}` : ''}
-            </Typography>
-
             {booking.status === 'waiting' && (
-                <Box sx={{ display: 'flex', gap: 0.8 }}>
-                    <Button size="small" onClick={() => onAccept(booking.id)} sx={{ minWidth: 0, px: 1.5, py: 0.5, fontSize: '0.65rem', fontWeight: 700, textTransform: 'none', backgroundColor: 'rgba(95,160,107,0.12)', color: '#5fa06b', border: '1px solid rgba(95,160,107,0.3)', borderRadius: 1, '&:hover': { backgroundColor: 'rgba(95,160,107,0.22)' } }}>
-                        ACCP
-                    </Button>
-                    <Button size="small" onClick={() => onReject(booking.id)} sx={{ minWidth: 0, px: 1.5, py: 0.5, fontSize: '0.65rem', fontWeight: 700, textTransform: 'none', backgroundColor: 'rgba(176,80,80,0.12)', color: '#b05050', border: '1px solid rgba(176,80,80,0.3)', borderRadius: 1, '&:hover': { backgroundColor: 'rgba(176,80,80,0.22)' } }}>
-                        REJC
-                    </Button>
+                <Box sx={{ display: 'flex', gap: 0.5, flexShrink: 0 }}>
+                    <IconButton size="small" onClick={() => onAccept(booking.id)} sx={{ width: 24, height: 24, backgroundColor: alpha('#4CAF50', 0.12), color: '#4CAF50', border: `1px solid ${alpha('#4CAF50', 0.3)}`, '&:hover': { backgroundColor: alpha('#4CAF50', 0.22) } }}>
+                        <CheckIcon sx={{ fontSize: '0.9rem' }} />
+                    </IconButton>
+                    <IconButton size="small" onClick={() => onReject(booking.id)} sx={{ width: 24, height: 24, backgroundColor: alpha('#ef5350', 0.12), color: '#ef5350', border: `1px solid ${alpha('#ef5350', 0.3)}`, '&:hover': { backgroundColor: alpha('#ef5350', 0.22) } }}>
+                        <CloseIcon sx={{ fontSize: '0.9rem' }} />
+                    </IconButton>
                 </Box>
             )}
 
-            {booking.status === 'approved' && (
-                <Chip label="Approved" size="small" icon={<CheckIcon sx={{ fontSize: '0.8rem !important' }} />} sx={{ fontSize: '0.65rem', height: 22, backgroundColor: 'rgba(95,160,107,0.12)', color: '#5fa06b', border: '1px solid rgba(95,160,107,0.3)' }} />
+            {booking.status !== 'waiting' && status && (
+                <Box sx={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: status.color, flexShrink: 0 }} />
             )}
+        </Box>
+    );
+}
 
-            {booking.status === 'rejected' && (
-                <Chip label="Rejected" size="small" icon={<CloseIcon sx={{ fontSize: '0.8rem !important' }} />} sx={{ fontSize: '0.65rem', height: 22, backgroundColor: 'rgba(176,80,80,0.12)', color: '#b05050', border: '1px solid rgba(176,80,80,0.3)' }} />
-            )}
+// 💡 المربع (Stage) الواحد
+function StageBox({ status, items, counts, onAccept, onReject, highlightedBookingId, borderStyle, isDark }) {
+    return (
+        <Box
+            sx={{
+                flex: 1,
+                minWidth: 220,
+                display: 'flex',
+                flexDirection: 'column',
+                border: `1.5px solid ${alpha(status.color, 0.3)}`,
+                borderRadius: 2,
+                overflow: 'hidden',
+                backgroundColor: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.3)',
+            }}
+        >
+            {/* هيدر المربع */}
+            <Box sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                px: 1.6,
+                py: 1,
+                backgroundColor: alpha(status.color, 0.1),
+                borderBottom: `1px solid ${alpha(status.color, 0.2)}`,
+            }}>
+                <Typography sx={{ fontSize: '0.72rem', fontWeight: 700, color: status.color }}>
+                    {status.label}
+                </Typography>
+                <Box sx={{ backgroundColor: alpha(status.color, 0.2), color: status.color, fontSize: '0.65rem', fontWeight: 700, px: 0.9, py: 0.15, borderRadius: 1, minWidth: 20, textAlign: 'center' }}>
+                    {String(counts[status.key]).padStart(2, '0')}
+                </Box>
+            </Box>
+
+            {/* محتوى المربع */}
+            <Box sx={{ maxHeight: 340, overflowY: 'auto' }}>
+                {items.length === 0 ? (
+                    <Box sx={{ py: 3, textAlign: 'center' }}>
+                        <Typography sx={{ fontSize: '0.72rem', color: isDark ? 'rgba(255,255,255,0.5)' : MUTED_TEXT }}>
+                            لا يوجد حجوزات
+                        </Typography>
+                    </Box>
+                ) : (
+                    items.map((booking) => (
+                        <BookingCard
+                            key={booking.id}
+                            booking={booking}
+                            onAccept={onAccept}
+                            onReject={onReject}
+                            isHighlighted={highlightedBookingId === booking.id}
+                            borderStyle={borderStyle}
+                            isDark={isDark}
+                        />
+                    ))
+                )}
+            </Box>
+        </Box>
+    );
+}
+
+// 💡 الخط الرفيع الواصل بين مربعين
+function Connector({ lineColor }) {
+    return (
+        <Box sx={{ display: 'flex', alignItems: 'flex-start', pt: '26px', px: { xs: 0, md: 0.5 } }}>
+            <Box sx={{ width: { xs: 16, md: 28 }, height: '2px', backgroundColor: lineColor, flexShrink: 0 }} />
         </Box>
     );
 }
@@ -85,23 +153,22 @@ function BookingRow({ booking, onAccept, onReject, isHighlighted }) {
 export default function BookingPipeline({ entityId, bookingsData = [], highlightedBookingId }) {
     const theme  = useTheme();
     const isDark = theme.palette.mode === 'dark';
-    const border = isDark ? '#2e2318' : '#ddd0b0';
 
-    const [activeTab, setActiveTab] = useState('waiting');
-    const [items, setItems]         = useState([]);
+    // إعداد متغيرات الحدود والخطوط الفاصلة بناءً على الثوابت
+    const borderStyle = isDark ? DARK_CARD_BORDER : `1px solid ${LIGHT_BORDER}`;
+    const lineColor = isDark ? 'rgba(255,255,255,0.1)' : LIGHT_BORDER;
 
-    // 💡 فلترة وتجهيز البيانات بمجرد وصولها من الـ API
+    const [items, setItems] = useState([]);
+
     useEffect(() => {
         if (!bookingsData || bookingsData.length === 0) {
             setItems([]);
             return;
         }
 
-        // استخراج حجوزات هذا المنتج فقط
         const filteredByEntity = bookingsData.filter(b => b.listing?.id === entityId);
 
         const mapped = filteredByEntity.map(b => {
-            // توحيد الحالات
             let frontendStatus = 'rejected';
             if (b.status === 'pending') frontendStatus = 'waiting';
             if (b.status === 'completed' || b.status === 'accepted') frontendStatus = 'approved';
@@ -118,12 +185,12 @@ export default function BookingPipeline({ entityId, bookingsData = [], highlight
         setItems(mapped);
     }, [bookingsData, entityId]);
 
-    // 💡 إذا كان هناك حجز محدد (highlightedBookingId)، نتحقق من حالته وننتقل للتاتش (Tab) المناسب تلقائياً ليظهر أمام المستخدم فوراً
+    // التمرير التلقائي
     useEffect(() => {
-        if (highlightedBookingId && items.length > 0) {
-            const targetBooking = items.find(b => b.id === highlightedBookingId);
-            if (targetBooking) {
-                setActiveTab(targetBooking.status); // الانتقال للتبويب الصحيح (waiting, approved, rejected)
+        if (highlightedBookingId) {
+            const el = document.getElementById(`booking-row-${highlightedBookingId}`);
+            if (el) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
         }
     }, [highlightedBookingId, items]);
@@ -134,9 +201,6 @@ export default function BookingPipeline({ entityId, bookingsData = [], highlight
         rejected: items.filter(b => b.status === 'rejected').length,
     };
 
-    const filteredItems = items.filter(b => b.status === activeTab);
-
-    // 💡 دوال القبول والرفض متصلة بالباك إند
     const handleAccept = async (id) => {
         setItems(prev => prev.map(b => b.id === id ? { ...b, status: 'approved' } : b));
         try {
@@ -154,44 +218,38 @@ export default function BookingPipeline({ entityId, bookingsData = [], highlight
     };
 
     return (
-        <Paper elevation={0} sx={{ backgroundColor: theme.palette.background.paper, border: `1px solid ${border}`, borderRadius: 2, mb: 2, overflow: 'hidden' }}>
-            <Box sx={{ px: 3, pt: 3, pb: 0 }}>
-                <Typography sx={{ fontSize: '1rem', fontWeight: 700, color: theme.palette.text.primary, mb: 2 }}>
-                    Booking Pipeline
-                </Typography>
-            </Box>
+        <Paper
+            elevation={0}
+            sx={{
+                background: isDark ? DARK_CARD_BACKGROUND : LIGHT_CARD,
+                backdropFilter: 'blur(16px)',
+                border: borderStyle,
+                boxShadow: isDark ? DARK_CARD_SHADOW : '0 18px 40px rgba(130, 100, 40, 0.10)',
+                borderRadius: 3,
+                mb: 2,
+                p: 3
+            }}
+        >
+            <Typography sx={{ fontSize: '1rem', fontWeight: 700, color: isDark ? '#ffffff' : BROWN_TEXT, mb: 2.5 }}>
+                Booking Pipeline
+            </Typography>
 
-            <Tabs value={activeTab} onChange={(_, v) => setActiveTab(v)} sx={{ px: 2, borderBottom: `1px solid ${border}`, '& .MuiTab-root': { fontSize: '0.72rem', fontWeight: 600, textTransform: 'none', minHeight: 40, color: theme.palette.text.secondary, '&.Mui-selected': { color: theme.palette.primary.main } }, '& .MuiTabs-indicator': { backgroundColor: theme.palette.primary.main, height: 2 } }}>
-                {STATUS_FILTERS.map(({ key, label }) => (
-                    <Tab key={key} value={key} label={
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8 }}>
-                            {label}
-                            <Box sx={{ backgroundColor: activeTab === key ? `${STATUS_FILTERS.find(s => s.key === key)?.color}22` : isDark ? '#2e2318' : '#e8dcc0', color: activeTab === key ? STATUS_FILTERS.find(s => s.key === key)?.color : theme.palette.text.secondary, fontSize: '0.65rem', fontWeight: 700, px: 0.8, py: 0.1, borderRadius: 1, minWidth: 20, textAlign: 'center' }}>
-                                {String(counts[key]).padStart(2, '0')}
-                            </Box>
-                        </Box>
-                    } />
-                ))}
-            </Tabs>
-
-            <Box>
-                {filteredItems.length === 0 ? (
-                    <Box sx={{ py: 4, textAlign: 'center' }}>
-                        <Typography sx={{ fontSize: '0.8rem', color: theme.palette.text.secondary }}>
-                            No bookings in this category.
-                        </Typography>
-                    </Box>
-                ) : (
-                    filteredItems.map((booking) => (
-                        <BookingRow
-                            key={booking.id}
-                            booking={booking}
+            <Box sx={{ display: 'flex', alignItems: 'flex-start', overflowX: 'auto', pb: 1, '&::-webkit-scrollbar': { height: '6px' }, '&::-webkit-scrollbar-thumb': { backgroundColor: alpha(GOLD, 0.5), borderRadius: '4px' } }}>
+                {STATUS_FILTERS.map((status, index) => (
+                    <React.Fragment key={status.key}>
+                        <StageBox
+                            status={status}
+                            items={items.filter(b => b.status === status.key)}
+                            counts={counts}
                             onAccept={handleAccept}
                             onReject={handleReject}
-                            isHighlighted={highlightedBookingId === booking.id}
+                            highlightedBookingId={highlightedBookingId}
+                            borderStyle={borderStyle}
+                            isDark={isDark}
                         />
-                    ))
-                )}
+                        {index < STATUS_FILTERS.length - 1 && <Connector lineColor={lineColor} />}
+                    </React.Fragment>
+                ))}
             </Box>
         </Paper>
     );

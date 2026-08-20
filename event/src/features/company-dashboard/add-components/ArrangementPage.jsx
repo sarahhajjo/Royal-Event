@@ -14,33 +14,14 @@ import {
     setAllStaff, setServicesEnabled, setScheduleDates, resetArrangementState
 } from "./addition_slices/arrangementSlice.js";
 
-const fixImageUrl = (img) => {
-    const fallback = "https://placehold.co/400x300/1c1512/c5a059?text=No+Image";
-    if (!img) return fallback;
-
-    let url = '';
-    if (typeof img === 'string') {
-        url = img;
-    } else if (typeof img === 'object') {
-        url = img.original_url || img.url || img.path || img.temp_path || '';
-    }
-
-    if (!url || typeof url !== 'string') return fallback;
-    if (url.startsWith('http')) return url;
-
-    const BACKEND_URL = 'http://127.0.0.1:8000';
-    let cleanPath = url.startsWith('/') ? url : `/${url}`;
-
-    if (cleanPath.includes('/uploads/') && !cleanPath.includes('/storage/')) {
-        cleanPath = cleanPath.replace('/uploads/', '/storage/uploads/');
-    }
-    if (!cleanPath.startsWith('/storage/')) {
-        cleanPath = `/storage${cleanPath}`;
-    }
-
-    return `${BACKEND_URL}${cleanPath}`;
-};
-
+// 💡 استيراد الدالة من ملف الـ Helper بدلاً من كتابتها يدوياً
+import { fixImageUrl } from '../../../utils/imageUrlHelper';
+import {
+    GOLD, BROWN_TEXT, MUTED_TEXT,
+    LIGHT_CARD, LIGHT_INPUT, LIGHT_BORDER,
+    DARK_CARD_BACKGROUND, DARK_CARD_BORDER, DARK_CARD_SHADOW,
+    DARK_CARD_HOVER_SHADOW, DARK_SURFACE_BG, DARK_SURFACE_BORDER
+} from '../../../utils/colorConstants';
 const ArrangementPage = ({ editData = null, onBack }) => {
     const theme = useTheme();
     const isDark = theme.palette.mode === 'dark';
@@ -227,7 +208,9 @@ const ArrangementPage = ({ editData = null, onBack }) => {
                         const existingSlot = existingAvail?.slots?.find(es => es.start_time.startsWith(shift.start) && es.end_time.startsWith(shift.end));
                         const slotObj = {
                             start_time: shift.start,
-                            end_time: shift.end
+                            end_time: shift.end,
+                            // 💡 الباك إند بيطلب remaining_capacity بكل سلوت — افتراضياً 1 (حجز واحد بالوقت هاد)
+                            remaining_capacity: existingSlot?.remaining_capacity ?? 1
                         };
                         if (existingSlot?.id) slotObj.id = existingSlot.id;
                         return slotObj;
@@ -235,6 +218,8 @@ const ArrangementPage = ({ editData = null, onBack }) => {
 
                     const availObj = {
                         available_date: d,
+                        // 💡 الباك إند بيطلب is_blocked بكل يوم توفر
+                        is_blocked: existingAvail?.is_blocked ?? false,
                         slots: slots
                     };
                     if (existingAvail?.id) availObj.id = existingAvail.id;
@@ -276,7 +261,7 @@ const ArrangementPage = ({ editData = null, onBack }) => {
                 cancel_after_acceptance: Boolean(formData.cancel_after_acceptance),
                 cancel_before_payment: Boolean(formData.cancel_before_payment),
 
-                // إرسال الصور بالشكل الذي ينتظره الباك إند
+                // إرسال الصور بالشكل الذي ينتظكه الباك إند
                 images: finalImages,
 
                 availabilities: availabilities,
@@ -284,17 +269,43 @@ const ArrangementPage = ({ editData = null, onBack }) => {
                 freelancers: freelancersPayload
             };
 
+            // 🖨️ طباعة تفصيلية للبيانات قبل إرسالها للباك إند — لتتبع أي مشكلة بالـ payload
+            console.log(
+                `%c📤 [${isEditMode ? 'UPDATE' : 'CREATE'}] Sending Arrangement Payload to backend`,
+                'color:#c5a059; font-weight:bold; font-size:12px;'
+            );
+            console.log('➡️ Endpoint:', isEditMode ? `updateArrangement(${editData?.id})` : 'createArrangement');
+            console.log('📦 Full Payload:', payload);
+            console.table({
+                title: payload.title,
+                category_id: payload.category_id,
+                district_id: payload.district_id,
+                price: payload.price,
+                currency: payload.currency,
+                capacity: payload.capacity,
+                images_count: payload.images.length,
+                availabilities_count: payload.availabilities.length,
+                items_count: payload.items.length,
+                freelancers_count: payload.freelancers.length,
+            });
+            console.log('🖼️ Images:', payload.images);
+            console.log('📅 Availabilities:', payload.availabilities);
+            console.log('📦 Items:', payload.items);
+            console.log('👥 Freelancers:', payload.freelancers);
+
             if (isEditMode) {
                 await additionService.updateArrangement(editData.id, payload);
+                console.log('✅ Update request sent successfully');
                 alert("تم تحديث التنسيق بنجاح!");
                 if(onBack) onBack();
             } else {
                 await additionService.createArrangement(payload);
+                console.log('✅ Create request sent successfully');
                 alert("تم إرسال التنسيق بنجاح!");
                 if(onBack) onBack();
             }
         } catch (error) {
-            console.error("Submit Error:", error);
+            console.error("❌ Submit Error:", error);
             if (error.response && error.response.data && error.response.data.errors) {
                 const errorMessages = Object.values(error.response.data.errors).flat().join('\n');
                 alert(`فشل الإرسال بسبب الأخطاء التالية:\n${errorMessages}`);
@@ -310,19 +321,19 @@ const ArrangementPage = ({ editData = null, onBack }) => {
         <Box sx={{ p: 2, ml: '-2%', mt: isEditMode ? 0 : -6, bgcolor: 'transparent', minHeight: '100vh', width: '100%' }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4, ml: '-3%' }}>
                 <Box>
-                    <Typography variant="caption" sx={{ color: isDark ? '#9a8f80' : '#7A6F5E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
-                        Catalog &nbsp;•&nbsp; <Box component="span" sx={{ color: isDark ? '#c5a059' : '#b38c45' }}>{isEditMode ? 'Edit Arrangement' : 'Add Ready Arrangement'}</Box>
+                    <Typography variant="caption" sx={{ color: isDark ? 'rgba(255,255,255,0.58)' : MUTED_TEXT, letterSpacing: '0.05em', textTransform: 'uppercase', fontWeight: 700 }}>
+                        Catalog &nbsp;•&nbsp; <Box component="span" sx={{ color: GOLD }}>{isEditMode ? 'Edit Arrangement' : 'Add Ready Arrangement'}</Box>
                     </Typography>
-                    <Typography variant="h3" sx={{ fontFamily: "'Playfair Display', serif", fontSize: '2.5rem', color: isDark ? '#ffffff' : '#2B211E', mt: 1, mb: 1, fontWeight: 500 }}>
+                    <Typography variant="h3" sx={{ fontFamily: "'Playfair Display', serif", fontSize: '2.5rem', color: isDark ? '#ffffff' : BROWN_TEXT, mt: 1, mb: 1, fontWeight: 500 }}>
                         {isEditMode ? 'Edit Arrangement' : 'Add Ready Arrangement'}
                     </Typography>
-                    <Typography variant="body2" sx={{ color: isDark ? '#9a8f80' : '#7A6F5E', fontWeight: 300 }}>
+                    <Typography variant="body2" sx={{ color: isDark ? 'rgba(255,255,255,0.58)' : MUTED_TEXT, fontWeight: 300 }}>
                         Curate your exclusive venue for the world's most discerning event organizers.
                     </Typography>
                 </Box>
                 <Box sx={{ display: 'flex', gap: 2 }}>
                     {isEditMode && (
-                        <Button variant="outlined" onClick={onBack} sx={{ color: isDark ? '#fff' : '#000', borderColor: '#c5a059', '&:hover': { borderColor: '#b38c45' } }}>
+                        <Button variant="outlined" onClick={onBack} sx={{ color: isDark ? '#fff' : BROWN_TEXT, borderColor: GOLD, '&:hover': { borderColor: GOLD } }}>
                             Cancel
                         </Button>
                     )}
@@ -330,7 +341,7 @@ const ArrangementPage = ({ editData = null, onBack }) => {
                         variant="contained"
                         onClick={handleSubmit}
                         disabled={loading}
-                        sx={{ bgcolor: '#c5a059', color: '#140e0c', fontWeight: 'bold', px: 4, '&:hover': { bgcolor: '#b38c45' } }}
+                        sx={{ bgcolor: GOLD, color: '#140e0c', fontWeight: 'bold', px: 4, '&:hover': { bgcolor: '#b38c45' } }}
                     >
                         {loading ? <CircularProgress size={24} color="inherit" /> : (isEditMode ? 'Update Arrangement' : 'Publish Arrangement')}
                     </Button>
@@ -343,7 +354,15 @@ const ArrangementPage = ({ editData = null, onBack }) => {
                 </Grid>
 
                 <Grid item xs={12} md={7} lg={8} sx={{ flex: 1 }}>
-                    <Box sx={{ bgcolor: isDark ? '#261d19' : '#E5D9B8', p: 4, borderRadius: 2, border: `1px solid ${theme.palette.divider}` }}>
+                    <Box sx={{
+                        background: isDark
+                            ? 'linear-gradient(180deg, rgba(17, 22, 36, 0.88) 0%, rgba(16, 21, 31, 0.86) 100%)'
+                            : LIGHT_CARD,
+                        p: 4,
+                        borderRadius: 2,
+                        border: isDark ? '1px solid rgba(255,255,255,0.05)' : '1px solid rgba(197, 160, 89, 0.4)',
+                        boxShadow: isDark ? '0 18px 40px rgba(0,0,0,0.22)' : '0 18px 40px rgba(130, 100, 40, 0.10)'
+                    }}>
                         <GeneralInfoForm
                             formData={formData}
                             setFormData={setFormData}

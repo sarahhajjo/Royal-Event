@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { Box, Stack, Typography, Avatar, Rating, Chip, Button, Divider } from '@mui/material';
+import { Box, Stack, Typography, Avatar, Rating, Chip, Button, Divider, useTheme } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import VerifiedIcon from '@mui/icons-material/Verified';
 import WorkHistoryOutlinedIcon from '@mui/icons-material/WorkHistoryOutlined';
@@ -9,9 +9,16 @@ import MailOutlinedIcon from '@mui/icons-material/MailOutlined';
 import PhoneOutlinedIcon from '@mui/icons-material/PhoneOutlined';
 import dayjs from 'dayjs';
 
-// 💡 1. استيراد الدسباتش والأكشن الخاص بتحديد الفريلانسر بناءً على المسار في صورتك
 import { useDispatch } from 'react-redux';
 import { setSelectedFreelancer } from '../../JobOfferAplicants/jobManagementSlice';
+
+// 💡 استيراد الألوان الموحدة (يرجى التأكد من مسار الملف لديكِ)
+import {
+    GOLD, BROWN_TEXT, MUTED_TEXT,
+    LIGHT_CARD, LIGHT_BORDER,
+    DARK_CARD_BACKGROUND, DARK_CARD_BORDER, DARK_CARD_SHADOW,
+    DARK_CARD_HOVER_SHADOW
+} from '../../../../utils/colorConstants';
 
 const formatDate = (d) => (d ? dayjs(d).format('MMM D, YYYY') : '—');
 
@@ -26,8 +33,9 @@ const STATUS_COLOR = {
 };
 
 const EmployeeContractCard = ({ contract }) => {
-    // 💡 2. تهيئة الدسباتش
     const dispatch = useDispatch();
+    const theme = useTheme();
+    const isDark = theme.palette.mode === 'dark';
 
     const { freelancer, status, created_at: contractDate } = contract;
     const user = freelancer?.user;
@@ -42,21 +50,19 @@ const EmployeeContractCard = ({ contract }) => {
             sx={{
                 maxWidth: '980px',
                 position: 'relative',
-                border: '1px solid',
-                borderColor: (theme) => alpha(theme.palette.divider, 0.6),
+                background: isDark ? DARK_CARD_BACKGROUND : LIGHT_CARD,
+                border: isDark ? DARK_CARD_BORDER : `1px solid ${LIGHT_BORDER}`,
                 borderRadius: 3,
                 p: { xs: 2.5, md: 3 },
                 mb: 2.5,
-                bgcolor: (theme) =>
-                    theme.palette.mode === 'dark' ? alpha('#ffffff', 0.02) : alpha('#000000', 0.01),
+                backdropFilter: 'blur(16px)',
+                boxShadow: isDark ? DARK_CARD_SHADOW : '0 18px 40px rgba(130, 100, 40, 0.10)',
                 transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                 overflow: 'hidden',
                 '&:hover': {
-                    borderColor: 'primary.main',
+                    borderColor: isDark ? 'rgba(197, 160, 89, 0.22)' : 'rgba(197, 160, 89, 0.7)',
                     transform: 'translateY(-4px)',
-                    boxShadow: (theme) => theme.palette.mode === 'dark'
-                        ? '0 12px 30px rgba(197, 160, 89, 0.12)'
-                        : '0 12px 30px rgba(179, 140, 69, 0.15)',
+                    boxShadow: isDark ? DARK_CARD_HOVER_SHADOW : '0 20px 44px rgba(130, 100, 40, 0.2)',
                 },
                 '&::before': {
                     content: '""',
@@ -65,7 +71,7 @@ const EmployeeContractCard = ({ contract }) => {
                     top: 0,
                     bottom: 0,
                     width: '4px',
-                    bgcolor: status === 'active' ? 'success.main' : 'primary.main',
+                    bgcolor: status === 'active' ? '#4caf50' : GOLD,
                     opacity: 0.7,
                     borderRadius: '4px 0 0 4px',
                 }
@@ -81,7 +87,7 @@ const EmployeeContractCard = ({ contract }) => {
                             display: { xs: 'none', md: 'block' },
                             mx: { md: 2.5 },
                             my: 1,
-                            borderColor: (theme) => alpha(theme.palette.divider, 0.5)
+                            borderColor: isDark ? DARK_CARD_BORDER : LIGHT_BORDER
                         }}
                     />
                 }
@@ -96,10 +102,9 @@ const EmployeeContractCard = ({ contract }) => {
                                 width: 72,
                                 height: 72,
                                 flexShrink: 0,
-                                bgcolor: (theme) => alpha(theme.palette.primary.main, 0.15),
-                                color: 'primary.main',
-                                border: '1px solid',
-                                borderColor: (theme) => alpha(theme.palette.primary.main, 0.3),
+                                bgcolor: alpha(GOLD, 0.15),
+                                color: GOLD,
+                                border: `1px solid ${alpha(GOLD, 0.3)}`,
                                 fontWeight: 700,
                                 fontSize: '1.5rem',
                             }}
@@ -108,11 +113,11 @@ const EmployeeContractCard = ({ contract }) => {
                         </Avatar>
                         <Box sx={{ minWidth: 0 }}>
                             <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" rowGap={0.5} mb={0.75}>
-                                <Typography sx={{ fontSize: '1.15rem', fontWeight: 700, color: 'text.primary', fontFamily: "'Playfair Display', serif" }}>
+                                <Typography sx={{ fontSize: '1.15rem', fontWeight: 700, color: isDark ? '#ffffff' : BROWN_TEXT, fontFamily: "'Playfair Display', serif" }}>
                                     {fullName}
                                 </Typography>
                                 {!!freelancer?.is_verified && (
-                                    <VerifiedIcon titleAccess="Verified" sx={{ fontSize: 18, color: 'info.main' }} />
+                                    <VerifiedIcon titleAccess="Verified" sx={{ fontSize: 18, color: '#4caf50' }} />
                                 )}
                                 {freelancer?.moderation_status === 'approved' && (
                                     <Chip
@@ -120,19 +125,19 @@ const EmployeeContractCard = ({ contract }) => {
                                         size="small"
                                         sx={{
                                             height: 18, fontSize: '0.6rem', fontWeight: 700,
-                                            bgcolor: (theme) => alpha(theme.palette.success.main, 0.15),
-                                            color: 'success.main', border: 'none'
+                                            bgcolor: alpha('#4caf50', 0.15),
+                                            color: '#4caf50', border: 'none'
                                         }}
                                     />
                                 )}
                             </Stack>
-                            <Typography sx={{ fontSize: '0.85rem', color: 'text.secondary', mb: 1.25, letterSpacing: '0.03em' }}>
+                            <Typography sx={{ fontSize: '0.85rem', color: isDark ? 'rgba(255,255,255,0.6)' : MUTED_TEXT, mb: 1.25, letterSpacing: '0.03em' }}>
                                 {freelancer?.brand_name || '—'}
                                 {freelancer?.provider_type ? ` • ${freelancer.provider_type}` : ''}
                             </Typography>
                             <Stack direction="row" spacing={1} alignItems="center">
-                                <Rating value={parseFloat(freelancer?.rating) || 0} precision={0.1} readOnly size="small" sx={{ color: 'primary.main' }} />
-                                <Typography sx={{ fontSize: '0.8rem', color: 'text.primary', fontWeight: 700 }}>
+                                <Rating value={parseFloat(freelancer?.rating) || 0} precision={0.1} readOnly size="small" sx={{ color: GOLD }} />
+                                <Typography sx={{ fontSize: '0.8rem', color: isDark ? '#ffffff' : BROWN_TEXT, fontWeight: 700 }}>
                                     {freelancer?.rating ?? '—'}
                                 </Typography>
                             </Stack>
@@ -145,14 +150,14 @@ const EmployeeContractCard = ({ contract }) => {
                     <Stack spacing={1.75}>
                         <Stack direction="row" spacing={3} sx={{ flexWrap: 'wrap', rowGap: 1 }}>
                             <Stack direction="row" spacing={0.75} alignItems="center">
-                                <WorkHistoryOutlinedIcon sx={{ fontSize: 16, color: 'primary.main', opacity: 0.8 }} />
-                                <Typography sx={{ fontSize: '0.8rem', color: 'text.secondary' }}>
+                                <WorkHistoryOutlinedIcon sx={{ fontSize: 16, color: GOLD, opacity: 0.8 }} />
+                                <Typography sx={{ fontSize: '0.8rem', color: isDark ? 'rgba(255,255,255,0.6)' : MUTED_TEXT }}>
                                     {freelancer?.freelancer_details?.experience_years ?? '—'} yrs exp.
                                 </Typography>
                             </Stack>
                             <Stack direction="row" spacing={0.75} alignItems="center">
-                                <TranslateIcon sx={{ fontSize: 16, color: 'primary.main', opacity: 0.8 }} />
-                                <Typography sx={{ fontSize: '0.8rem', color: 'text.secondary' }}>
+                                <TranslateIcon sx={{ fontSize: 16, color: GOLD, opacity: 0.8 }} />
+                                <Typography sx={{ fontSize: '0.8rem', color: isDark ? 'rgba(255,255,255,0.6)' : MUTED_TEXT }}>
                                     {user?.settings_language ? user.settings_language.toUpperCase() : '—'}
                                 </Typography>
                             </Stack>
@@ -160,12 +165,12 @@ const EmployeeContractCard = ({ contract }) => {
 
                         <Stack spacing={0.75}>
                             <Stack direction="row" spacing={0.75} alignItems="center">
-                                <MailOutlinedIcon sx={{ fontSize: 16, color: 'text.secondary', flexShrink: 0 }} />
-                                <Typography sx={{ fontSize: '0.8rem', color: 'text.secondary', wordBreak: 'break-all' }}>{user?.email || '—'}</Typography>
+                                <MailOutlinedIcon sx={{ fontSize: 16, color: isDark ? 'rgba(255,255,255,0.6)' : MUTED_TEXT, flexShrink: 0 }} />
+                                <Typography sx={{ fontSize: '0.8rem', color: isDark ? 'rgba(255,255,255,0.6)' : MUTED_TEXT, wordBreak: 'break-all' }}>{user?.email || '—'}</Typography>
                             </Stack>
                             <Stack direction="row" spacing={0.75} alignItems="center">
-                                <PhoneOutlinedIcon sx={{ fontSize: 16, color: 'text.secondary', flexShrink: 0 }} />
-                                <Typography sx={{ fontSize: '0.8rem', color: 'text.secondary' }}>{user?.phone || 'No phone'}</Typography>
+                                <PhoneOutlinedIcon sx={{ fontSize: 16, color: isDark ? 'rgba(255,255,255,0.6)' : MUTED_TEXT, flexShrink: 0 }} />
+                                <Typography sx={{ fontSize: '0.8rem', color: isDark ? 'rgba(255,255,255,0.6)' : MUTED_TEXT }}>{user?.phone || 'No phone'}</Typography>
                             </Stack>
                         </Stack>
 
@@ -178,8 +183,8 @@ const EmployeeContractCard = ({ contract }) => {
                                         size="small"
                                         sx={{
                                             height: 24, fontSize: '0.7rem', fontWeight: 500,
-                                            bgcolor: (theme) => alpha(theme.palette.primary.main, 0.1),
-                                            color: 'primary.main', border: 'none', borderRadius: 1.5
+                                            bgcolor: alpha(GOLD, 0.1),
+                                            color: GOLD, border: 'none', borderRadius: 1.5
                                         }}
                                     />
                                 ))}
@@ -201,7 +206,7 @@ const EmployeeContractCard = ({ contract }) => {
                                     color: statusColor, border: 'none', borderRadius: 1
                                 }}
                             />
-                            <Typography sx={{ fontSize: '0.75rem', color: 'text.secondary', fontStyle: 'italic' }}>
+                            <Typography sx={{ fontSize: '0.75rem', color: isDark ? 'rgba(255,255,255,0.5)' : MUTED_TEXT, fontStyle: 'italic' }}>
                                 Hired: {formatDate(contractDate)}
                             </Typography>
                         </Stack>
@@ -211,23 +216,22 @@ const EmployeeContractCard = ({ contract }) => {
                                 size="small" variant="outlined"
                                 {...(user?.email ? { component: 'a', href: `mailto:${user.email}` } : {})}
                                 sx={{
-                                    borderColor: (theme) => alpha(theme.palette.primary.main, 0.5),
-                                    color: 'primary.main', textTransform: 'none', borderRadius: 2, px: 2,
+                                    borderColor: alpha(GOLD, 0.5),
+                                    color: GOLD, textTransform: 'none', borderRadius: 2, px: 2,
                                     whiteSpace: 'nowrap',
-                                    '&:hover': { borderColor: 'primary.main', bgcolor: (theme) => alpha(theme.palette.primary.main, 0.05) }
+                                    '&:hover': { borderColor: GOLD, bgcolor: alpha(GOLD, 0.05) }
                                 }}
                             >
                                 Contact
                             </Button>
                             <Button
                                 size="small" variant="contained"
-                                // 💡 3. ربط الزر ليرسل بيانات الفريلانسر عند الضغط عليه
                                 onClick={() => dispatch(setSelectedFreelancer(freelancer))}
                                 sx={{
-                                    bgcolor: 'primary.main', color: '#140e0c', fontWeight: 700,
+                                    bgcolor: GOLD, color: '#131110', fontWeight: 700,
                                     textTransform: 'none', borderRadius: 2, px: 2, boxShadow: 'none',
                                     whiteSpace: 'nowrap',
-                                    '&:hover': { bgcolor: 'primary.dark', boxShadow: 'none' },
+                                    '&:hover': { bgcolor: '#b38c45', boxShadow: 'none' },
                                 }}
                             >
                                 Profile

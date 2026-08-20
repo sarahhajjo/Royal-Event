@@ -1,5 +1,6 @@
-import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
+import { createAsyncThunk, createSlice, createSelector } from '@reduxjs/toolkit';
 import additionService from '../../../../services/companyService/additionService.js';
+import dayjs from 'dayjs';
 
 export const fetchProductsByType = createAsyncThunk('arrangement/fetchProducts', async () => {
     try {
@@ -20,9 +21,21 @@ export const fetchDistricts = createAsyncThunk('arrangement/fetchDistricts', asy
     return await additionService.getDistricts();
 });
 
-// 💡 1. ثانك جديد لجلب الفريلانسرز
+// 💡 تعديل ثانك الفريلانسرز ليجلب التواريخ المحجوزة لكل فريلانسر
 export const fetchFreelancers = createAsyncThunk('arrangement/fetchFreelancers', async () => {
-    return await additionService.getCompanyFreelancers();
+    const rawContracts = await additionService.getCompanyFreelancers();
+
+    // جلب الأيام المحجوزة لكل فريلانسر بشكل متوازي لسرعة الأداء
+    const contractsWithDates = await Promise.all(rawContracts.map(async (contract) => {
+        try {
+            const blockedDates = await additionService.getFreelancerBlockedDates(contract.freelancer?.id);
+            return { ...contract, blockedDates };
+        } catch (e) {
+            return { ...contract, blockedDates: [] };
+        }
+    }));
+
+    return contractsWithDates;
 });
 
 const arrangementSlice = createSlice({
@@ -34,9 +47,7 @@ const arrangementSlice = createSlice({
         districts: [],
         servicesEnabled: true,
         selectedStaff: [],
-        date: null,
         scheduleDates: null,
-        // 💡 2. متغيرات جديدة لتخزين بيانات الفريلانسرز والخدمات
         freelancers: [],
         availableServices: [],
     },
@@ -45,8 +56,6 @@ const arrangementSlice = createSlice({
             state.products = state.products.filter(p => p.id !== action.payload);
         },
         toggleServices: (state) => { state.servicesEnabled = !state.servicesEnabled; },
-
-        // 💡 الدوال الجديدة التي نسينا إضافتها:
         setAllStaff: (state, action) => { state.selectedStaff = action.payload; },
         setServicesEnabled: (state, action) => { state.servicesEnabled = action.payload; },
         resetArrangementState: (state) => {
@@ -54,8 +63,6 @@ const arrangementSlice = createSlice({
             state.scheduleDates = null;
             state.servicesEnabled = true;
         },
-        // ------------------------------------
-
         addStaff: (state, action) => { state.selectedStaff.push(action.payload); },
         removeStaff: (state, action) => {
             state.selectedStaff = state.selectedStaff.filter(staff => staff.id !== action.payload);
@@ -69,8 +76,6 @@ const arrangementSlice = createSlice({
             .addCase(fetchProductsByType.fulfilled, (state, action) => { state.products = action.payload; })
             .addCase(fetchCategories.fulfilled, (state, action) => { state.categories = action.payload; })
             .addCase(fetchDistricts.fulfilled, (state, action) => { state.districts = action.payload; })
-
-            // 💡 3. تخزين الفريلانسرز واستخراج الخدمات
             .addCase(fetchFreelancers.fulfilled, (state, action) => {
                 const rawContracts = action.payload || [];
 
@@ -92,16 +97,15 @@ const arrangementSlice = createSlice({
                         contract_id: contract.id,
                         name: fullName,
                         role: jobOffer.job_title || 'Service Provider',
-
-                        // 💡 هنا نسحب الرقم والإيميل معاً ونحفظهما
                         phone: user.phone || null,
                         email: user.email || null,
+
+                        // 💡 تخزين التواريخ المحجوزة
+                        blockedDates: contract.blockedDates || [],
 
                         isAvailable: true,
                         availableDates: availableDates,
                         service_name: jobOffer.job_title,
-                        availStart: '2020-01-01',
-                        availEnd: '2030-01-01'
                     };
                 });
 
@@ -111,9 +115,92 @@ const arrangementSlice = createSlice({
                 state.availableServices = [...new Set(titles)];
             });
     }});
+
 export const {
     removeProduct, toggleServices, addStaff, removeStaff, setScheduleDates,
-    setAllStaff, setServicesEnabled, resetArrangementState // 💡 تأكدي من وجود هذه الـ 3 هنا!
+    setAllStaff, setServicesEnabled, resetArrangementState
 } = arrangementSlice.actions;
+
+// ─── 💡 خوارزمية الفلترة الذكية ───
+// ─── 💡 خوارزمية الفلترة الذكية ───
+const timeToMin = (timeStr) => {
+    if (!timeStr) return 0;
+    const [h, m] = timeStr.split(':').map(Number);
+    return h * 60 + m;
+};
+
+export const selectFilteredFreelancers = createSelector(
+    [(state) => state.arrangement.freelancers, (state) => state.arrangement.scheduleDates],
+    (freelancers, scheduleDates) => {
+        if (!scheduleDates || !scheduleDates.selectionMode) return freelancers;
+
+        // 1. تحديد التواريخ المطلوبة في التنسيق
+        let requiredDates = [];
+        if (scheduleDates.selectionMode === 'multiple' && scheduleDates.selectedDates?.length > 0) {
+            requiredDates = scheduleDates.selectedDates;
+        } else if (scheduleDates.startDate) {
+            let curr = dayjs(scheduleDates.startDate);
+            const end = scheduleDates.endDate ? dayjs(scheduleDates.endDate) : curr;
+            while (curr.isBefore(end, 'day') || curr.isSame(end, 'day')) {
+                requiredDates.push(curr.format('YYYY-MM-DD'));
+                curr = curr.add(1, 'day');
+            }
+        }
+
+        // 2. فحص تعارض التواريخ لكل فريلانسر
+        return freelancers.map(freelancer => {
+            let isAvailable = true;
+
+            if (requiredDates.length > 0 && freelancer.blockedDates?.length > 0) {
+                for (const reqDate of requiredDates) {
+
+                    // 💡 التعديل الجذري هنا: توحيد صيغة التاريخ القادمة من الباك إند مع يوم التنسيق باستخدام dayjs!
+                    const blocksOnDate = freelancer.blockedDates.filter(b =>
+                        dayjs(b.blocked_date).format('YYYY-MM-DD') === reqDate
+                    );
+
+                    if (blocksOnDate.length > 0) {
+                        // إذا كان التنسيق "طوال اليوم"، أي حظر في هذا اليوم يجعله غير متاح
+                        if (scheduleDates.isAllDay) {
+                            isAvailable = false;
+                            break;
+                        }
+
+                        // إذا كان هناك شفتات، نفحص التداخل (Overlap)
+                        if (scheduleDates.shiftRanges?.length > 0) {
+                            for (const shift of scheduleDates.shiftRanges) {
+                                const shiftStart = timeToMin(shift.start);
+                                const shiftEnd = timeToMin(shift.end);
+
+                                for (const block of blocksOnDate) {
+                                    if (!block.start_time || !block.end_time) {
+                                        isAvailable = false; // محجوز طوال اليوم
+                                        break;
+                                    }
+                                    const blockStart = timeToMin(block.start_time);
+                                    const blockEnd = timeToMin(block.end_time);
+
+                                    // شرط التداخل: بداية الشفت قبل نهاية الحظر، ونهاية الشفت بعد بداية الحظر
+                                    if (shiftStart < blockEnd && shiftEnd > blockStart) {
+                                        isAvailable = false;
+                                        break;
+                                    }
+                                }
+                                if (!isAvailable) break;
+                            }
+                        } else {
+                            // 💡 حماية إضافية: إذا لم يختر المستخدم شفتات ولم يحدد "طوال اليوم"،
+                            // نعتبر الفريلانسر المشغول "غير متاح" حتى يقوم المستخدم بتحديد وقت آمن.
+                            isAvailable = false;
+                        }
+                    }
+                    if (!isAvailable) break;
+                }
+            }
+
+            return { ...freelancer, isAvailable };
+        });
+    }
+);
 
 export default arrangementSlice.reducer;

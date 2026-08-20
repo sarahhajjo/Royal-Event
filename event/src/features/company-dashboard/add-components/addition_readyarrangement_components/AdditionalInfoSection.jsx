@@ -1,7 +1,11 @@
 import React from 'react';
 import { Box, Typography, TextField, Checkbox, FormControlLabel, Grid, useTheme } from '@mui/material';
-
-// 💡 استقبال editMode و originalData
+import {
+    GOLD, BROWN_TEXT, MUTED_TEXT,
+    LIGHT_CARD, LIGHT_INPUT, LIGHT_BORDER,
+    DARK_CARD_BACKGROUND, DARK_CARD_BORDER, DARK_CARD_SHADOW,
+    DARK_CARD_HOVER_SHADOW, DARK_SURFACE_BG, DARK_SURFACE_BORDER
+} from '../../../../utils/colorConstants';
 const AdditionalInfoSection = ({ formData, setFormData, editMode, originalData }) => {
     const theme = useTheme();
     const isDark = theme.palette.mode === 'dark';
@@ -13,7 +17,7 @@ const AdditionalInfoSection = ({ formData, setFormData, editMode, originalData }
     ];
 
     const getCheckboxColor = (key) => {
-        if (!editMode || !originalData) return theme.palette.primary.main;
+        if (!editMode || !originalData) return GOLD;
         return formData[key] !== originalData[key] ? '#FFC107' : '#4CAF50';
     };
 
@@ -25,11 +29,13 @@ const AdditionalInfoSection = ({ formData, setFormData, editMode, originalData }
         }
         return {
             letterSpacing: '0.07em',
-            bgcolor: isDark ? 'rgba(0, 0, 0, 0.4)' : 'rgba(255, 255, 255, 0.6)',
+            bgcolor: isDark ? DARK_SURFACE_BG : LIGHT_INPUT,
             borderRadius: 1,
             '& .MuiOutlinedInput-root': {
                 border: `1px solid ${borderColor}`,
                 transition: 'border-color 0.3s ease',
+                height: '44px',
+                color: isDark ? '#ffffff' : BROWN_TEXT,
             },
             '& fieldset': { borderColor: 'transparent' },
             '&:hover fieldset': { borderColor: 'transparent' },
@@ -38,10 +44,26 @@ const AdditionalInfoSection = ({ formData, setFormData, editMode, originalData }
     };
 
     return (
-        <Box sx={{ p: 4, bgcolor: isDark ? '#261d19' : '#E5D9B8', borderRadius: 3, border: `1px solid ${theme.palette.divider}`, mb: 3, width: 1020 }}>
-            <Grid container spacing={24} alignItems="flex-start">
+        <Box sx={{
+            p: 4,
+            background: isDark ? DARK_CARD_BACKGROUND : LIGHT_CARD,
+            borderRadius: '18px',
+            border: isDark ? DARK_CARD_BORDER : `1px solid ${LIGHT_BORDER}`,
+            mb: 3,
+            width: 1020,
+            backdropFilter: 'blur(16px)',
+            boxShadow: isDark ? DARK_CARD_SHADOW : '0 18px 40px rgba(130, 100, 40, 0.10)',
+            transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+            '&:hover': {
+                transform: 'translateY(-4px)',
+                boxShadow: isDark ? DARK_CARD_HOVER_SHADOW : '0 20px 44px rgba(130, 100, 40, 0.2)',
+                borderColor: isDark ? 'rgba(197, 160, 89, 0.22)' : 'rgba(197, 160, 89, 0.7)'
+            },
+            '&:active': { transform: 'scale(0.98) translateY(-2px)', transition: 'all 0.05s ease' }
+        }}>
+            <Grid container spacing={4} alignItems="flex-start">
                 <Grid item xs={12} md={6}>
-                    <Typography sx={{ color: theme.palette.primary.main, fontWeight: 'bold', mb: 1, fontSize: '0.8rem', letterSpacing: '0.05em' ,width:350 }}>
+                    <Typography sx={{ color: GOLD, fontWeight: 'bold', mb: 1, fontSize: '0.8rem', letterSpacing: '0.05em', width: '100%' }}>
                         SECONDARY CONTACT
                     </Typography>
                     <TextField
@@ -51,13 +73,13 @@ const AdditionalInfoSection = ({ formData, setFormData, editMode, originalData }
                         onChange={(e) => setFormData({ ...formData, secondary_contact_number: e.target.value })}
                         sx={getPhoneStyle()}
                     />
-                    <Typography variant="caption" sx={{ color: theme.palette.text.secondary, mt: 1, display: 'block', fontStyle: 'italic' }}>
+                    <Typography variant="caption" sx={{ color: isDark ? 'rgba(255,255,255,0.58)' : MUTED_TEXT, mt: 1, display: 'block', fontStyle: 'italic' }}>
                         Optional emergency concierge number.
                     </Typography>
                 </Grid>
 
                 <Grid item xs={12} md={6}>
-                    <Typography sx={{ color: theme.palette.primary.main, fontWeight: 'bold', mb: 1, fontSize: '0.8rem', letterSpacing: '0.05em' }}>
+                    <Typography sx={{ color: GOLD, fontWeight: 'bold', mb: 1, fontSize: '0.8rem', letterSpacing: '0.05em' }}>
                         CANCELLATION POLICY
                     </Typography>
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
@@ -76,7 +98,7 @@ const AdditionalInfoSection = ({ formData, setFormData, editMode, originalData }
                                     />
                                 }
                                 label={
-                                    <Typography variant="body2" sx={{ color: theme.palette.text.primary, fontSize: '0.9rem', letterSpacing: '0.07em' }}>
+                                    <Typography variant="body2" sx={{ color: isDark ? '#ffffff' : BROWN_TEXT, fontSize: '0.85rem', fontFamily: "'Inter', sans-serif" }}>
                                         {policy.label}
                                     </Typography>
                                 }

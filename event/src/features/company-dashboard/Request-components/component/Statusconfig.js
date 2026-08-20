@@ -5,68 +5,63 @@ import DoneAllIcon from '@mui/icons-material/DoneAll';
 import CancelIcon from '@mui/icons-material/Cancel';
 import BlockIcon from '@mui/icons-material/Block';
 
-/**
- * إعدادات موحّدة لكل حالة طلب: اللون، الأيقونة، نص الشارة، ونوع المحتوى
- * (offer = تفاصيل عرض بصيغة "التسمية: القيمة" | reason = نص سبب حر - للرفض/الإلغاء).
- *
- * كل الألوان مأخوذة من tokens الثيم القياسية بـ MUI (success/warning/info/error/text)
- * وهي موجودة تلقائياً بأي ثيم حتى لو مش معرّفة صراحة بملف theme عندك — فما في داعي
- * لتعديل ملف الثيم عشان هالكرت يشتغل.
- */
+// 💡 استيراد اللون الذهبي (عدلي المسار حسب مجلدك)
+import { GOLD } from '../../../../utils/colorConstants';
+
 export const REQUEST_STATUS_CONFIG = {
     pending: {
-        accentColor: 'success.main',
+        accentColor: GOLD, // 💡 ذهبي للطلبات الجديدة
         badgeLabel: 'NEW REQUEST',
         BadgeIcon: AddCircleIcon,
         detailsLabel: 'OFFER DETAILS',
         detailsType: 'offer',
         buttonLabel: 'VIEW',
-        buttonColor: 'primary.main', // نفس التصميم الأصلي المعتمد (ذهبي)
+        buttonColor: GOLD,
     },
     accepted: {
-        accentColor: 'warning.main',
+        accentColor: '#ffa726', // برتقالي لانتظار الدفع
         badgeLabel: 'AWAITING PAYMENT',
         BadgeIcon: CheckCircleOutlinedIcon,
         detailsLabel: 'PAYMENT DETAILS',
         detailsType: 'offer',
         buttonLabel: 'VIEW',
-        buttonColor: 'warning.main',
+        buttonColor: '#ffa726',
     },
     confirmed: {
-        accentColor: 'info.main',
+        accentColor: '#29b6f6', // أزرق للتأكيد
         badgeLabel: 'CONFIRMED',
         BadgeIcon: CheckCircleIcon,
         detailsLabel: 'BOOKING DETAILS',
         detailsType: 'offer',
         buttonLabel: 'VIEW',
-        buttonColor: 'info.main',
+        buttonColor: '#29b6f6',
     },
     completed: {
-        accentColor: 'text.secondary',
+        accentColor: '#4caf50', // أخضر للاكتمال
         badgeLabel: 'COMPLETED',
         BadgeIcon: DoneAllIcon,
         detailsLabel: 'SUMMARY',
         detailsType: 'offer',
         buttonLabel: 'VIEW RECEIPT',
-        buttonColor: 'text.secondary',
+        buttonColor: '#4caf50',
     },
     cancelled: {
-        accentColor: 'error.light',
+        accentColor: '#ef5350', // أحمر للإلغاء
         badgeLabel: 'CANCELLATION ALERT',
         BadgeIcon: CancelIcon,
         detailsLabel: 'CANCELLATION REASON',
         detailsType: 'reason',
         buttonLabel: 'VIEW DETAILS',
-        buttonColor: 'error.light',
+        buttonColor: '#ef5350',
     },
     rejected: {
-        accentColor: 'error.main',
+        accentColor: '#ef5350', // أحمر للرفض
         badgeLabel: 'REQUEST REJECTED',
         BadgeIcon: BlockIcon,
         detailsLabel: 'REASON',
         detailsType: 'reason',
         buttonLabel: 'VIEW',
-        buttonColor: 'error.main',
+        buttonColor: '#ef5350',
     },
 };
 

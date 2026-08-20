@@ -12,22 +12,22 @@ import {
 import JobSummaryHeader from './Components/Jobsummaryheader';
 import EmployeeContractCard from './Components/Employeecontractcard';
 
-// 💡 1. استيراد صفحة البروفايل (حسب مسار صورتك)
+// استيراد صفحة البروفايل
 import FreelancerProfileView from '../JobOfferAplicants/FreelancerProfileView';
+
+// 💡 استيراد اللون الثابت الجديد للعناوين
+import { GOLD, BROWN_TEXT, MUTED_TEXT, TITLE_TEXT_LIGHT } from '../../../utils/colorConstants';
 
 const JobApplicantsPage = () => {
     const dispatch = useDispatch();
     const theme = useTheme();
     const isDark = theme.palette.mode === 'dark';
 
-    const gold = isDark ? '#c5a059' : '#b38c45';
-
     const groups = useSelector(selectContractsGroupedByJob);
     const loading = useSelector(selectContractsLoading);
     const error = useSelector(selectContractsError);
     const pagination = useSelector(selectContractsPagination);
 
-    // 💡 2. سحب حالة الفريلانسر المحدد لمعرفة ما إذا كان الزر قد تم ضغطه
     const selectedFreelancer = useSelector((state) => state.jobManagement?.selectedFreelancer);
 
     useEffect(() => {
@@ -40,7 +40,6 @@ const JobApplicantsPage = () => {
 
     const totalHires = groups.reduce((sum, g) => sum + (g.contracts?.length || 0), 0);
 
-    // 💡 3. الشرط السحري: إذا تم الضغط على زر البروفايل، نعرض صفحة البروفايل فقط!
     if (selectedFreelancer) {
         return (
             <Box sx={{ animation: 'fadeIn 0.3s ease-in-out' }}>
@@ -54,41 +53,45 @@ const JobApplicantsPage = () => {
             {/* ── Page Header ── */}
             <Box sx={{ mb: 5, textAlign: 'left' }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1.5, flexWrap: 'wrap' }}>
-                    <Box
-                        component="svg"
-                        viewBox="0 0 24 24"
-                        sx={{
-                            width: { xs: '28px', sm: '36px' },
-                            height: { xs: '28px', sm: '36px' },
-                            fill: 'none',
-                            stroke: gold,
-                            strokeWidth: 1.2,
-                        }}
-                    >
-                        <path d="M12 2.5L21.5 12L12 21.5L2.5 12Z" />
+
+
+                    {/* 💡 هذا هو العنوان الذي تم تعديل خطه ولونه ليطابق الصورة المرجعية */}
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mt: 1, mb: 1 }}>
+                        <Box
+                            sx={{
+                                width: 14,
+                                height: 14,
+                                // 💡 بني بالفاتح، وذهبي بالداكن
+                                border: `2px solid ${isDark ? theme.palette.primary.main : BROWN_TEXT}`,
+                                transform: 'rotate(45deg)',
+                                boxShadow: `0 0 10px ${isDark ? theme.palette.primary.main + '40' : 'rgba(74, 59, 50, 0.2)'}`,
+                                flexShrink: 0
+                            }}
+                        />
+
+                        <Typography
+                            variant="h3"
+                            sx={{
+                                fontFamily: "'Playfair Display', serif",
+                                fontSize: '2.5rem',
+                                // 💡 بني بالفاتح، وذهبي بالداكن
+                                color: isDark ? theme.palette.primary.main : BROWN_TEXT,
+                                fontWeight: 50,
+                                m: 0
+                            }}
+                        >
+                            My Services
+                        </Typography>
                     </Box>
-
-                    <Typography
-                        sx={{
-                            fontFamily: "'Playfair Display', serif",
-                            fontSize: { xs: '2rem', sm: '2.5rem' },
-                            fontWeight: 500,
-                            color: gold,
-                            lineHeight: 1,
-                        }}
-                    >
-                        My Offers
-                    </Typography>
-
                     {!loading && !error && groups.length > 0 && (
                         <Box sx={{
-                            bgcolor: 'rgba(197, 160, 89, 0.1)',
-                            border: `1px solid rgba(197, 160, 89, 0.3)`,
+                            bgcolor: isDark ? 'rgba(197, 160, 89, 0.1)' : 'rgba(74, 59, 50, 0.08)',
+                            border: isDark ? `1px solid rgba(197, 160, 89, 0.3)` : `1px solid rgba(74, 59, 50, 0.2)`,
                             px: 1.5, py: 0.5,
                             borderRadius: 4,
                             ml: { sm: 1 }
                         }}>
-                            <Typography sx={{ color: gold, fontSize: '0.75rem', fontWeight: 'bold' }}>
+                            <Typography sx={{ color: isDark ? GOLD : TITLE_TEXT_LIGHT, fontSize: '0.75rem', fontWeight: 700 }}>
                                 ✔️ {totalHires} Hired in {groups.length} {groups.length === 1 ? 'Job' : 'Jobs'}
                             </Typography>
                         </Box>
@@ -98,8 +101,8 @@ const JobApplicantsPage = () => {
                 <Typography
                     variant="body2"
                     sx={{
-                        color: isDark ? '#9a8f80' : '#7A6F5E',
-                        fontWeight: 300,
+                        color: isDark ? 'rgba(255,255,255,0.6)' : MUTED_TEXT,
+                        fontWeight: 400,
                         letterSpacing: '0.02em',
                         maxWidth: 700
                     }}
@@ -110,7 +113,7 @@ const JobApplicantsPage = () => {
 
             {loading && (
                 <Stack sx={{ alignItems: 'center', py: 6 }}>
-                    <CircularProgress sx={{ color: gold }} />
+                    <CircularProgress sx={{ color: GOLD }} />
                 </Stack>
             )}
 
@@ -121,7 +124,7 @@ const JobApplicantsPage = () => {
             )}
 
             {!loading && !error && groups.length === 0 && (
-                <Typography sx={{ color: isDark ? '#9a8f80' : '#7A6F5E', mt: 3, fontStyle: 'italic' }}>
+                <Typography sx={{ color: isDark ? 'rgba(255,255,255,0.6)' : MUTED_TEXT, mt: 3, fontStyle: 'italic' }}>
                     No accepted applicants yet.
                 </Typography>
             )}
@@ -148,8 +151,8 @@ const JobApplicantsPage = () => {
                         page={pagination.currentPage}
                         onChange={handlePageChange}
                         sx={{
-                            '& .MuiPaginationItem-root': { color: gold },
-                            '& .Mui-selected': { bgcolor: `${gold} !important`, color: '#140e0c' }
+                            '& .MuiPaginationItem-root': { color: isDark ? '#ffffff' : BROWN_TEXT },
+                            '& .Mui-selected': { bgcolor: `${GOLD} !important`, color: '#131110' }
                         }}
                     />
                 </Stack>

@@ -4,12 +4,18 @@ import { StaticDatePicker, LocalizationProvider, TimePicker } from '@mui/x-date-
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs from 'dayjs';
 
+import {
+    GOLD, BROWN_TEXT, MUTED_TEXT,
+    LIGHT_CARD, LIGHT_INPUT, LIGHT_BORDER,
+    DARK_CARD_BACKGROUND, DARK_CARD_BORDER, DARK_CARD_SHADOW,
+    DARK_CARD_HOVER_SHADOW, DARK_SURFACE_BG, DARK_SURFACE_BORDER
+} from '../../../../utils/colorConstants';
+
 export default function DateAndTime({ data, setData }) {
     const theme = useTheme();
     const isDark = theme.palette.mode === 'dark';
 
     const [isAllDay, setIsAllDay] = useState(data.isAllDay || false);
-    // 💡 حالة جديدة لتتبع وضع التحديد (نطاق متصل أم أيام متفرقة)
     const [selectionMode, setSelectionMode] = useState(data.selectionMode || 'range');
     const [error, setError] = useState('');
 
@@ -29,9 +35,9 @@ export default function DateAndTime({ data, setData }) {
         }
         return excluded;
     };
-    // ─── منطق الروزنامة ───
+
     const excludedDates = data.excludedDates || [];
-    const selectedDates = data.selectedDates || []; // مصفوفة الأيام المتفرقة
+    const selectedDates = data.selectedDates || [];
 
     const handleDateClick = (clickedDate) => {
         if (!clickedDate) return;
@@ -56,7 +62,6 @@ export default function DateAndTime({ data, setData }) {
             return;
         }
 
-        // منطق النطاق العادي
         if (data.startDate && data.endDate && clickedDate.isAfter(data.startDate, 'day') && clickedDate.isBefore(data.endDate, 'day')) {
             const newExcluded = excludedDates.includes(dateStr)
                 ? excludedDates.filter(d => d !== dateStr)
@@ -83,19 +88,19 @@ export default function DateAndTime({ data, setData }) {
         const dateStr = day.format('YYYY-MM-DD');
         let bgColor = 'transparent';
         let borderStyle = 'none';
-        let textColor = isDark ? '#eee0da' : '#2B211E';
+        let textColor = isDark ? '#ffffff' : BROWN_TEXT;
 
         if (disabled) {
-            textColor = isDark ? alpha('#eee0da', 0.2) : alpha('#2B211E', 0.2);
+            textColor = isDark ? 'rgba(255,255,255,0.2)' : alpha(BROWN_TEXT, 0.2);
         } else if (selectionMode === 'multiple') {
             const isSelected = selectedDates.includes(dateStr);
             const isExcluded = excludedDates.includes(dateStr);
             if (isSelected) {
-                bgColor = theme.palette.primary.main;
+                bgColor = GOLD;
                 textColor = '#131110';
             } else if (isExcluded) {
-                borderStyle = `1px dashed ${theme.palette.primary.main}`;
-                textColor = theme.palette.primary.main;
+                borderStyle = `1px dashed ${GOLD}`;
+                textColor = GOLD;
             }
         } else {
             const isExcluded = excludedDates.includes(dateStr);
@@ -103,10 +108,10 @@ export default function DateAndTime({ data, setData }) {
             const isEnd = data.endDate && day.isSame(data.endDate, 'day');
             const isBetween = data.startDate && data.endDate && day.isAfter(data.startDate, 'day') && day.isBefore(data.endDate, 'day');
 
-            if (isStart || isEnd) { bgColor = theme.palette.primary.main; textColor = '#131110'; }
+            if (isStart || isEnd) { bgColor = GOLD; textColor = '#131110'; }
             else if (isBetween) {
-                if (isExcluded) { borderStyle = `2px solid ${theme.palette.primary.main}`; textColor = theme.palette.primary.main; }
-                else { bgColor = alpha(theme.palette.primary.main, 0.15); textColor = theme.palette.primary.main; }
+                if (isExcluded) { borderStyle = `2px solid ${GOLD}`; textColor = GOLD; }
+                else { bgColor = alpha(GOLD, 0.15); textColor = GOLD; }
             }
         }
 
@@ -117,13 +122,12 @@ export default function DateAndTime({ data, setData }) {
                      display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: disabled ? 'default' : 'pointer', margin: '2px auto',
                      color: textColor, opacity: disabled ? 0.6 : 1,
                      transition: 'all 0.5s ease',
-                     '&:hover': { backgroundColor: disabled ? 'transparent' : (bgColor !== 'transparent') ? theme.palette.primary.main : alpha(theme.palette.primary.main, 0.3) }
+                     '&:hover': { backgroundColor: disabled ? 'transparent' : (bgColor !== 'transparent') ? GOLD : alpha(GOLD, 0.3) }
                  }}
             >{day.date()}</Box>
         );
     };
 
-    // ─── منطق الشفتات ───
     const [draftStart, setDraftStart] = useState(null);
     const [draftEnd, setDraftEnd] = useState(null);
     const shiftRanges = data.shiftRanges || [];
@@ -167,52 +171,86 @@ export default function DateAndTime({ data, setData }) {
         setData(prev => ({ ...prev, shiftRanges: (prev.shiftRanges || []).filter((_, i) => i !== idxToRemove) }));
     };
 
-    const inputStyle = { '& .MuiOutlinedInput-root': { height: '48px', backgroundColor: isDark ? 'rgba(0, 0, 0, 0.4)' : 'rgba(255, 255, 255, 0.6)', color: isDark ? '#eee0da' : '#2B211E', borderRadius: '4px', border: isDark ? '1px solid rgba(78, 70, 57, 0.3)' : '1px solid rgba(179, 140, 69, 0.35)', '& fieldset': { borderColor: 'transparent' } } };
+    const inputStyle = {
+        '& .MuiOutlinedInput-root': {
+            height: '48px',
+            backgroundColor: isDark ? DARK_SURFACE_BG : LIGHT_INPUT,
+            color: isDark ? '#ffffff' : BROWN_TEXT,
+            borderRadius: '4px',
+            border: isDark ? DARK_CARD_BORDER : `1px solid ${LIGHT_BORDER}`,
+            '& fieldset': { borderColor: 'transparent' }
+        }
+    };
+
+    // 💡 تنسيق نافذة الوقت المنسدلة (TimePicker)
+    const timePickerPopperProps = {
+        popper: {
+            sx: {
+                '& .MuiPaper-root': {
+                    background: isDark ? DARK_CARD_BACKGROUND : LIGHT_CARD,
+                    border: isDark ? DARK_CARD_BORDER : `1px solid ${LIGHT_BORDER}`,
+                    color: isDark ? '#ffffff' : BROWN_TEXT,
+                    backdropFilter: 'blur(16px)',
+                    backgroundImage: 'none',
+                    '& .MuiMultiSectionDigitalClockSection-root': {
+                        borderRight: isDark ? DARK_CARD_BORDER : `1px solid ${LIGHT_BORDER}`
+                    }
+                }
+            }
+        },
+        textField: { fullWidth: true, sx: inputStyle }
+    };
 
     return (
-        <Paper className="date-time-section" sx={{ p: 4, backgroundColor: theme.palette.background.paper, border: `1px solid ${theme.palette.divider}`, borderRadius: '8px', height: '100%', display: 'flex', flexDirection: 'column' }}>            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 3, borderBottom: `1px solid ${theme.palette.divider}`, pb: 1.5 }}>
+        <Paper className="date-time-section" sx={{
+            p: 4,
+            background: isDark ? DARK_CARD_BACKGROUND : LIGHT_CARD,
+            border: isDark ? DARK_CARD_BORDER : `1px solid ${LIGHT_BORDER}`,
+            borderRadius: '18px',
+            height: '100%',
+            display: 'flex', flexDirection: 'column',
+            backdropFilter: 'blur(16px)',
+            boxShadow: isDark ? DARK_CARD_SHADOW : '0 18px 40px rgba(130, 100, 40, 0.10)',
+            transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+            '&:hover': {
+                boxShadow: isDark ? DARK_CARD_HOVER_SHADOW : '0 20px 44px rgba(130, 100, 40, 0.2)',
+                borderColor: isDark ? 'rgba(197, 160, 89, 0.22)' : 'rgba(197, 160, 89, 0.7)'
+            }
+        }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 3, borderBottom: isDark ? DARK_CARD_BORDER : `1px solid ${LIGHT_BORDER}`, pb: 1.5 }}>
                 <Typography sx={{ fontSize: '16px' }}>📅</Typography>
-                <Typography sx={{ fontWeight: 'bold', fontSize: '16px', letterSpacing: '0.02em' }}>Date & Time</Typography>
+                <Typography sx={{ fontWeight: 'bold', fontSize: '16px', letterSpacing: '0.02em', color: isDark ? '#ffffff' : BROWN_TEXT }}>Date & Time</Typography>
             </Box>
 
             <LocalizationProvider dateAdapter={AdapterDayjs}>
-                {/* 💡 أزرار اختيار وضع التحديد */}
                 <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Typography sx={{ fontSize: '12px', fontWeight: 'bold', color: theme.palette.text.secondary, textTransform: 'uppercase' }}>
+                    <Typography sx={{ fontSize: '12px', fontWeight: 'bold', color: isDark ? 'rgba(255,255,255,0.6)' : MUTED_TEXT, textTransform: 'uppercase' }}>
                         Selection Mode
                     </Typography>
-                    <RadioGroup
-                        row
-                        value={selectionMode}
-                        onChange={(e) => {
-                            const mode = e.target.value;
-                            setSelectionMode(mode);
-                            setData({ ...data, selectionMode: mode });
-                        }}
-                    >
-                        <FormControlLabel value="range" control={<Radio size="small" />} label={<Typography sx={{ fontSize: '12px' }}>Date Range</Typography>} />
-                        <FormControlLabel value="multiple" control={<Radio size="small" />} label={<Typography sx={{ fontSize: '12px' }}>Multiple Days</Typography>} />
+                    <RadioGroup row value={selectionMode} onChange={(e) => { const mode = e.target.value; setSelectionMode(mode); setData({ ...data, selectionMode: mode }); }}>
+                        <FormControlLabel value="range" control={<Radio size="small" sx={{color: GOLD, '&.Mui-checked': { color: GOLD }}}/>} label={<Typography sx={{ fontSize: '12px', color: isDark ? '#ffffff' : BROWN_TEXT }}>Date Range</Typography>} />
+                        <FormControlLabel value="multiple" control={<Radio size="small" sx={{color: GOLD, '&.Mui-checked': { color: GOLD }}}/>} label={<Typography sx={{ fontSize: '12px', color: isDark ? '#ffffff' : BROWN_TEXT }}>Multiple Days</Typography>} />
                     </RadioGroup>
                 </Box>
 
-                <Box sx={{ border: `1px solid ${theme.palette.divider}`, borderRadius: '8px', mb: 3, bgcolor: isDark ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.5)', display: 'flex', justifyContent: 'center'}}>
-                    <StaticDatePicker displayStaticWrapperAs="desktop" disablePast value={selectionMode === 'range' ? (data.startDate || null) : null} onChange={() => { }} slots={{ day: renderCustomDay }} slotProps={{ actionBar: { actions: [] } }} sx={{ backgroundColor: 'transparent', '& .MuiPickersToolbar-root': { display: 'none' } }} />
+                <Box sx={{ border: isDark ? DARK_CARD_BORDER : `1px solid ${LIGHT_BORDER}`, borderRadius: '8px', mb: 3, background: isDark ? DARK_SURFACE_BG : LIGHT_INPUT, display: 'flex', justifyContent: 'center'}}>
+                    <StaticDatePicker displayStaticWrapperAs="desktop" disablePast value={selectionMode === 'range' ? (data.startDate || null) : null} onChange={() => { }} slots={{ day: renderCustomDay }} slotProps={{ actionBar: { actions: [] } }} sx={{ backgroundColor: 'transparent', '& .MuiPickersToolbar-root': { display: 'none' }, '& .MuiTypography-root': { color: isDark ? '#ffffff' : BROWN_TEXT } }} />
                 </Box>
 
                 <FormControlLabel
-                    control={<Switch checked={isAllDay} onChange={(e) => { setIsAllDay(e.target.checked); setData({...data, isAllDay: e.target.checked}); }} />}
-                    label={<Typography sx={{ fontSize: '13px', fontWeight: 'bold' }}>All Day (No specific shifts)</Typography>}
+                    control={<Switch checked={isAllDay} onChange={(e) => { setIsAllDay(e.target.checked); setData({...data, isAllDay: e.target.checked}); }} sx={{ '& .MuiSwitch-switchBase.Mui-checked': { color: GOLD }, '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { backgroundColor: GOLD } }}/>}
+                    label={<Typography sx={{ fontSize: '13px', fontWeight: 'bold', color: isDark ? '#ffffff' : BROWN_TEXT }}>All Day (No specific shifts)</Typography>}
                     sx={{ mb: 2 }}
                 />
 
                 {!isAllDay && (
                     <Box>
                         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-                        <Typography sx={{ color: theme.palette.primary.main, fontSize: '11px', mb: 1, fontWeight: 'bold', textTransform: 'uppercase' }}>Create a Shift</Typography>
+                        <Typography sx={{ color: GOLD, fontSize: '11px', mb: 1, fontWeight: 'bold', textTransform: 'uppercase' }}>Create a Shift</Typography>
                         <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center', mb: 2 }}>
-                            <TimePicker label="Start Time" value={draftStart} onChange={setDraftStart} slotProps={{ textField: { fullWidth: true, sx: inputStyle } }} sx={{ flex: 1 }} />
-                            <TimePicker label="End Time" value={draftEnd} onChange={setDraftEnd} slotProps={{ textField: { fullWidth: true, sx: inputStyle } }} sx={{ flex: 1 }} />
-                            <Button variant="contained" onClick={handleAddShift} disabled={!draftStart || !draftEnd} sx={{ height: '48px', minWidth: '90px', backgroundColor: theme.palette.primary.main }}>ADD</Button>
+                            <TimePicker label="Start Time" value={draftStart} onChange={setDraftStart} slotProps={timePickerPopperProps} sx={{ flex: 1 }} />
+                            <TimePicker label="End Time" value={draftEnd} onChange={setDraftEnd} slotProps={timePickerPopperProps} sx={{ flex: 1 }} />
+                            <Button variant="contained" onClick={handleAddShift} disabled={!draftStart || !draftEnd} sx={{ height: '48px', minWidth: '90px', backgroundColor: GOLD, color: '#131110', fontWeight: 'bold', '&:hover': {bgcolor: '#b38c45'} }}>ADD</Button>
                         </Box>
                     </Box>
                 )}
@@ -221,25 +259,25 @@ export default function DateAndTime({ data, setData }) {
             <Box sx={{ mt: 'auto', pt: 3 }}>
                 {!isAllDay ? (
                     <Box >
-                        <Typography sx={{ fontSize: '12px', color: theme.palette.text.secondary, mb: 1, fontWeight: 'bold' }}>Selected Shifts:</Typography>
+                        <Typography sx={{ fontSize: '12px', color: isDark ? 'rgba(255,255,255,0.6)' : MUTED_TEXT, mb: 1, fontWeight: 'bold' }}>Selected Shifts:</Typography>
                         {shiftRanges.length > 0 ? (
-                            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap',height:200, p: 2, borderRadius: '6px', border: `1px dashed ${theme.palette.divider}` }}>
+                            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap',height:200, p: 2, borderRadius: '6px', border: isDark ? '1px dashed rgba(255,255,255,0.2)' : `1px dashed ${LIGHT_BORDER}` }}>
                                 {shiftRanges.map((range, idx) => (
-                                    <Chip key={idx} label={`${range.startLabel} - ${range.endLabel}`} onDelete={() => handleDeleteShift(idx)} sx={{ backgroundColor: alpha(theme.palette.primary.main, 0.1), color: theme.palette.primary.main, border: `1px solid ${theme.palette.primary.main}` }} />
+                                    <Chip key={idx} label={`${range.startLabel} - ${range.endLabel}`} onDelete={() => handleDeleteShift(idx)} sx={{ backgroundColor: alpha(GOLD, 0.1), color: GOLD, border: `1px solid ${GOLD}` }} />
                                 ))}
                             </Box>
                         ) : (
-                            <Box sx={{ p: 3, borderRadius: '6px', border: `1px dashed ${theme.palette.divider}`, textAlign: 'center', height: 200 }}>
-                                <Typography sx={{ fontSize: '13px', color: theme.palette.text.secondary }}>No shifts selected.</Typography>
+                            <Box sx={{ p: 3, borderRadius: '6px', border: isDark ? '1px dashed rgba(255,255,255,0.2)' : `1px dashed ${LIGHT_BORDER}`, textAlign: 'center', height: 200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <Typography sx={{ fontSize: '13px', color: isDark ? 'rgba(255,255,255,0.5)' : MUTED_TEXT }}>No shifts selected.</Typography>
                             </Box>
                         )}
                     </Box>
                 ) : (
                     <Box sx={{
-                        p: 3, borderRadius: '6px', border: `1px dashed ${theme.palette.primary.main}`,
-                        bgcolor: alpha(theme.palette.primary.main, 0.05), display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 50
+                        p: 3, borderRadius: '6px', border: `1px dashed ${GOLD}`,
+                        bgcolor: alpha(GOLD, 0.05), display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 50
                     }}>
-                        <Typography sx={{ fontSize: '14px', color: theme.palette.primary.main, fontWeight: 'bold', textAlign: 'center' }}>
+                        <Typography sx={{ fontSize: '14px', color: GOLD, fontWeight: 'bold', textAlign: 'center' }}>
                             Currently set to "All Day" mode. No shifts required.
                         </Typography>
                     </Box>

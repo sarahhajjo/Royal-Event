@@ -1,25 +1,31 @@
 import React from 'react';
-import { Box, Typography, Avatar, IconButton, useTheme } from '@mui/material'; // إضافة useTheme
+import { Box, Typography, Avatar, IconButton, useTheme } from '@mui/material';
 import CancelIcon from '@mui/icons-material/Cancel';
 import { useSelector, useDispatch } from 'react-redux';
 import { removeStaff } from '../addition_slices/arrangementSlice';
-
+import {
+    GOLD, BROWN_TEXT, MUTED_TEXT,
+    LIGHT_CARD, LIGHT_INPUT, LIGHT_BORDER,
+    DARK_CARD_BACKGROUND, DARK_CARD_BORDER, DARK_CARD_SHADOW,
+    DARK_CARD_HOVER_SHADOW, DARK_SURFACE_BG, DARK_SURFACE_BORDER
+} from '../../../../utils/colorConstants';
 const StaffSummary = () => {
     const selected = useSelector(state => state.arrangement.selectedStaff);
     const dispatch = useDispatch();
-    const theme = useTheme(); // استخدام الثيم
+    const theme = useTheme();
     const isDark = theme.palette.mode === 'dark';
 
     return (
         <Box sx={{
             p: 3,
-            bgcolor: isDark ? 'rgba(0, 0, 0, 0.4)' : 'rgba(255, 255, 255, 0.6)', // استخدام خلفية الـ Paper
-            border: `1px solid ${theme.palette.divider}`,
+            background: isDark ? DARK_SURFACE_BG : LIGHT_INPUT,
+            border: isDark ? DARK_CARD_BORDER : `1px solid ${LIGHT_BORDER}`,
             borderRadius: 3,
-            mb: 3
+            mb: 3,
+            backdropFilter: 'blur(8px)'
         }}>
             <Typography variant="caption" sx={{
-                color: theme.palette.primary.main, // اللون الذهبي من الثيم
+                color: GOLD,
                 fontWeight: 'bold',
                 letterSpacing: '0.05rem',
                 display: 'block',
@@ -35,17 +41,17 @@ const StaffSummary = () => {
                         alignItems: 'center',
                         p: 1.5,
                         pr: 1,
-                        border: `1px solid ${theme.palette.primary.main}`, // إطار ذهبي
+                        border: `1px solid ${GOLD}`,
                         borderRadius: 2,
-                        bgcolor: theme.palette.background.default // خلفية المربع
+                        background: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(255, 255, 255, 0.6)'
                     }}>
-                        <Avatar src={s.image} sx={{ width: 40, height: 40, mr: 1.5 }} />
+                        <Avatar src={s.image} sx={{ width: 40, height: 40, mr: 1.5, border: isDark ? DARK_CARD_BORDER : `1px solid ${LIGHT_BORDER}` }} />
                         <Box sx={{ mr: 2 }}>
-                            <Typography variant="body2" sx={{ color: theme.palette.text.primary, fontWeight: 'bold' }}>
+                            <Typography variant="body2" sx={{ color: isDark ? '#ffffff' : BROWN_TEXT, fontWeight: 'bold' }}>
                                 {s.name}
                             </Typography>
                             <Typography variant="caption" sx={{
-                                color: theme.palette.primary.main,
+                                color: GOLD,
                                 textTransform: 'uppercase',
                                 display: 'block',
                                 fontSize: '0.65rem'
@@ -53,15 +59,15 @@ const StaffSummary = () => {
                                 {s.role}
                             </Typography>
                         </Box>
-                        <IconButton onClick={() => dispatch(removeStaff(s.id))} size="small">
-                            <CancelIcon sx={{ color: theme.palette.text.secondary, fontSize: '1.2rem' }} />
+                        <IconButton onClick={() => dispatch(removeStaff(s.id))} size="small" sx={{ '&:hover': { bgcolor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)' } }}>
+                            <CancelIcon sx={{ color: isDark ? 'rgba(255,255,255,0.6)' : MUTED_TEXT, fontSize: '1.2rem' }} />
                         </IconButton>
                     </Box>
                 ))}
 
                 {selected.length < 3 && (
                     <Box sx={{
-                        border: `1px dashed ${theme.palette.divider}`,
+                        border: `1px dashed ${isDark ? 'rgba(255,255,255,0.12)' : LIGHT_BORDER}`,
                         borderRadius: 2,
                         p: 2,
                         display: 'flex',
@@ -69,7 +75,7 @@ const StaffSummary = () => {
                         justifyContent: 'center',
                         minWidth: 180
                     }}>
-                        <Typography variant="body2" sx={{ color: theme.palette.text.disabled, fontStyle: 'italic' }}>
+                        <Typography variant="body2" sx={{ color: isDark ? 'rgba(255,255,255,0.4)' : MUTED_TEXT, fontStyle: 'italic' }}>
                             No other staff selected
                         </Typography>
                     </Box>

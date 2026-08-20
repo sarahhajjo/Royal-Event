@@ -1,81 +1,65 @@
-import axios from 'axios';
-
-const API_URL = 'http://127.0.0.1:8000/api';
+import api from '../api'; // 💡 الاعتماد على api المركزي بدلاً من axios الخام
 
 const getProviderProfile = async () => {
-    const token = localStorage.getItem('token');
-    const response = await axios.get(`${API_URL}/provider/profile`, {
-        headers: { Authorization: `Bearer ${token}` },
-    });
+    const response = await api.get(`/provider/profile`);
+    return response.data;
+};
+
+const updateProviderProfile = async (data) => {
+    const response = await api.put(`/provider/profile`, data);
     return response.data;
 };
 
 const getNotifications = async () => {
-    const token = localStorage.getItem('token');
-    const response = await axios.get(`${API_URL}/notifications`, {
-        headers: { Authorization: `Bearer ${token}` },
-    });
+    const response = await api.get(`/notifications`);
     return response.data;
 };
 
-// 💡 1. جلب خدمات الشركة
 const getCompanyServicesData = async () => {
-    const token = localStorage.getItem('token');
-    const response = await axios.get(`${API_URL}/services`, {
-        headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' }
-    });
-    return response.data; // بناءً على البوستمان، يرجع مصفوفة مباشرة
+    const response = await api.get(`/services`);
+    return response.data;
 };
 
-// 💡 2. إضافة خدمة جديدة
 const addCompanyService = async (data) => {
-    const token = localStorage.getItem('token');
-    const response = await axios.post(`${API_URL}/services`, data, {
-        headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' }
-    });
+    const response = await api.post(`/services`, data);
     return response.data;
 };
 
-// 💡 3. تعديل خدمة
 const updateCompanyService = async (id, data) => {
-    const token = localStorage.getItem('token');
-    const response = await axios.put(`${API_URL}/services/${id}`, data, {
-        headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' }
-    });
+    const response = await api.put(`/services/${id}`, data);
     return response.data;
 };
 
-// 💡 4. حذف خدمة
 const deleteCompanyService = async (id) => {
-    const token = localStorage.getItem('token');
-    const response = await axios.delete(`${API_URL}/services/${id}`, {
-        headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' }
-    });
+    const response = await api.delete(`/services/${id}`);
     return response.data;
 };
+
 const uploadCompanyQrCode = async (file) => {
-    const token = localStorage.getItem('token');
-
-    // يجب استخدام FormData لأننا نرسل ملف (صورة)
     const formData = new FormData();
-    formData.append('qr_image', file); // نفس الاسم الموجود في Postman
+    formData.append('qr_image', file);
 
-    const response = await axios.post(`${API_URL}/provider/upload-qr`, formData, {
-        headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'multipart/form-data' // ضروري جداً للملفات
-        }
+    const response = await api.post(`/provider/upload-qr`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
     });
     return response.data;
 };
+
+const getCompanyQrCode = async () => {
+    const response = await api.get(`/provider/qr`);
+    return response.data;
+};
+
 const providerService = {
     getProviderProfile,
+    updateProviderProfile,
     getNotifications,
     getCompanyServicesData,
     addCompanyService,
     updateCompanyService,
     deleteCompanyService,
-    uploadCompanyQrCode // 💡 لا تنسي تصديرها هنا
+    uploadCompanyQrCode,
+    getCompanyQrCode
 };
 
 export default providerService;
