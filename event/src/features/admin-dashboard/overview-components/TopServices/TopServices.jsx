@@ -1,27 +1,14 @@
 import React from "react";
-import { Box, Grid, Stack, Typography, Paper, Button } from "@mui/material";
-import CampaignIcon from "@mui/icons-material/Campaign";
-import TrendingUpIcon from "@mui/icons-material/TrendingUp";
-import ServiceCard from "./ServiceCard"; // تأكد من المسار
+import { Box, Grid, Stack, Typography, Button, CircularProgress } from "@mui/material";
+import ServiceCard from "./ServiceCard";
 
-const ActionCard = ({ icon, label, onClick }) => (
-    <Paper
-        elevation={0} onClick={onClick}
-        sx={{
-            border: "1px dashed #C8BA90", borderRadius: 2, height: "100%", minHeight: 230,
-            display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-            cursor: "pointer", bgcolor: "#FFFFFF", transition: "all 0.2s",
-            "&:hover": { borderColor: "#8a6f28", bgcolor: "#F3EDE0" },
-        }}
-    >
-        <Box mb={1} sx={{ color: "#8a6f28" }}>{icon}</Box>
-        <Typography variant="subtitle2" fontWeight={700} textAlign="center" color="#1C1712">
-            {label}
-        </Typography>
-    </Paper>
-);
+const TopServices = ({ listings = [], isLoading }) => {
+    // مصفوفة صور افتراضية للجمالية بما أن الـ API لا يعيد صوراً حالياً
+    const defaultImages = [
+        "https://images.unsplash.com/photo-1519167758481-83f550bb49b3?w=600&q=80",
+        "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=600&q=80"
+    ];
 
-const TopServices = () => {
     return (
         <Box>
             <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
@@ -31,21 +18,36 @@ const TopServices = () => {
                 <Button sx={{ color: "#8a6f28", fontWeight: 700 }} endIcon={<span>→</span>}>VIEW ALL</Button>
             </Stack>
 
-            <Grid container spacing={3} alignItems="stretch">
-                <Grid item xs={12} sm={6} md={3}>
-                    <ServiceCard
-                        image="https://images.unsplash.com/photo-1519167758481-83f550bb49b3?w=600&q=80"
-                        badge="PREMIUM" title="The Grand Reserve" subtitle="Signature Ballroom" rating={4.9}
-                    />
-                </Grid>
-                <Grid item xs={12} sm={6} md={3}>
-                    <ServiceCard
-                        image="https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=600&q=80"
-                        badge={null} title="Sky Terrace Lounge" subtitle="Rooftop Experience" rating={4.7}
-                    />
-                </Grid>
+            {isLoading ? (
+                <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+                    <CircularProgress sx={{ color: '#8a6f28' }} />
+                </Box>
+            ) : listings.length === 0 ? (
+                <Typography variant="body1" sx={{ color: "#7A6F5E", py: 2 }}>
+                    No top services available at the moment.
+                </Typography>
+            ) : (
+                <Grid container spacing={3} alignItems="stretch">
+                    {listings.slice(0, 4).map((listing, index) => {
+                        // 💡 فصل العنوان الرئيسي عن اسم الشركة بذكاء
+                        const titleParts = listing.title ? listing.title.split(' - ') : ["Service", "Details"];
+                        const mainTitle = titleParts[0];
+                        const subTitle = titleParts[1] || "Service Provider";
 
-            </Grid>
+                        return (
+                            <Grid item xs={12} sm={6} md={6} key={listing.listing_id || index}>
+                                <ServiceCard
+                                    image={defaultImages[index % defaultImages.length]}
+                                    badge={index === 0 ? "PREMIUM" : null}
+                                    title={mainTitle}
+                                    subtitle={subTitle}
+                                    rating={listing.average_rating}
+                                />
+                            </Grid>
+                        );
+                    })}
+                </Grid>
+            )}
         </Box>
     );
 };

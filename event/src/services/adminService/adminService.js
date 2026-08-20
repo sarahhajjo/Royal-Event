@@ -100,10 +100,18 @@ export const adminService = {
         const response = await adminApi.get(`/payments/${paymentId}/view`);
         return response.data.data || response.data;
     },
+
+    // ─── Dashboard Stats ───────────────────────────────────────────────
     getDashboardStats: async () => {
         const response = await adminApi.get('/dashboard-stats');
         // نرجع الـ data الداخلية مباشرة
         return response.data.data;
+    },
+
+    // 👑 التابع الجديد الذي كان مفقوداً وسبب الخطأ
+    getTopListings: async () => {
+        const response = await adminApi.get('/topListings');
+        return response.data.data || [];
     },
 
     confirmPayment: (paymentId) =>
@@ -113,6 +121,5 @@ export const adminService = {
         adminApi.put(`/${paymentId}/reject`, null, { params: { note } }),
 
 };
-
 
 export default adminService;
