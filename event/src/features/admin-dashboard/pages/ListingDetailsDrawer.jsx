@@ -34,6 +34,28 @@ const paperSx = {
     '&::-webkit-scrollbar-thumb': { bgcolor: L.border, borderRadius: 3 }
 };
 
+// 👑 الدالة السحرية لتصحيح مسار الصور ديناميكياً
+const getImageUrl = (path) => {
+    if (!path) return "https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&q=80&w=400";
+
+    // إذا كان الرابط كامل أصلاً، نرجعه كما هو
+    if (path.startsWith('http') || path.startsWith('data:')) return path;
+
+    // جلب الرابط الأساسي من البيئة
+    const mode = import.meta.env.VITE_ENV_MODE || 'ngrok';
+    const apiUrl = mode === 'ngrok'
+        ? (import.meta.env.VITE_API_NGROK || 'https://preflight-refusal-luminous.ngrok-free.dev/api')
+        : (import.meta.env.VITE_API_LOCAL || 'http://127.0.0.1:8000/api');
+
+    // إزالة كلمة /api من النهاية لكي نحصل على رابط السيرفر الأساسي فقط
+    const baseUrl = apiUrl.replace(/\/api\/?$/, '');
+
+    // إضافة / قبل مسار الصورة في حال لم يكن موجوداً
+    const cleanPath = path.startsWith('/') ? path : `/${path}`;
+
+    return `${baseUrl}${cleanPath}`;
+};
+
 export default function ListingDetailsDrawer({ open, onClose, item }) {
     if (!item) return null;
 
@@ -49,10 +71,10 @@ export default function ListingDetailsDrawer({ open, onClose, item }) {
         ? item.job_requirements_and_scope
         : (typeof item.description === 'object' ? (item.description?.en || item.description?.ar || '') : (item.description || 'No description provided.'));
 
-    // صور الخدمة أو شعار/صور الوظيفة إن وجدت
+    // 👑 تطبيق دالة تصحيح الصور هنا
     const images = !isJob && item.images && item.images.length > 0
-        ? item.images.map(img => img.url || img)
-        : [item.imageUrl || "https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&q=80&w=400"];
+        ? item.images.map(img => getImageUrl(img.url || img))
+        : [getImageUrl(item.imageUrl)];
 
     // معلومات المزود / الشركة
     const providerName = item.provider?.brand_name || item.provider?.name || item.company?.name || 'Unknown Provider';
@@ -138,7 +160,7 @@ export default function ListingDetailsDrawer({ open, onClose, item }) {
                 </Box>
             </Box>
 
-            {/* صور الخدمة (تظهر فقط لو لم تكن وظيفة أو لو أردت إخفاءها للوظائف) */}
+            {/* صور الخدمة */}
             {!isJob && (
                 <Box>
                     <Typography sx={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase', color: L.primary, mb: 1.2 }}>
@@ -197,11 +219,11 @@ export default function ListingDetailsDrawer({ open, onClose, item }) {
                 </Box>
             </Paper>
 
-            {/* شبكة المعلومات (تتغير تفاصيلها حسب نوع العنصر) */}
+            {/* شبكة المعلومات */}
             <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', rowGap: 3, columnGap: 4, pb: 3, borderBottom: `1px solid ${L.border}` }}>
                 <Box>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.6, mb: 0.5 }}>
-                        {isJob ? 'Event Type' : 'Category'}
+                        <CategoryOutlinedIcon sx={{ fontSize: '16px', color: L.primary }} />
                         <Typography sx={{ fontSize: '0.65rem', fontWeight: 600, letterSpacing: 1.8, textTransform: 'uppercase', color: L.primary }}>
                             {isJob ? 'Event Type' : 'Category'}
                         </Typography>

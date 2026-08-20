@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { Box, Typography, Button, CircularProgress } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 
-// استيراد الأيقونات (يمكنك تعديلها حسب ما تستخدمين في مشروعك)
+// 👑 1. استيراد adminService بدلاً من axios العادي
+// ⚠️ ملاحظة: تأكدي من مسار الاستيراد حسب مكان الملف عندك في المشروع
+import adminService from "../../../../services/adminService/adminService.js";
 import BusinessIcon from "@mui/icons-material/Business";
 import EmojiObjectsIcon from "@mui/icons-material/EmojiObjects";
 import CelebrationIcon from "@mui/icons-material/Celebration";
@@ -16,13 +17,11 @@ const PendingApproval = () => {
     useEffect(() => {
         const fetchPendingListings = async () => {
             try {
-                const token = localStorage.getItem("token");
-                const response = await axios.get("http://127.0.0.1:8000/api/admin/pending-listings", {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
+                // 👑 2. استخدام التابع الجاهز اللي بيجيب البيانات من النيغروك وبضيف التوكن لحالو!
+                const data = await adminService.getListings();
 
-                // استخراج البيانات والتأكد من أنها مصفوفة
-                let items = response.data.data || response.data || [];
+                // استخراج البيانات والتأكد من أنها مصفوفة (حسب طبيعة الاستجابة من لارافيل)
+                let items = data.data || data || [];
 
                 // أخذ أول 3 طلبات فقط وتنسيقها لتناسب الواجهة
                 const formattedItems = items.slice(0, 3).map(item => {
@@ -54,7 +53,7 @@ const PendingApproval = () => {
 
     // دالة الانتقال لصفحة الموافقات الكاملة
     const handleViewAll = () => {
-        navigate("/admin-dashboard/approvals"); // تأكدي أن هذا هو الرابط الصحيح لصفحة الموافقات في الـ Router لديك
+        navigate("/admin-dashboard/approvals");
     };
 
     return (
@@ -86,7 +85,6 @@ const PendingApproval = () => {
                     </Box>
                 </Box>
 
-                {/* 👈 زر الانتقال لصفحة الموافقات */}
                 <Button
                     onClick={handleViewAll}
                     sx={{
@@ -118,13 +116,13 @@ const PendingApproval = () => {
                                 justifyContent: "space-between",
                                 alignItems: "center",
                                 p: 2,
-                                bgcolor: "#FFFFFF", // 👈 التعديل الأساسي هنا: خلفية بيضاء لبطاقة الطلب
+                                bgcolor: "#FFFFFF",
                                 borderRadius: 2,
                                 border: "1px solid rgba(140, 106, 31, 0.15)",
-                                boxShadow: "0 2px 8px rgba(0,0,0,0.02)", // 👈 إضافة ظل خفيف جداً لتبدو كبطاقة
+                                boxShadow: "0 2px 8px rgba(0,0,0,0.02)",
                                 "&:hover": {
                                     borderColor: "#8C6A1F",
-                                    bgcolor: "#FFFCF7" // 👈 لون أبيض مائل للذهبي الفاتح عند التمرير
+                                    bgcolor: "#FFFCF7"
                                 }
                             }}
                         >
@@ -134,7 +132,7 @@ const PendingApproval = () => {
                                         width: 40,
                                         height: 40,
                                         borderRadius: 2,
-                                        bgcolor: "#FAF3E8", // لون مربع الأيقونة ليتناسق مع الثيم
+                                        bgcolor: "#FAF3E8",
                                         display: "flex",
                                         justifyContent: "center",
                                         alignItems: "center",
@@ -158,7 +156,7 @@ const PendingApproval = () => {
 
                             <Box
                                 sx={{
-                                    border: "1px solid rgba(140, 106, 31, 0.4)", // تخفيف حدة إطار حالة الطلب
+                                    border: "1px solid rgba(140, 106, 31, 0.4)",
                                     color: "#8C6A1F",
                                     px: 2,
                                     py: 0.5,
@@ -166,7 +164,7 @@ const PendingApproval = () => {
                                     fontSize: "0.7rem",
                                     fontWeight: 700,
                                     letterSpacing: "0.5px",
-                                    bgcolor: "rgba(140, 106, 31, 0.04)" // خلفية خفيفة جداً لحالة الطلب
+                                    bgcolor: "rgba(140, 106, 31, 0.04)"
                                 }}
                             >
                                 {item.status}

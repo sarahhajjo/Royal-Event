@@ -1,8 +1,11 @@
-// استيراد الـ adminApi الذي قمنا بإنشائه في الملف الثالث
 import adminApi from './AdminApi';
 
-// 👑 نجهز الرابط الأساسي بدون /admin لاستخدامه في الحالات الاستثنائية
-const base = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+// 👑 قراءة الرابط الصحيح (النيغروك أو المحلي) للطلبات الاستثنائية
+const mode = import.meta.env.VITE_ENV_MODE || 'ngrok';
+const base = mode === 'ngrok'
+    ? (import.meta.env.VITE_API_NGROK || 'https://preflight-refusal-luminous.ngrok-free.dev/api')
+    : (import.meta.env.VITE_API_LOCAL || 'http://127.0.0.1:8000/api');
+
 const cleanApiBase = `${base.replace(/\/api\/?$/, '')}/api`;
 
 export const adminService = {
@@ -17,7 +20,7 @@ export const adminService = {
     },
 
     getOrganizerById: async (id) => {
-        const response = await adminApi.get(`/Organzier/${id}`); // تأكدي من الإملاء إذا كان Organizer
+        const response = await adminApi.get(`/Organzier/${id}`);
         return response.data.data || response.data;
     },
 
@@ -78,7 +81,6 @@ export const adminService = {
         return response.data;
     },
 
-    // ⚠️ مسار عام لا يتبع للإدمن مباشرة (نستخدم baseURL: cleanApiBase)
     getJobOfferById: async (id) => {
         const response = await adminApi.get(`/job-offers/${id}`, { baseURL: cleanApiBase });
         return response.data.data || response.data;
@@ -104,22 +106,19 @@ export const adminService = {
     // ─── Dashboard Stats ───────────────────────────────────────────────
     getDashboardStats: async () => {
         const response = await adminApi.get('/dashboard-stats');
-        // نرجع الـ data الداخلية مباشرة
         return response.data.data;
     },
 
-    // 👑 التابع الجديد الذي كان مفقوداً وسبب الخطأ
     getTopListings: async () => {
         const response = await adminApi.get('/topListings');
         return response.data.data || [];
     },
 
     confirmPayment: (paymentId) =>
-        adminApi.put(`/${paymentId}/confirm`),
+        adminApi.put(`/payments/${paymentId}/confirm`),
 
     rejectPayment: (paymentId, note) =>
-        adminApi.put(`/${paymentId}/reject`, null, { params: { note } }),
-
+        adminApi.put(`/payments/${paymentId}/reject`, null, { params: { note } }),
 };
 
 export default adminService;
