@@ -32,7 +32,6 @@ const NAV_ITEMS = [
     { label: "Freelancers",       path: "/admin-dashboard/freelancers", icon: <WorkOutlineOutlinedIcon fontSize="small" /> },
     { label: "Company Directory", path: "/admin-dashboard/companies",   icon: <BusinessOutlinedIcon fontSize="small" /> },
     { label: "Finances", path: "/admin-dashboard/finances", icon: <AccountBalanceWalletOutlinedIcon fontSize="small" /> },
-    { label: "System Settings",   path: "/admin-dashboard/settings",    icon: <SettingsOutlinedIcon fontSize="small" /> },
 ];
 
 /**

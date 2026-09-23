@@ -4,6 +4,9 @@ import { useTheme, alpha } from '@mui/material/styles';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { useDispatch, useSelector } from 'react-redux';
 
+// 🚀 [1] استيراد التوجيه
+import { useLocation } from 'react-router-dom';
+
 import HeroSection            from './detailshall-components/Herosection';
 import GeneralInfo            from './detailshall-components/Generalinfo';
 import ProductOptionsPricing  from './details-product/ProductOptionsPricing';
@@ -46,6 +49,10 @@ export default function Productdetailpage({ productId, onBack, onEdit, highlight
     const dispatch = useDispatch();
     const [selectedVariantIndex, setSelectedVariantIndex] = useState(0);
 
+    // 🚀 [2] التقاط التوجيه
+    const location = useLocation();
+    const activeHighlightedBookingId = location.state?.highlightedBookingId || highlightedBookingId;
+
     const { products = [], bookings = [] } = useSelector((state) => state.myCatalog || {});
     const { profile } = useSelector((state) => state.providerProfile || {});
     const providerData = profile?.data || {};
@@ -54,8 +61,9 @@ export default function Productdetailpage({ productId, onBack, onEdit, highlight
         dispatch(fetchProviderBookings());
     }, [dispatch]);
 
+    // 🚀 [3] تحديث التمرير
     useEffect(() => {
-        if (highlightedBookingId) {
+        if (activeHighlightedBookingId) {
             const timer = setTimeout(() => {
                 const section = document.getElementById('booking-pipeline-section');
                 if (section) {
@@ -64,7 +72,7 @@ export default function Productdetailpage({ productId, onBack, onEdit, highlight
             }, 500);
             return () => clearTimeout(timer);
         }
-    }, [highlightedBookingId]);
+    }, [activeHighlightedBookingId]);
 
     const rawProduct = products.find(p => p.id === productId);
 
@@ -195,19 +203,7 @@ export default function Productdetailpage({ productId, onBack, onEdit, highlight
 
                 <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 3, mb: 3, alignItems: 'stretch' }}>
 
-                    {/* 💡 5. الكود السحري لفرض التصميم الزجاجي على GeneralInfo وإلغاء لونه البني القديم */}
-                    <Box sx={{
-                        flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column',
-                        '& > div, & > section, & > article': {
-                            backgroundColor: 'transparent !important',
-                            background: isDark ? `${DARK_CARD_BACKGROUND} !important` : `${LIGHT_CARD} !important`,
-                            backdropFilter: 'blur(16px) !important',
-                            WebkitBackdropFilter: 'blur(16px) !important',
-                            border: isDark ? `${DARK_CARD_BORDER} !important` : `1px solid ${LIGHT_BORDER} !important`,
-                            boxShadow: 'none !important',
-                            borderRadius: '24px !important',
-                        }
-                    }}>
+                    <Box sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
                         <GeneralInfo data={mappedProduct} />
                     </Box>
 
@@ -225,10 +221,11 @@ export default function Productdetailpage({ productId, onBack, onEdit, highlight
                 <AvailabilityCalendar availabilities={activeVariant.availabilities} onBookSlot={handleBookSlot} />
 
                 <Box id="booking-pipeline-section" sx={{ mt: 4 }}>
+                    {/* 🚀 [4] إرسال الرقم للبايبلاين */}
                     <BookingPipeline
                         entityId={productId}
                         bookingsData={bookings}
-                        highlightedBookingId={highlightedBookingId}
+                        highlightedBookingId={activeHighlightedBookingId}
                     />
                 </Box>
             </Box>

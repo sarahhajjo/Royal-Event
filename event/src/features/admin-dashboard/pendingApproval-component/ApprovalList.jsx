@@ -2,14 +2,13 @@ import React from 'react';
 import { Box, Typography, Button as MuiButton, CircularProgress, Paper } from '@mui/material';
 import HighlightOffIcon from '@mui/icons-material/HighlightOff';
 import VisibilityIcon from '@mui/icons-material/Visibility';
-import { T, typography, avatarBaseSx } from '../Theme.jsx';
+import { T, typography } from '../Theme.jsx';
 
-// 👑 الدالة السحرية لتصحيح مسار الصور
 const getImageUrl = (path) => {
-    // صورة افتراضية فخمة في حال عدم وجود صورة للخدمة
     const defaultImage = "https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&q=80&w=200";
 
     if (!path) return defaultImage;
+    if (typeof path !== 'string') return defaultImage;
     if (path.startsWith('http') || path.startsWith('data:')) return path;
 
     const mode = import.meta.env.VITE_ENV_MODE || 'ngrok';
@@ -19,11 +18,10 @@ const getImageUrl = (path) => {
 
     const baseUrl = apiUrl.replace(/\/api\/?$/, '');
     const cleanPath = path.startsWith('/') ? path : `/${path}`;
-
     return `${baseUrl}${cleanPath}`;
 };
 
-export default function ApprovalList({ items, status, actionStatusMap, onViewDetails, onApprove, onReject }) {
+export default function ApprovalList({ items = [], status, actionStatusMap = {}, onViewDetails, onApprove, onReject }) {
 
     if (status === "loading") {
         return (
@@ -33,7 +31,7 @@ export default function ApprovalList({ items, status, actionStatusMap, onViewDet
         );
     }
 
-    if (!items || items.length === 0) {
+    if (!items || !Array.isArray(items) || items.length === 0) {
         return (
             <Paper
                 elevation={0}
@@ -45,7 +43,7 @@ export default function ApprovalList({ items, status, actionStatusMap, onViewDet
                     borderRadius: '8px'
                 }}
             >
-                <Typography sx={{ color: T.textMuted, fontSize: '0.85rem', fontFamily: typography.fontFamily }}>
+                <Typography sx={{ color: T.textMuted, fontSize: '0.85rem', fontFamily: typography?.fontFamily || 'inherit' }}>
                     No pending approval requests found at the moment.
                 </Typography>
             </Paper>
@@ -55,16 +53,35 @@ export default function ApprovalList({ items, status, actionStatusMap, onViewDet
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, width: '100%' }}>
             {items.map((item) => {
+                if (!item) return null;
+
                 const actionState = actionStatusMap[item.id];
                 const isApproving = actionState === "approving";
                 const isRejecting = actionState === "rejecting";
 
-                const titleText = typeof item.title === 'object' ? (item.title?.en || item.title?.ar || 'Untitled') : item.title;
-                const descText = typeof item.description === 'object' ? (item.description?.en || item.description?.ar || '') : item.description;
+                const titleText = typeof item.title === 'object' ? (item.title?.en || item.title?.ar || 'Untitled') : (item.title || 'Untitled');
+                const descText = typeof item.description === 'object' ? (item.description?.en || item.description?.ar || '') : (item.description || '');
 
-                // 👑 استخراج المسار وتمريره للدالة السحرية
-                const rawImagePath = item.imageUrl || (item.images && item.images.length > 0 ? (item.images[0].url || item.images[0]) : null);
-                const imageSrc = getImageUrl(rawImagePath);
+                // 👑 الحل النهائي الآمن (بحماية ? لمنع الانهيار)
+                let rawPath = null;
+                const originalData = item.raw || item || {};
+
+                if (originalData.images && Array.isArray(originalData.images) && originalData.images.length > 0) {
+                    const img = originalData.images[0];
+                    rawPath = img?.url || img?.original_url || img?.image_url || img?.file_url || img?.image_path || img?.path;
+                }
+                else if (originalData.variants && Array.isArray(originalData.variants) && originalData.variants.length > 0 && originalData.variants[0].images && originalData.variants[0].images.length > 0) {
+                    const vImg = originalData.variants[0].images[0];
+                    rawPath = vImg?.url || vImg?.original_url || vImg?.image_url || vImg?.file_url || vImg?.image_path || vImg?.path;
+                }
+                else if (originalData.imageUrl) {
+                    rawPath = originalData.imageUrl;
+                }
+                else if (item.image) {
+                    rawPath = item.image;
+                }
+
+                const imageSrc = getImageUrl(rawPath);
 
                 return (
                     <Paper
@@ -92,6 +109,10 @@ export default function ApprovalList({ items, status, actionStatusMap, onViewDet
                                 component="img"
                                 src={imageSrc}
                                 alt={titleText}
+                                onError={(e) => {
+                                    e.target.onerror = null;
+                                    e.target.src = "https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&q=80&w=200";
+                                }}
                                 sx={{
                                     width: 72,
                                     height: 72,
@@ -106,9 +127,9 @@ export default function ApprovalList({ items, status, actionStatusMap, onViewDet
                                 <Typography
                                     sx={{
                                         color: T.textPrimary,
-                                        fontWeight: typography.rowName.fontWeight,
-                                        fontSize: typography.rowName.fontSize,
-                                        fontFamily: typography.fontFamily,
+                                        fontWeight: typography?.rowName?.fontWeight || 600,
+                                        fontSize: typography?.rowName?.fontSize || '1rem',
+                                        fontFamily: typography?.fontFamily || 'inherit',
                                         whiteSpace: 'nowrap',
                                         overflow: 'hidden',
                                         textOverflow: 'ellipsis'
@@ -119,8 +140,8 @@ export default function ApprovalList({ items, status, actionStatusMap, onViewDet
                                 <Typography
                                     sx={{
                                         color: T.textMuted,
-                                        fontSize: typography.rowContact.fontSize,
-                                        fontFamily: typography.fontFamily,
+                                        fontSize: typography?.rowContact?.fontSize || '0.85rem',
+                                        fontFamily: typography?.fontFamily || 'inherit',
                                         display: '-webkit-box',
                                         WebkitLineClamp: 2,
                                         WebkitBoxOrient: 'vertical',
@@ -132,10 +153,10 @@ export default function ApprovalList({ items, status, actionStatusMap, onViewDet
                                 </Typography>
                                 <Box sx={{ display: 'flex', gap: 2, mt: 0.5 }}>
                                     <Typography sx={{ color: T.goldLabel, fontSize: '0.65rem', fontWeight: 600, letterSpacing: 1.2, textTransform: 'uppercase' }}>
-                                        Category: {item.category?.name || 'General'}
+                                        Category: {item.category?.name || item.raw?.category?.name || 'General'}
                                     </Typography>
                                     <Typography sx={{ color: T.textMuted, fontSize: '0.65rem', fontWeight: 600, letterSpacing: 1.2, textTransform: 'uppercase' }}>
-                                        Company: {item.company?.name || item.submittedBy || 'Partner'}
+                                        Company: {item.provider?.name || item.raw?.provider?.name || item.submittedBy || 'Partner'}
                                     </Typography>
                                 </Box>
                             </Box>
@@ -144,7 +165,7 @@ export default function ApprovalList({ items, status, actionStatusMap, onViewDet
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, width: { xs: '100%', md: 'auto' }, justifyContent: { xs: 'flex-end', md: 'flex-start' } }}>
 
                             <MuiButton
-                                onClick={() => onViewDetails(item)}
+                                onClick={() => onViewDetails && onViewDetails(item)}
                                 sx={{
                                     color: T.textMuted,
                                     borderColor: T.infoBorder,
@@ -164,7 +185,7 @@ export default function ApprovalList({ items, status, actionStatusMap, onViewDet
                             {item.status === 'pending_approval' ? (
                                 <>
                                     <MuiButton
-                                        onClick={() => onReject(item.id)}
+                                        onClick={() => onReject && onReject(item.id)}
                                         disabled={isRejecting || isApproving}
                                         sx={{
                                             color: '#b33939',
@@ -183,7 +204,7 @@ export default function ApprovalList({ items, status, actionStatusMap, onViewDet
                                     </MuiButton>
 
                                     <MuiButton
-                                        onClick={() => onApprove(item.id)}
+                                        onClick={() => onApprove && onApprove(item.id)}
                                         disabled={isRejecting || isApproving}
                                         sx={{
                                             backgroundColor: T.gold,

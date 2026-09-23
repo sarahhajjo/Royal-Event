@@ -115,14 +115,14 @@ const PublishHallPage = ({ editData = null, onBack }) => {
                 slot_name: { en: "All Day", ar: "طوال اليوم" },
                 start_time: "00:00",
                 end_time: "23:59",
-                remaining_capacity: parsedCapacity
+                remaining_capacity:1
             });
         } else {
             formattedSlots = hallData.shiftRanges.map((range, index) => ({
                 slot_name: { en: `Shift ${index + 1}`, ar: `الفترة ${index + 1}` },
                 start_time: range.start.substring(0, 5),
                 end_time: range.end.substring(0, 5),
-                remaining_capacity: parsedCapacity
+                remaining_capacity: 1
             }));
         }
 

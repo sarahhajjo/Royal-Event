@@ -8,8 +8,7 @@ import DashboardIcon from "@mui/icons-material/GridView";
 import AddBoxIcon    from "@mui/icons-material/AddBoxOutlined";
 import OrdersIcon    from "@mui/icons-material/ShoppingCart";
 import CatalogIcon   from "@mui/icons-material/TableChart";
-import SettingsIcon  from "@mui/icons-material/Settings";
-import InfoIcon      from "@mui/icons-material/InfoOutlined";
+
 import AssignmentOutlinedIcon from "@mui/icons-material/AssignmentOutlined";
 import BusinessCenterOutlinedIcon from "@mui/icons-material/BusinessCenterOutlined";
 
@@ -25,10 +24,7 @@ const topNavItems = [
     { label: "My Calendar", icon: <AssignmentOutlinedIcon />, key: "calendar", path: "/freelancer-calendar" },
 ];
 
-const bottomNavItems = [
-    { label: "Settings", icon: <SettingsIcon />, key: "settings", path: "/settings" },
-    { label: "Help",     icon: <InfoIcon />,     key: "help",     path: "/help" },
-];
+
 
 const NavList = ({ items }) => {
     const navigate = useNavigate();
@@ -129,7 +125,6 @@ const Sidebar = () => {
             <Divider sx={{ borderColor: theme.palette.mode === 'dark' ? "rgba(255, 255, 255, 0.08)" : "rgba(0, 0, 0, 0.04)", mx: 3, my: 1 }} />
 
             <Box sx={{ my: 1 }}>
-                <NavList items={bottomNavItems} />
             </Box>
         </Drawer>
     );

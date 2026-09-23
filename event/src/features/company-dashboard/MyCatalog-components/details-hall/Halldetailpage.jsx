@@ -4,6 +4,9 @@ import { useTheme, alpha } from '@mui/material/styles';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { useDispatch, useSelector } from 'react-redux';
 
+// 🚀 [1] استيراد التوجيه
+import { useLocation } from 'react-router-dom';
+
 import HeroSection          from './detailshall-components/Herosection';
 import GeneralInfo          from './detailshall-components/Generalinfo';
 import PoliciesPricing      from './detailshall-components/Policiespricing';
@@ -13,7 +16,6 @@ import BookingPipeline      from './detailshall-components/Bookingpipeline';
 import { fetchProviderBookings } from '../myCatalogSlice';
 import { fixImageUrl } from "../../../../utils/imageUrlHelper";
 
-// استيراد صورة الخلفية المطلوبة والألوان الفاخرة
 import dashboardBg from '../../../../assets/sidebar-bg.jpg';
 import { GOLD, BROWN_TEXT } from '../../../../utils/colorConstants';
 
@@ -21,6 +23,10 @@ export default function Halldetailpage({ hallId, onBack, onEdit, highlightedBook
     const theme = useTheme();
     const isDark = theme.palette.mode === 'dark';
     const dispatch = useDispatch();
+
+    // 🚀 [2] التقاط التوجيه
+    const location = useLocation();
+    const activeHighlightedBookingId = location.state?.highlightedBookingId || highlightedBookingId;
 
     const { services: halls, bookings = [] } = useSelector((state) => state.myCatalog || {});
     const { profile } = useSelector((state) => state.providerProfile || {});
@@ -30,9 +36,9 @@ export default function Halldetailpage({ hallId, onBack, onEdit, highlightedBook
         dispatch(fetchProviderBookings());
     }, [dispatch]);
 
-    // التمرير التلقائي لقسم الحجوزات
+    // 🚀 [3] تحديث التمرير
     useEffect(() => {
-        if (highlightedBookingId) {
+        if (activeHighlightedBookingId) {
             const timer = setTimeout(() => {
                 const section = document.getElementById('booking-pipeline-section');
                 if (section) {
@@ -41,7 +47,7 @@ export default function Halldetailpage({ hallId, onBack, onEdit, highlightedBook
             }, 500);
             return () => clearTimeout(timer);
         }
-    }, [highlightedBookingId]);
+    }, [activeHighlightedBookingId]);
 
     const rawData = halls?.find(h => h.id === hallId);
 
@@ -174,10 +180,11 @@ export default function Halldetailpage({ hallId, onBack, onEdit, highlightedBook
 
                 {/* 💡 غلاف مع ID لتوجيه السكرول بدقة */}
                 <Box id="booking-pipeline-section" sx={{ mt: 4 }}>
+                    {/* 🚀 [4] إرسال الرقم للبايبلاين */}
                     <BookingPipeline
                         entityId={hallId}
                         bookingsData={bookings}
-                        highlightedBookingId={highlightedBookingId}
+                        highlightedBookingId={activeHighlightedBookingId}
                     />
                 </Box>
             </Box>

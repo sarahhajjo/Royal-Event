@@ -4,12 +4,6 @@ import ScheduleOutlinedIcon from "@mui/icons-material/ScheduleOutlined";
 import BlockOutlinedIcon    from "@mui/icons-material/BlockOutlined";
 import { T } from "../Theme";
 
-/**
- * ApprovalCard — a single pending-approval row
- *
- * item shape: { id, title, badge, image, submittedBy, timeLabel }
- * actionStatus: undefined | "approving" | "rejecting"
- */
 export default function ApprovalCard({ item, actionStatus, onViewDetails, onApprove, onReject }) {
     const isApproving = actionStatus === "approving";
     const isRejecting = actionStatus === "rejecting";

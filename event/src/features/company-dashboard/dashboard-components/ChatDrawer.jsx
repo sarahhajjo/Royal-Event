@@ -25,12 +25,12 @@ const formatRelativeTime = (dateString) => {
     const diffHr = Math.floor(diffMin / 60);
     const diffDay = Math.floor(diffHr / 24);
 
-    if (diffMin < 1) return 'الآن';
-    if (diffMin < 60) return `منذ ${diffMin} د`;
-    if (diffHr < 24) return `منذ ${diffHr} س`;
-    if (diffDay === 1) return 'أمس';
-    if (diffDay < 30) return `منذ ${diffDay} ي`;
-    return date.toLocaleDateString('ar-EG', { month: 'short', day: 'numeric' });
+    if (diffMin < 1) return 'Just now';
+    if (diffMin < 60) return `${diffMin}m ago`;
+    if (diffHr < 24) return `${diffHr}h ago`;
+    if (diffDay === 1) return 'Yesterday';
+    if (diffDay < 30) return `${diffDay}d ago`;
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 };
 
 export default function ChatDrawer({ open, onClose, isDark, goldColor, currentUserId }) {
@@ -38,17 +38,16 @@ export default function ChatDrawer({ open, onClose, isDark, goldColor, currentUs
     const [conversations, setConversations] = useState([]);
     const [conversationsLoading, setConversationsLoading] = useState(false);
 
-    const [clientNames, setClientNames] = useState({}); // تخزين الأسماء { id: name }
+    const [clientNames, setClientNames] = useState({});
     const [selectedChat, setSelectedChat] = useState(null);
     const [messages, setMessages] = useState([]);
     const [messagesLoading, setMessagesLoading] = useState(false);
 
     const [draft, setDraft] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
-    const [newReceiverId, setNewReceiverId] = useState(''); // لبدء محادثة جديدة
+    const [newReceiverId, setNewReceiverId] = useState('');
     const [creatingConversation, setCreatingConversation] = useState(false);
 
-    // 1. مراقبة المحادثات لايف
     useEffect(() => {
         let unsubscribe;
         if (open && currentUserId) {
@@ -62,7 +61,6 @@ export default function ChatDrawer({ open, onClose, isDark, goldColor, currentUs
         return () => { if (unsubscribe) unsubscribe(); };
     }, [open, currentUserId]);
 
-    // 2. جلب الأسماء الحقيقية للمستخدمين من لارافيل
     useEffect(() => {
         const fetchNames = async () => {
             if (conversations.length === 0) return;
@@ -91,7 +89,6 @@ export default function ChatDrawer({ open, onClose, isDark, goldColor, currentUs
         fetchNames();
     }, [conversations, currentUserId, clientNames]);
 
-    // 3. مراقبة الرسائل لايف
     useEffect(() => {
         let unsubscribe;
         if (view === 'thread' && selectedChat) {
@@ -110,7 +107,6 @@ export default function ChatDrawer({ open, onClose, isDark, goldColor, currentUs
         setSearchQuery('');
     };
 
-    // 💡 بدء محادثة جديدة كلياً
     const handleStartNew = async () => {
         if (!newReceiverId.trim() || creatingConversation) return;
         setCreatingConversation(true);
@@ -145,7 +141,7 @@ export default function ChatDrawer({ open, onClose, isDark, goldColor, currentUs
     const filteredConversations = useMemo(() => {
         return conversations.filter(conv => {
             const otherId = getOtherUserId(conv);
-            const name = clientNames[otherId] || 'مستخدم...';
+            const name = clientNames[otherId] || 'User...';
             return name.toLowerCase().includes(searchQuery.toLowerCase());
         });
     }, [conversations, searchQuery, clientNames]);
@@ -167,7 +163,6 @@ export default function ChatDrawer({ open, onClose, isDark, goldColor, currentUs
                 }
             }}
         >
-            {/* Header */}
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 3, py: 2.2, borderBottom: isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0,0,0,0.06)', flexShrink: 0, backgroundColor: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(255, 248, 232, 0.45)' }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.2 }}>
                     {view === 'thread' && (
@@ -176,10 +171,10 @@ export default function ChatDrawer({ open, onClose, isDark, goldColor, currentUs
                         </IconButton>
                     )}
                     <Avatar sx={{ width: 32, height: 32, bgcolor: GOLD, fontSize: '13px', fontWeight: 700, color: isDark ? '#0B101C' : '#fff' }}>
-                        {view === 'thread' ? 'ش' : 'EP'}
+                        {view === 'thread' ? 'U' : 'EP'}
                     </Avatar>
                     <Typography sx={{ fontSize: '1.05rem', fontWeight: 700, color: isDark ? '#fff' : BROWN_TEXT }}>
-                        {view === 'thread' ? (clientNames[getOtherUserId(selectedChat)] || 'المحادثة') : 'المحادثات'}
+                        {view === 'thread' ? (clientNames[getOtherUserId(selectedChat)] || 'Chat') : 'Conversations'}
                     </Typography>
                 </Box>
                 <IconButton onClick={onClose} sx={{ color: isDark ? 'rgba(255,255,255,0.65)' : MUTED_TEXT, border: isDark ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(197, 160, 89, 0.18)', '&:hover': { color: GOLD, borderColor: GOLD } }}>
@@ -187,16 +182,14 @@ export default function ChatDrawer({ open, onClose, isDark, goldColor, currentUs
                 </IconButton>
             </Box>
 
-            {/* Body */}
             {view === 'list' ? (
                 <Box sx={{ flex: 1, overflowY: 'auto', py: 1 }}>
 
-                    {/* ✏️ خانة بدء محادثة جديدة */}
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, px: 2.5, pb: 1, pt: 1 }}>
                         <TextField
                             value={newReceiverId} onChange={(e) => setNewReceiverId(e.target.value)}
                             onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleStartNew(); } }}
-                            placeholder="أدخل ID الفريلانسر أو المستخدم لبدء شات..." size="small" fullWidth disabled={creatingConversation}
+                            placeholder="Enter Freelancer or User ID to start chat..." size="small" fullWidth disabled={creatingConversation}
                             sx={{ '& .MuiOutlinedInput-root': { fontSize: '0.85rem', borderRadius: '10px', color: isDark ? '#fff' : BROWN_TEXT, bgcolor: isDark ? SURFACE_DARK : SURFACE_LIGHT, '& fieldset': { borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(197,160,89,0.18)' }, '&:hover fieldset': { borderColor: GOLD }, '&.Mui-focused fieldset': { borderColor: GOLD } } }}
                         />
                         <IconButton onClick={handleStartNew} disabled={!newReceiverId.trim() || creatingConversation} sx={{ width: 38, height: 38, flexShrink: 0, bgcolor: GOLD, color: isDark ? '#0B101C' : '#fff', '&:hover': { bgcolor: GOLD, opacity: 0.9 }, '&.Mui-disabled': { bgcolor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' } }}>
@@ -204,10 +197,9 @@ export default function ChatDrawer({ open, onClose, isDark, goldColor, currentUs
                         </IconButton>
                     </Box>
 
-                    {/* 🔍 شريط البحث */}
                     <Box sx={{ px: 2.5, pb: 2, pt: 0.5 }}>
                         <TextField
-                            placeholder="البحث بالاسم..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} size="small" fullWidth
+                            placeholder="Search by name..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} size="small" fullWidth
                             InputProps={{ startAdornment: (<InputAdornment position="start"><SearchIcon sx={{ color: isDark ? 'rgba(255,255,255,0.4)' : MUTED_TEXT, fontSize: '18px' }} /></InputAdornment>) }}
                             sx={{ '& .MuiOutlinedInput-root': { fontSize: '0.85rem', borderRadius: '10px', color: isDark ? '#fff' : BROWN_TEXT, bgcolor: isDark ? SURFACE_DARK : 'transparent', '& fieldset': { borderColor: 'transparent' }, '&:hover fieldset': { borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(197,160,89,0.18)' }, '&.Mui-focused fieldset': { borderColor: GOLD } } }}
                         />
@@ -227,14 +219,14 @@ export default function ChatDrawer({ open, onClose, isDark, goldColor, currentUs
                         <Box sx={{ p: 5, textAlign: 'center' }}>
                             <ChatBubbleOutlinedIcon sx={{ fontSize: 30, color: isDark ? 'rgba(255,255,255,0.3)' : '#d8cbb0', mb: 1 }} />
                             <Typography sx={{ color: isDark ? 'rgba(255,255,255,0.68)' : BROWN_TEXT, fontSize: '14px' }}>
-                                {searchQuery ? 'لا توجد نتائج بحث' : 'لا توجد محادثات حتى الآن'}
+                                {searchQuery ? 'No search results found' : 'No conversations yet'}
                             </Typography>
                         </Box>
                     ) : (
                         <List sx={{ p: 0 }}>
                             {filteredConversations.map((conv) => {
                                 const otherId = getOtherUserId(conv);
-                                const displayName = clientNames[otherId] || 'مستخدم...';
+                                const displayName = clientNames[otherId] || 'User...';
 
                                 return (
                                     <ListItem
@@ -270,7 +262,6 @@ export default function ChatDrawer({ open, onClose, isDark, goldColor, currentUs
                 </Box>
             ) : (
                 <>
-                    {/* الرسائل المتبادلة */}
                     <Box sx={{ flex: 1, overflowY: 'auto', px: 3, py: 2.5, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
                         {messagesLoading ? (
                             [0, 1].map(i => <Skeleton key={i} variant="rounded" width="50%" height={60} sx={{ alignSelf: i%2===0 ? 'flex-end' : 'flex-start', borderRadius: 3, bgcolor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }} />)
@@ -295,12 +286,11 @@ export default function ChatDrawer({ open, onClose, isDark, goldColor, currentUs
                         )}
                     </Box>
 
-                    {/* إدخال الرسالة */}
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, px: 2.5, py: 1.6, borderTop: isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0,0,0,0.06)', flexShrink: 0 }}>
                         <TextField
                             value={draft} onChange={(e) => setDraft(e.target.value)}
                             onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
-                            placeholder="اكتب رسالتك..." size="small" fullWidth multiline maxRows={4}
+                            placeholder="Type your message..." size="small" fullWidth multiline maxRows={4}
                             sx={{ '& .MuiOutlinedInput-root': { fontSize: '0.85rem', borderRadius: '10px', color: isDark ? '#fff' : BROWN_TEXT, bgcolor: isDark ? SURFACE_DARK : SURFACE_LIGHT, '& fieldset': { borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(197,160,89,0.18)' }, '&:hover fieldset': { borderColor: GOLD }, '&.Mui-focused fieldset': { borderColor: GOLD } } }}
                         />
                         <IconButton onClick={handleSend} disabled={!draft.trim()} sx={{ width: 38, height: 38, flexShrink: 0, bgcolor: GOLD, color: isDark ? '#0B101C' : '#fff', '&:hover': { bgcolor: GOLD, opacity: 0.9 }, '&.Mui-disabled': { bgcolor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' } }}>

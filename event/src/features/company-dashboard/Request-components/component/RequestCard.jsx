@@ -20,18 +20,16 @@ import { buildRequestTimeline } from './buildRequestTimeline';
 
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchPaymentReceipt, selectReceiptById } from './../RequestSlice';
-
-// 💡 استيراد دالة معالجة الصور من ملف الـ helper لتعمل ديناميكياً مع ngrok/local
 import { fixImageUrl } from '../../../../utils/imageUrlHelper';
 
-// الألوان الزجاجية
+// 🚀 [1] استيراد التوجيه
+import { useNavigate } from 'react-router-dom';
+
 import {
     GOLD, BROWN_TEXT, MUTED_TEXT,
     LIGHT_CARD, LIGHT_BORDER, LIGHT_INPUT,
     DARK_CARD_BACKGROUND, DARK_CARD_BORDER, DARK_SURFACE_BG
 } from '../../../../utils/colorConstants';
-
-// ─── Utility Functions ───────────────────────────────────────────────────────
 
 const resolveColor = (theme, colorValue) => {
     if (!colorValue) return GOLD;
@@ -50,28 +48,28 @@ const resolveText = (field, fallback = 'Untitled') => {
 
 const getHexFromColorName = (name) => {
     const lowerName = name?.toLowerCase() || '';
-    if (lowerName.includes('red') || lowerName.includes('أحمر')) return '#b05050';
-    if (lowerName.includes('pink') || lowerName.includes('زهري')) return '#e297a6';
-    if (lowerName.includes('blue') || lowerName.includes('أزرق')) return '#4267B2';
-    if (lowerName.includes('black') || lowerName.includes('أسود')) return '#222222';
-    if (lowerName.includes('white') || lowerName.includes('أبيض')) return '#f5f5f5';
-    if (lowerName.includes('green') || lowerName.includes('أخضر')) return '#4CAF50';
-    if (lowerName.includes('silver') || lowerName.includes('فضي')) return '#C0C0C0';
-    if (lowerName.includes('gold') || lowerName.includes('ذهبي')) return '#D4AF37';
+    if (lowerName.includes('red')) return '#b05050';
+    if (lowerName.includes('pink')) return '#e297a6';
+    if (lowerName.includes('blue')) return '#4267B2';
+    if (lowerName.includes('black')) return '#222222';
+    if (lowerName.includes('white')) return '#f5f5f5';
+    if (lowerName.includes('green')) return '#4CAF50';
+    if (lowerName.includes('silver')) return '#C0C0C0';
+    if (lowerName.includes('gold')) return '#D4AF37';
     return GOLD;
 };
 
-// ─── Included Product Card ───────────────────────────────────────────────────
-
-const IncludedProductCard = ({ item }) => {
+const IncludedProductCard = ({ item, originalVariantItems }) => {
     const theme = useTheme();
     const isDark = theme.palette.mode === 'dark';
 
-    // 💡 استخدام الدالة الديناميكية المستوردة
-    const image = fixImageUrl(item.image);
+    // البحث عن العنصر الأصلي لجلب معلومات إضافية مثل اللون والصورة إن لزم الأمر
+    const originalItem = originalVariantItems?.find(i => i.included_variant_id === item.listing_variant_id) || {};
+
+    const image = fixImageUrl(item.image || originalItem.image);
     const title = resolveText(item.item_name) || 'Included Product';
     const qty = item.quantity || 1;
-    const colorName = item.metadata?.color || 'Standard';
+    const colorName = item.metadata?.color || originalItem.metadata?.color || 'Standard';
     const cssColor = getHexFromColorName(colorName);
 
     return (
@@ -85,7 +83,7 @@ const IncludedProductCard = ({ item }) => {
                     <Typography sx={{ fontSize: '0.85rem', fontWeight: 800, color: GOLD }}>Included in Package</Typography>
                 </Box>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 1 }}>
-                    {item.metadata?.color ? (
+                    {colorName !== 'Standard' ? (
                         <Tooltip title={`${colorName}`} placement="top"><Box sx={{ width: 16, height: 16, borderRadius: '50%', backgroundColor: cssColor, border: `2px solid ${isDark ? '#1c1512' : '#fcf8f0'}`, outline: `1px solid ${GOLD}`, boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }} /></Tooltip>
                     ) : <Box />}
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -97,8 +95,6 @@ const IncludedProductCard = ({ item }) => {
         </Box>
     );
 };
-
-// ─── Included Staff Card ─────────────────────────────────────────────────────
 
 const IncludedStaffCard = ({ freelancerData }) => {
     const theme = useTheme();
@@ -123,8 +119,6 @@ const IncludedStaffCard = ({ freelancerData }) => {
     );
 };
 
-// ─── Main Request Card ───────────────────────────────────────────────────────
-
 const StatItem = ({ icon: Icon, label, color, isDark }) => (
     <Stack direction="row" spacing={0.75} sx={{ alignItems: 'center' }}>
         <Icon sx={{ fontSize: 16, color: color || (isDark ? 'rgba(255,255,255,0.6)' : MUTED_TEXT) }} />
@@ -136,6 +130,9 @@ const RequestCard = ({ request, onView, onAccept, onReject }) => {
     const theme = useTheme();
     const isDark = theme.palette.mode === 'dark';
     const dispatch = useDispatch();
+
+    // 🚀 [2] تعريف أداة التوجيه
+    const navigate = useNavigate();
 
     const [expanded, setExpanded] = useState(false);
     const [productsExpanded, setProductsExpanded] = useState(false);
@@ -151,13 +148,33 @@ const RequestCard = ({ request, onView, onAccept, onReject }) => {
 
     const activeListing = request.listing || {};
     const activeVariant = request.variant || activeListing.variant || {};
-    const dynamicAttrs = activeVariant.dynamic_attributes || {};
+
+    // 🚀 القراءة من الميتا داتا المخصصة للحجز
+    const metadataItems = request.metadata?.booking_items || [];
+    const customProducts = metadataItems.filter(item => item.type === 'item');
+    const customFreelancers = metadataItems.filter(item => item.type === 'freelancer');
 
     useEffect(() => {
         if (['confirmed', 'completed'].includes(request.status) && paymentId && !receiptData && !receiptError) {
             dispatch(fetchPaymentReceipt(paymentId)).unwrap().catch(() => setReceiptError(true));
         }
     }, [request.status, paymentId, receiptData, receiptError, dispatch]);
+
+    // 🚀 [3] دالة الانتقال للكتالوج وتمرير الداتا الخفية
+    const handleViewClick = () => {
+        const listingId = activeListing.id;
+        const bookingId = request.id;
+        if (!listingId) {
+            onView?.(request); // في حال فشل التوجيه نعتمد الطريقة القديمة
+            return;
+        }
+        navigate('/company-dashboard/catalog', {
+            state: {
+                openListingId: listingId,
+                highlightedBookingId: bookingId
+            }
+        });
+    };
 
     const config = getStatusConfig(request.status);
     const safeAccentColor = resolveColor(theme, config.accentColor);
@@ -240,65 +257,45 @@ const RequestCard = ({ request, onView, onAccept, onReject }) => {
                         <Box sx={{ mb: 3, p: 1.5, bgcolor: alpha(GOLD, 0.05), border: isDark ? DARK_CARD_BORDER : `1px solid ${LIGHT_BORDER}`, borderRadius: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
                             <PeopleAltOutlinedIcon sx={{ color: GOLD }} />
                             <Typography variant="caption" sx={{ color: isDark ? '#ffffff' : BROWN_TEXT, fontWeight: 600, fontSize: '0.9rem' }}>
-                                Booked Capacity: <span style={{color: GOLD}}>{dynamicAttrs.capacity || 'N/A'} Persons</span>
+                                Requested Capacity: <span style={{color: GOLD}}>{request.quantity || 'N/A'} Persons</span>
                             </Typography>
-                        </Box>
-                    )}
-
-                    {activeListing.listing_type === 'physical_product' && (
-                        <Box sx={{ mb: 3, p: 1.5, background: isDark ? DARK_SURFACE_BG : LIGHT_INPUT, borderRadius: 2, border: isDark ? DARK_CARD_BORDER : `1px solid ${LIGHT_BORDER}`, display: 'flex', gap: 2, alignItems: 'center' }}>
-                            <Box sx={{ width: 60, height: 60, borderRadius: 2, bgcolor: isDark ? '#140e0c' : '#ffffff', border: isDark ? DARK_CARD_BORDER : `1px solid ${LIGHT_BORDER}`, overflow: 'hidden', flexShrink: 0 }}>
-                                {/* 💡 استخدام الدالة الديناميكية المستوردة */}
-                                <img src={fixImageUrl(activeListing.images?.[0])} alt="Product" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-                            </Box>
-                            <Box sx={{ flexGrow: 1 }}>
-                                <Typography variant="subtitle2" sx={{ fontWeight: 'bold', color: isDark ? '#ffffff' : BROWN_TEXT }}>{resolveText(activeVariant.name || activeVariant.variant_name)}</Typography>
-                                <Typography variant="caption" sx={{ color: GOLD, display: 'block', mb: 0.5, fontWeight: 'bold' }}>
-                                    {parseInt(request.price || 0).toLocaleString()} {request.currency}
-                                </Typography>
-                                <Stack direction="row" alignItems="center" spacing={3}>
-                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                        <Tooltip title={dynamicAttrs.color || 'Standard'}><Box sx={{ width: 14, height: 14, borderRadius: '50%', bgcolor: getHexFromColorName(dynamicAttrs.color), border: `1px solid ${GOLD}` }} /></Tooltip>
-                                        <Typography variant="caption" sx={{ fontWeight: 'bold', color: isDark ? 'rgba(255,255,255,0.6)' : MUTED_TEXT }}>Color</Typography>
-                                    </Box>
-                                    <Typography variant="caption" sx={{ fontWeight: 'bold', color: isDark ? '#ffffff' : BROWN_TEXT }}>Requested QTY: <span style={{color: GOLD}}>{request.quantity}</span></Typography>
-                                </Stack>
-                            </Box>
                         </Box>
                     )}
 
                     {activeListing.listing_type === 'package' && (
                         <Box sx={{ mb: 3 }}>
                             <Stack spacing={2}>
-                                {activeVariant.items?.length > 0 && (
+                                {/* 🚀 استخدام customProducts بدلاً من activeVariant.items */}
+                                {customProducts.length > 0 && (
                                     <Box>
                                         <Stack direction="row" alignItems="center" justifyContent="space-between" onClick={() => setProductsExpanded(!productsExpanded)} sx={{ cursor: 'pointer', mb: productsExpanded ? 1.5 : 0 }}>
                                             <Stack direction="row" alignItems="center" spacing={1}>
                                                 <Inventory2OutlinedIcon sx={{ fontSize: 16, color: GOLD }} />
-                                                <Typography variant="caption" sx={{ color: GOLD, fontWeight: 'bold', letterSpacing: 1 }}>INCLUDED PRODUCTS</Typography>
+                                                <Typography variant="caption" sx={{ color: GOLD, fontWeight: 'bold', letterSpacing: 1 }}>REQUESTED PRODUCTS</Typography>
                                             </Stack>
                                             <IconButton size="small" sx={{ p: 0, color: GOLD, transform: productsExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}><ExpandMoreIcon fontSize="small" /></IconButton>
                                         </Stack>
                                         <Collapse in={productsExpanded} timeout="auto" unmountOnExit>
                                             <Box sx={{ display: 'flex', gap: 2, overflowX: 'auto', pb: 1, pt: 0.5, ...scrollbarStyle }}>
-                                                {activeVariant.items.map((item) => <IncludedProductCard key={item.id} item={item} />)}
+                                                {customProducts.map((item, idx) => <IncludedProductCard key={idx} item={item} originalVariantItems={activeVariant.items} />)}
                                             </Box>
                                         </Collapse>
                                     </Box>
                                 )}
 
-                                {activeVariant.freelancers?.length > 0 && (
+                                {/* 🚀 استخدام customFreelancers بدلاً من activeVariant.freelancers */}
+                                {customFreelancers.length > 0 && (
                                     <Box>
                                         <Stack direction="row" alignItems="center" justifyContent="space-between" onClick={() => setServicesExpanded(!servicesExpanded)} sx={{ cursor: 'pointer', mb: servicesExpanded ? 1.5 : 0 }}>
                                             <Stack direction="row" alignItems="center" spacing={1}>
                                                 <PersonOutlineOutlinedIcon sx={{ fontSize: 18, color: GOLD }} />
-                                                <Typography variant="caption" sx={{ color: GOLD, fontWeight: 'bold', letterSpacing: 1 }}>INCLUDED SERVICES / STAFF</Typography>
+                                                <Typography variant="caption" sx={{ color: GOLD, fontWeight: 'bold', letterSpacing: 1 }}>REQUESTED STAFF</Typography>
                                             </Stack>
                                             <IconButton size="small" sx={{ p: 0, color: GOLD, transform: servicesExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}><ExpandMoreIcon fontSize="small" /></IconButton>
                                         </Stack>
                                         <Collapse in={servicesExpanded} timeout="auto" unmountOnExit>
                                             <Box sx={{ display: 'flex', gap: 2, overflowX: 'auto', pb: 1, pt: 0.5, ...scrollbarStyle }}>
-                                                {activeVariant.freelancers.map((f) => <IncludedStaffCard key={f.id} freelancerData={f} />)}
+                                                {customFreelancers.map((f, idx) => <IncludedStaffCard key={idx} freelancerData={f} />)}
                                             </Box>
                                         </Collapse>
                                     </Box>
@@ -311,7 +308,7 @@ const RequestCard = ({ request, onView, onAccept, onReject }) => {
                         <StatItem icon={CalendarTodayOutlinedIcon} label={displayDate} isDark={isDark} />
                         {displayShift && <StatItem icon={AccessTimeOutlinedIcon} label={displayShift} color={safeAccentColor} isDark={isDark} />}
                         <StatItem icon={ConfirmationNumberOutlinedIcon} label={`#${request.id?.substring(0, 8).toUpperCase()}`} isDark={isDark} />
-                        <StatItem icon={SellOutlinedIcon} label={`Total Price: ${parseInt(request.offerValue || request.price || 0).toLocaleString()} ${request.currency || 'SYP'}`} color={GOLD} isDark={isDark} />
+                        <StatItem icon={SellOutlinedIcon} label={`Total Price: ${parseInt(request.total_price || 0).toLocaleString()} ${request.currency || 'SYP'}`} color={GOLD} isDark={isDark} />
                     </Stack>
                 </Box>
 
@@ -384,7 +381,8 @@ const RequestCard = ({ request, onView, onAccept, onReject }) => {
                             CONTACT
                         </Button>
 
-                        <Button variant="contained" fullWidth onClick={() => onView?.(request)} sx={{ borderRadius: 2, bgcolor: config.buttonColor, color: (config.buttonColor === GOLD) ? '#131110' : '#ffffff', fontWeight: 700, boxShadow: 'none', '&:hover': { bgcolor: config.buttonColor, opacity: 0.8, boxShadow: `0 4px 12px ${alpha(resolveColor(theme, config.buttonColor), 0.3)}` } }}>{config.buttonLabel}</Button>
+                        {/* 🚀 [4] التعديل هنا لزر الـ VIEW */}
+                        <Button variant="contained" fullWidth onClick={handleViewClick} sx={{ borderRadius: 2, bgcolor: config.buttonColor, color: (config.buttonColor === GOLD) ? '#131110' : '#ffffff', fontWeight: 700, boxShadow: 'none', '&:hover': { bgcolor: config.buttonColor, opacity: 0.8, boxShadow: `0 4px 12px ${alpha(resolveColor(theme, config.buttonColor), 0.3)}` } }}>{config.buttonLabel}</Button>
                     </Stack>
                 </Stack>
             </Stack>

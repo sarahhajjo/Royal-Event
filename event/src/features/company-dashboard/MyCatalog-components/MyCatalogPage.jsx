@@ -5,6 +5,9 @@ import { useTheme, alpha } from "@mui/material/styles";
 import { useDispatch, useSelector } from 'react-redux';
 import dayjs from 'dayjs';
 
+// 🚀 [1] استيراد أداة التقاط التوجيه
+import { useLocation } from 'react-router-dom';
+
 import ArrangementCard from "./components/ArrangementCard";
 import HallCard from "./components/HallCard";
 import ProductCard from "./components/ProductCard";
@@ -104,7 +107,14 @@ export default function MyCatalogPage({
 
     const dispatch = useDispatch();
 
+    // 🚀 [2] التقاط الرابط المخفي
+    const location = useLocation();
+
     const { products = [], services: halls = [], arrangements = [], loading = false } = useSelector((state) => state.myCatalog || {});
+
+    // 🚀 [3] استخراج الداتا الممررة
+    const routeListingId = location.state?.openListingId;
+    const routeBookingId = location.state?.highlightedBookingId;
 
     useEffect(() => {
         dispatch(fetchMyProducts());
@@ -145,9 +155,35 @@ export default function MyCatalogPage({
         }
     };
 
-    if (externalHallId !== null) return <Halldetailpage hallId={externalHallId} onBack={onClearHall} onEdit={onEditHall} highlightedBookingId={externalHighlightedBookingId} />;
-    if (externalProductId !== null) return <Productdetailpage productId={externalProductId} onBack={onClearProduct} onEdit={onEditProduct} highlightedBookingId={externalHighlightedBookingId} />;
-    if (externalArrangementId !== null) return <Arrangmentdetailpage arrangementId={externalArrangementId} onBack={onClearArrangement} onEdit={onEditArrangement} highlightedBookingId={externalHighlightedBookingId} />;
+    // 🚀 [4] دالة تمسح رسالة الراوتر عند ضغط زر "الرجوع"
+    const handleBackWithClearRoute = (clearFunc) => {
+        if (routeListingId) window.history.replaceState({}, document.title);
+        if (clearFunc) clearFunc();
+    };
+
+    // 🚀 [5] إذا كان هناك توجيه والبيانات ما زالت تحمل، ننتظرها
+    if (routeListingId && loading) {
+        return (
+            <Box sx={{ display: 'flex', justifyContent: 'center', p: 5, mt: 10 }}>
+                <CircularProgress sx={{ color: GOLD }} />
+            </Box>
+        );
+    }
+
+    // 🚀 [6] التعرف على نوع الإعلان القادم من زر View بذكاء
+    const isHall = halls.some(h => h.id === routeListingId);
+    const isProduct = products.some(p => p.id === routeListingId);
+    const isArrangement = arrangements.some(a => a.id === routeListingId);
+
+    const activeHallId = externalHallId || (isHall ? routeListingId : null);
+    const activeProductId = externalProductId || (isProduct ? routeListingId : null);
+    const activeArrangementId = externalArrangementId || (isArrangement ? routeListingId : null);
+    const activeBookingId = externalHighlightedBookingId || routeBookingId;
+
+    // 🚀 [7] استبدال شروط العرض القديمة لتعتمد على الدالة الجديدة
+    if (activeHallId !== null) return <Halldetailpage hallId={activeHallId} onBack={() => handleBackWithClearRoute(onClearHall)} onEdit={onEditHall} highlightedBookingId={activeBookingId} />;
+    if (activeProductId !== null) return <Productdetailpage productId={activeProductId} onBack={() => handleBackWithClearRoute(onClearProduct)} onEdit={onEditProduct} highlightedBookingId={activeBookingId} />;
+    if (activeArrangementId !== null) return <Arrangmentdetailpage arrangementId={activeArrangementId} onBack={() => handleBackWithClearRoute(onClearArrangement)} onEdit={onEditArrangement} highlightedBookingId={activeBookingId} />;
 
     const tabStatuses = ["pending_approval", "approved", "rejected"];
     const activeStatusFilter = tabStatuses[pageTab];

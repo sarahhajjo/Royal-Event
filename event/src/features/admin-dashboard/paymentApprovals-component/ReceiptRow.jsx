@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Box, Typography, Avatar, Button, IconButton, CircularProgress } from "@mui/material";
@@ -21,7 +22,7 @@ export default function ReceiptRow({ item, isProcessing, onVerify, onReject }) {
     // الدالة المسؤولة عن فتح الـ PDF أو جلبه من السيرفر
     const handleViewPdf = () => {
         // بناء الرابط المباشر للملف باستخدام الـ paymentId
-        const pdfUrl = `http://localhost:8000/api/admin/payments/${item.paymentId}/view`;
+        const pdfUrl = `https://preflight-refusal-luminous.ngrok-free.dev/api/admin/payments/${item.paymentId}/view`;
 
         // فتح الرابط بتاب جديد مباشرة
         window.open(pdfUrl, '_blank', 'noopener,noreferrer');

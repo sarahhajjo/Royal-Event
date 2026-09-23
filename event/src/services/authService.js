@@ -63,7 +63,28 @@ const resendOTP = async (data) => {
     const response = await api.post(`/otp/resend`, data);
     return response.data;
 };
+// 🚀 جلب السياسة
+const getPolicy = async () => {
+    const response = await api.get(`/provider/policy`);
+    return response.data;
+};
 
-const authService = { register, login, getCategories, getDistricts, verifyOTP, setupProfile, setupfreelancerProfile, verifyEmailOTP, resendOTP };
-
+// 🚀 الموافقة على السياسة
+const acceptPolicy = async () => {
+    const response = await api.post(`/provider/policy/accept`);
+    return response.data;
+};
+const authService = {
+    register,
+    login,
+    getCategories,
+    getDistricts,
+    verifyOTP,
+    setupProfile,
+    setupfreelancerProfile,
+    verifyEmailOTP,
+    resendOTP,
+    getPolicy,    // 👈 ضفناها هون
+    acceptPolicy  // 👈 وضفناها هون
+};
 export default authService;

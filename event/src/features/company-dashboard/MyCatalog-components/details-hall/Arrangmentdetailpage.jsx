@@ -4,6 +4,9 @@ import { useTheme, alpha } from '@mui/material/styles';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { useDispatch, useSelector } from 'react-redux';
 
+// 🚀 [1] استيراد التوجيه
+import { useLocation } from 'react-router-dom';
+
 import Herosection from './detailshall-components/Herosection';
 import Generalinfo from './detailshall-components/Generalinfo';
 import Policiespricing from './detailshall-components/Policiespricing';
@@ -36,6 +39,10 @@ export default function ArrangmentDetailPage({ arrangementId, onBack, onEdit, hi
     const isDark = theme.palette.mode === 'dark';
     const dispatch = useDispatch();
 
+    // 🚀 [2] التقاط التوجيه
+    const location = useLocation();
+    const activeHighlightedBookingId = location.state?.highlightedBookingId || highlightedBookingId;
+
     const { arrangements, bookings = [], companyFreelancers = [] } = useSelector((state) => state.myCatalog || {});
     const { profile } = useSelector((state) => state.providerProfile || {});
     const providerData = profile?.data || {};
@@ -45,8 +52,9 @@ export default function ArrangmentDetailPage({ arrangementId, onBack, onEdit, hi
         dispatch(fetchCompanyFreelancers());
     }, [dispatch]);
 
+    // 🚀 [3] تغيير اسم المتغير هنا
     useEffect(() => {
-        if (highlightedBookingId) {
+        if (activeHighlightedBookingId) {
             const timer = setTimeout(() => {
                 const section = document.getElementById('booking-pipeline-section');
                 if (section) {
@@ -55,7 +63,7 @@ export default function ArrangmentDetailPage({ arrangementId, onBack, onEdit, hi
             }, 500);
             return () => clearTimeout(timer);
         }
-    }, [highlightedBookingId]);
+    }, [activeHighlightedBookingId]);
 
     const rawData = arrangements?.find(a => a.id === arrangementId);
 
@@ -245,10 +253,11 @@ export default function ArrangmentDetailPage({ arrangementId, onBack, onEdit, hi
                 />
 
                 <Box id="booking-pipeline-section" sx={{ mt: 4 }}>
+                    {/* 🚀 [4] إرسال الرقم للبايبلاين */}
                     <Bookingpipeline
                         entityId={arrangementId}
                         bookingsData={bookings}
-                        highlightedBookingId={highlightedBookingId}
+                        highlightedBookingId={activeHighlightedBookingId}
                     />
                 </Box>
             </Box>

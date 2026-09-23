@@ -27,10 +27,11 @@ export const fetchRequests = createAsyncThunk(
                 offerValue: `${parseFloat(booking.price || 0).toLocaleString()} ${booking.currency || 'SYP'}`,
 
                 listing: booking.listing,
-
-                // 💡 [السر هنا] يجب تمرير هذين الحقلين لكي يراهم الكرت ويعرض المنتجات والفاتورة
                 variant: booking.variant,
                 payment_id: booking.payment_id,
+
+                // 🚀 استخراج الميتا داتا لعرض التخصيص
+                metadata: booking.metadata,
 
                 quantity: booking.quantity,
                 total_price: booking.price,
@@ -80,11 +81,8 @@ export const fetchPaymentReceipt = createAsyncThunk(
         try {
             const res = await RequestService.getPaymentReceipt(paymentId);
             const imageUrl = URL.createObjectURL(res.data);
-
-            // 💡 السر هنا: نكتشف نوع الملف مباشرة من الاستجابة
             const isPdf = res.data.type === 'application/pdf';
 
-            // نخزن الرابط مع نوعه
             return { id: paymentId, data: { url: imageUrl, isPdf: isPdf }, cached: false };
         } catch (err) {
             return rejectWithValue(err.message);
@@ -127,7 +125,7 @@ const requestSlice = createSlice({
             })
             .addCase(fetchPaymentReceipt.fulfilled, (state, action) => {
                 if (!action.payload.cached) {
-                    state.receiptsCache[action.payload.id] = action.payload.data; // 💡 نمرر الداتا كاملة
+                    state.receiptsCache[action.payload.id] = action.payload.data;
                 }
             });
     },
@@ -139,7 +137,6 @@ export const selectActiveTab = (state) => state.requests.activeTab;
 export const selectAllRequests = (state) => state.requests.items;
 export const selectRequestsLoadingStatus = (state) => state.requests.status;
 export const selectRequestsError = (state) => state.requests.error;
-
 export const selectListingDetailsById = (state, listingId) => state.requests.listingsCache[listingId];
 export const selectReceiptById = (state, paymentId) => state.requests.receiptsCache[paymentId];
 
